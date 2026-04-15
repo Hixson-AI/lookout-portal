@@ -263,6 +263,8 @@ pnpm preview
 - **Central styling system**: CSS variables (`var(--bg-body)`, `var(--text-primary)`, etc.) for consistent theming across all pages
 - **API key masking**: List response shows only first 5 characters of key prefix for security
 - **Subdomain-based tenant identification**: Portal extracts tenant name from subdomain (e.g., "hixson-ai" from `hixson-ai.portal.dev.client.cumberlandstrategygroup.com`) for OAuth state parameter
+- **OAuth redirect URI handling**: Always uses main portal domain as redirect_uri (`portal.dev.client.cumberlandstrategygroup.com`) since Google doesn't support wildcard redirect URIs
+- **Cross-subdomain token passing**: Token passed via URL fragment when redirecting from main portal domain to tenant subdomain (localStorage not shared across subdomains)
 - **API response unwrapping**: Backend `{ data: T }` pattern handled in api.ts with proper TypeScript typing
 - **Date formatting**: Fixed "Invalid Date" issues with proper ISO date parsing in ApiKeyList and OverviewTab
 - **Dialog transparency fix**: Dialog component uses `var(--bg-card)` for proper background
