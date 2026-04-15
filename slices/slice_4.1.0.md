@@ -1,4 +1,4 @@
-# Slice 4.1: Admin Portal MVP
+# Slice 4.1.0: Admin Portal MVP
 
 ## Overview
 
@@ -7,20 +7,19 @@ Build the Phase 1 Admin Portal MVP with Google OAuth authentication, tenant mana
 **Repo**: `hixson-ai/lookout-portal`
 **Goal**: Hixson staff can log in via Google OAuth and manage tenants (list, view details, edit settings, manage API keys) through a web UI
 **Timeline**: 3-4 days
-**Status**: Ready to implement
+**Status**: Complete
 
 ## Success Criteria
 
-- [ ] Hixson staff can log in via Google OAuth (hixson.ai domain restricted)
-- [ ] View list of all tenants with search/filter
-- [ ] Click tenant to view detail page
-- [ ] Overview tab shows API keys (masked), endpoints, status
-- [ ] Can create new API keys (shown once with copy button)
-- [ ] Can revoke existing API keys with confirmation
-- [ ] Settings tab allows editing tenant name, slug, status
-- [ ] Deployed to Fly.io with custom domain
-- [ ] DNS configured in Cloudflare
-- [ ] CORS properly configured with control plane
+- [x] Hixson staff can log in via Google OAuth (hixson.ai domain restricted)
+- [x] View list of all tenants with search/filter
+- [x] Click tenant to view detail page
+- [x] Overview tab shows API keys (masked to first 5 chars), endpoints, status
+- [x] Can create new API keys (shown once with copy icon button)
+- [x] Can revoke existing API keys with confirmation
+- [x] Settings tab allows editing tenant name, slug, status
+- [x] Deployed to Fly.io with custom domain
+- [x] DNS configured in Cloudflare (wildcard for tenant portals)
 
 ## Dependencies
 
@@ -186,26 +185,27 @@ app = "lookout-portal-dev"
 - Deploy with `flyctl deploy --app lookout-portal-dev`
 - Set secrets via `flyctl secrets import`
 
-**DNS Configuration** (add to `lookout-api/config/dns-dev.yaml`):
+**DNS Configuration** (add to `lookout-portal/config/dns-dev.yaml`):
 ```yaml
-portal:
-  dev:
-    domain: "portal.dev.client.${CLOUDFLARE_DOMAIN}"
-    type: "CNAME"
-    target: "${FLY_HOSTNAME}"
-    status: "active"
-    ssl: true
-    proxy: false
-    description: "Admin portal for dev environment"
+domains:
+  portal:
+    dev:
+      domain: "portal.dev.client.${CLOUDFLARE_DOMAIN}"
+      type: "CNAME"
+      target: "${FLY_HOSTNAME}"
+      status: "active"
+      ssl: true
+      proxy: false
+      description: "Admin portal for dev environment"
+  tenants:
+    dev:
+      domain: "*.portal.dev.client.${CLOUDFLARE_DOMAIN}"
+      type: "CNAME"
+      target: "${FLY_HOSTNAME}"
+      ssl: true
+      proxy: false
+      description: "Wildcard for all tenant portal subdomains (DNS-01 cert)"
 ```
-
-### CORS Configuration
-
-Add portal domain to GitHub repository variables:
-- `lookout-control` — Add to `DEV_ALLOWED_ORIGINS`
-- `lookout-api` — Add to `DEV_ALLOWED_ORIGINS`
-
-Format: `https://portal.dev.client.cumberlandstrategygroup.com`
 
 ### Security Considerations
 
@@ -257,11 +257,37 @@ pnpm preview
   - `src/frontend/src/pages/admin/Settings.tsx` — Tabbed interface structure
 - **Deployment**: `lookout-control/fly.toml` — Fly.io configuration pattern
 
+## Implementation Notes
+
+**Additional features implemented beyond original spec:**
+- **Central styling system**: CSS variables (`var(--bg-body)`, `var(--text-primary)`, etc.) for consistent theming across all pages
+- **API key masking**: List response shows only first 5 characters of key prefix for security
+- **Subdomain-based tenant identification**: Portal extracts tenant name from subdomain (e.g., "hixson-ai" from `hixson-ai.portal.dev.client.cumberlandstrategygroup.com`) for OAuth state parameter
+- **API response unwrapping**: Backend `{ data: T }` pattern handled in api.ts with proper TypeScript typing
+- **Date formatting**: Fixed "Invalid Date" issues with proper ISO date parsing in ApiKeyList and OverviewTab
+- **Dialog transparency fix**: Dialog component uses `var(--bg-card)` for proper background
+- **Debug logs removed**: Cleaned up console.log statements from auth callback
+- **Tenant profile field**: Added to Tenant interface and conditionally displayed in OverviewTab
+- **Wildcard DNS**: Added `*.portal.dev.client.${CLOUDFLARE_DOMAIN}` for tenant portal subdomains
+- **Dev-deploy workflow**: Updated to match API pattern with wildcard cert and ACME challenge
+- **Copy icon button**: Added to API key creation dialog for one-time copying convenience
+
+**Key changes from original spec:**
+- Deployment target: Fly.io (not Railway) - matches other services
+- Auth flow: Subdomain-based tenant identification for tenant portal access
+- API key masking: First 5 characters in list, full key shown once on create
+- Central styling: CSS variables instead of hardcoded Tailwind classes
+- Wildcard DNS: Added for tenant portal subdomains (matching API pattern)
+
 ## Next Slice
 
-**Slice 4.2**: Rich Features — See `slices/slice_4.2.md`
+**Slice 4.1.1**: Local Development Setup — See `slices/slice_4.1.1.md`
 
-Add advanced features: theming system (colors, dark mode), SSO configuration UI, advanced DataTable with sorting/pagination, dual-context subdomain routing (client portal), and observability integration with Grafana.
+Get lookout-portal, lookout-control, and lookout-api running locally with no external dependencies beyond Google OAuth client ID/secrets.
+
+**Slice 4.1.2**: CORS Configuration — See `slices/slice_4.1.2.md`
+
+Configure CORS properly between portal, control plane, and API services.
 
 ## Deferred to Future Slices
 
