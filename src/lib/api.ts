@@ -48,9 +48,9 @@ async function apiRequest<T>(
     throw new Error(error || `API error: ${response.status}`);
   }
 
-  const json = await response.json();
+  const json = await response.json() as { data?: T };
   // Unwrap data property if present (backend pattern)
-  return (json as any).data ?? json;
+  return json.data ?? (json as T);
 }
 
 export const api = {

@@ -21,7 +21,7 @@ export function TenantList() {
   if (isLoading) {
     return (
       <Layout>
-        <div className="text-center py-8">Loading tenants...</div>
+        <div className="text-center py-8" style={{ color: 'var(--text-secondary)' }}>Loading tenants...</div>
       </Layout>
     );
   }
@@ -29,7 +29,7 @@ export function TenantList() {
   if (error) {
     return (
       <Layout>
-        <div className="text-center py-8 text-destructive">
+        <div className="text-center py-8" style={{ color: 'var(--accent)' }}>
           Error loading tenants: {error.message}
         </div>
       </Layout>
@@ -42,7 +42,7 @@ export function TenantList() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gradient">Tenants</h1>
-            <p className="text-muted-foreground">Manage your platform tenants</p>
+            <p style={{ color: 'var(--text-secondary)' }}>Manage your platform tenants</p>
           </div>
           <Button className="btn-gradient">
             <Plus className="h-4 w-4 mr-2" />
@@ -51,7 +51,7 @@ export function TenantList() {
         </div>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" style={{ color: 'var(--text-muted)' }} />
           <Input
             placeholder="Search tenants..."
             value={searchQuery}
@@ -61,7 +61,7 @@ export function TenantList() {
         </div>
 
         {filteredTenants.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
+          <div className="text-center py-12" style={{ color: 'var(--text-muted)' }}>
             {searchQuery ? 'No tenants match your search.' : 'No tenants found.'}
           </div>
         ) : (

@@ -17,7 +17,7 @@ export function TenantDetail() {
   if (isLoading) {
     return (
       <Layout>
-        <div className="text-center py-8">Loading tenant...</div>
+        <div className="text-center py-8" style={{ color: 'var(--text-secondary)' }}>Loading tenant...</div>
       </Layout>
     );
   }
@@ -25,7 +25,7 @@ export function TenantDetail() {
   if (error || !tenant) {
     return (
       <Layout>
-        <div className="text-center py-8 text-destructive">
+        <div className="text-center py-8" style={{ color: 'var(--accent)' }}>
           {error?.message || 'Tenant not found'}
         </div>
       </Layout>
@@ -42,7 +42,7 @@ export function TenantDetail() {
 
         <div>
           <h1 className="text-3xl font-bold text-gradient">{tenant.name}</h1>
-          <p className="text-muted-foreground">@{tenant.slug}</p>
+          <p style={{ color: 'var(--text-secondary)' }}>@{tenant.slug}</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>

@@ -55,36 +55,36 @@ export function OverviewTab({ tenant }: OverviewTabProps) {
         <CardContent>
           <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <dt className="text-sm font-medium text-muted-foreground">Name</dt>
+              <dt className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Name</dt>
               <dd className="text-lg font-semibold">{tenant.name}</dd>
             </div>
             <div className="space-y-1">
-              <dt className="text-sm font-medium text-muted-foreground">Slug</dt>
+              <dt className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Slug</dt>
               <dd className="text-lg font-semibold">@{tenant.slug}</dd>
             </div>
             <div className="space-y-1">
-              <dt className="text-sm font-medium text-muted-foreground">Status</dt>
+              <dt className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Status</dt>
               <dd className="flex items-center gap-2">
                 <BadgeCheck className="h-4 w-4" />
                 <span className="capitalize">{tenant.status}</span>
               </dd>
             </div>
             <div className="space-y-1">
-              <dt className="text-sm font-medium text-muted-foreground">Tier</dt>
+              <dt className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Tier</dt>
               <dd className="flex items-center gap-2">
                 <Building2 className="h-4 w-4" />
                 <span className="capitalize">{tenant.tier}</span>
               </dd>
             </div>
             <div className="space-y-1">
-              <dt className="text-sm font-medium text-muted-foreground">Created</dt>
+              <dt className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Created</dt>
               <dd className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 <span>{new Date(tenant.createdAt).toLocaleDateString()}</span>
               </dd>
             </div>
             <div className="space-y-1">
-              <dt className="text-sm font-medium text-muted-foreground">API Endpoint</dt>
+              <dt className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>API Endpoint</dt>
               <dd className="flex items-center gap-2">
                 <Globe className="h-4 w-4" />
                 <span className="text-sm font-mono">{controlPlaneUrl}</span>

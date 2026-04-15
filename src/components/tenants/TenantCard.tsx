@@ -21,14 +21,14 @@ export function TenantCard({ tenant, onClick }: TenantCardProps) {
             {tenant.status}
           </Badge>
         </div>
-        <p className="text-sm text-muted-foreground">@{tenant.slug}</p>
+        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>@{tenant.slug}</p>
       </CardHeader>
       <CardContent className="space-y-2">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
           <Building2 className="h-4 w-4" />
           <span>{tenant.tier}</span>
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
           <Calendar className="h-4 w-4" />
           <span>{new Date(tenant.createdAt).toLocaleDateString()}</span>
         </div>

@@ -72,13 +72,13 @@ export function SettingsTab({ tenant }: SettingsTabProps) {
         <CardContent className="space-y-6">
           {error && (
             <Alert>
-              <AlertDescription className="text-destructive">{error}</AlertDescription>
+              <AlertDescription style={{ color: 'var(--accent)' }}>{error}</AlertDescription>
             </Alert>
           )}
 
           {success && (
             <Alert>
-              <AlertDescription className="text-green-600">
+              <AlertDescription style={{ color: 'var(--accent)' }}>
                 Tenant updated successfully
               </AlertDescription>
             </Alert>
@@ -102,7 +102,7 @@ export function SettingsTab({ tenant }: SettingsTabProps) {
               onChange={(e) => handleSlugChange(e.target.value)}
               placeholder="tenant-slug"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
               Used in URLs and API key prefixes. Lowercase, alphanumeric, and hyphens only.
             </p>
           </div>
@@ -123,7 +123,7 @@ export function SettingsTab({ tenant }: SettingsTabProps) {
           <div className="space-y-2">
             <Label>Tier</Label>
             <Input value={tenant.tier} disabled className="bg-muted" />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
               Tier cannot be changed. Contact support to upgrade.
             </p>
           </div>

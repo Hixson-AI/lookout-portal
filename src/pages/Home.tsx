@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { getUser } from '../lib/auth';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Layout } from '../components/layout/Layout';
 
 export function Home() {
   const navigate = useNavigate();
@@ -13,21 +14,20 @@ export function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">
-            Welcome, {user.name || user.email}
-          </h1>
-          <p className="text-slate-600">
-            {user.isSystemAdmin ? 'System Administrator' : 'Operator'}
-          </p>
-        </div>
+    <Layout>
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-gradient mb-2">
+          Welcome, {user.name || user.email}
+        </h1>
+        <p style={{ color: 'var(--text-secondary)' }}>
+          {user.isSystemAdmin ? 'System Administrator' : 'Operator'}
+        </p>
+      </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {user.isSystemAdmin ? (
             <>
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/tenants')}>
+              <Card className="card-hover cursor-pointer" onClick={() => navigate('/tenants')}>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -40,11 +40,11 @@ export function Home() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-slate-600">View and manage all tenant configurations</p>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>View and manage all tenant configurations</p>
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <Card className="card-hover cursor-pointer">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,11 +57,11 @@ export function Home() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-slate-600">Monitor platform performance and usage</p>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Monitor platform performance and usage</p>
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <Card className="card-hover cursor-pointer">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,13 +74,13 @@ export function Home() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-slate-600">Add and manage operator access</p>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Add and manage operator access</p>
                 </CardContent>
               </Card>
             </>
           ) : (
             <>
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/tenants')}>
+              <Card className="card-hover cursor-pointer" onClick={() => navigate('/tenants')}>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,14 +93,14 @@ export function Home() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-slate-600">
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                     You have access to {user.tenants.length} tenant{user.tenants.length !== 1 ? 's' : ''}
                   </p>
                 </CardContent>
               </Card>
 
               {user.tenants.map((tenant) => (
-                <Card key={tenant.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/tenants/${tenant.id}`)}>
+                <Card key={tenant.id} className="card-hover cursor-pointer" onClick={() => navigate(`/tenants/${tenant.id}`)}>
                   <CardHeader>
                     <CardTitle className="text-lg">Tenant {tenant.id}</CardTitle>
                     <CardDescription>Role: {tenant.role}</CardDescription>
@@ -113,7 +113,6 @@ export function Home() {
             </>
           )}
         </div>
-      </div>
-    </div>
+    </Layout>
   );
 }
