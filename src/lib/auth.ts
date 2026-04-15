@@ -88,10 +88,10 @@ export async function handleAuthCallback(): Promise<boolean> {
       if (!decodedState.includes('/login')) {
         // If state is a tenant slug (not a full URL), redirect back to tenant subdomain with token
         if (!decodedState.startsWith('http') && !decodedState.startsWith('/')) {
-          // Reconstruct tenant subdomain URL and pass token in fragment
+          // Reconstruct tenant subdomain URL by inserting tenant slug before "portal"
           const hostname = window.location.hostname;
           const parts = hostname.split('.');
-          parts[0] = decodedState; // Replace 'portal' with tenant slug
+          parts.unshift(decodedState); // Insert tenant slug at beginning
           const tenantUrl = `${window.location.protocol}//${parts.join('.')}/tenants/${decodedState}#token=${token}`;
           window.location.href = tenantUrl;
         } else {
