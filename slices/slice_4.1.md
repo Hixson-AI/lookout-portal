@@ -41,12 +41,14 @@ Build the Phase 1 Admin Portal MVP with Google OAuth authentication, tenant mana
 ### Core Features
 
 **Authentication**:
-- Google OAuth2 login via control plane `/auth/google`
+- Google OAuth2 login via control plane `/auth/google` (authorization code flow)
+- Control plane handles code exchange via `/auth/google/callback` endpoint
 - JWT stored in localStorage (cross-domain OAuth pattern)
 - Control plane is auth boundary — portal never validates Google tokens directly
 - Platform JWT returned from control plane contains: id, email, name, picture, isSystemAdmin, tenants array
 
 **Tenant Management**:
+- Home page differentiates based on admin status (system admins see full dashboard, operators see their assigned tenants)
 - Tenant list with search/filter (card grid pattern adapted from novomesa `PlatformClients.tsx`)
 - Tenant detail with tabs: Overview | Settings
 - Create new tenant (system admin only) — basic form (name, slug, tier)
@@ -76,6 +78,7 @@ lookout-portal/
 │   ├── App.tsx
 │   ├── index.css
 │   ├── pages/
+│   │   ├── Home.tsx
 │   │   ├── Login.tsx
 │   │   ├── TenantList.tsx
 │   │   └── TenantDetail.tsx
