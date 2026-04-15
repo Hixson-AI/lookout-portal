@@ -62,69 +62,38 @@ export async function handleAuthCallback(): Promise<boolean> {
   console.log('[handleAuthCallback] Current URL:', window.location.href);
   console.log('[handleAuthCallback] Hash:', window.location.hash);
 
-  // Google OAuth returns token in URL fragment
+  // OAuth returns platform JWT in URL fragment
   const fragment = window.location.hash.substring(1); // Remove '#'
   console.log('[handleAuthCallback] Fragment:', fragment);
 
   const params = new URLSearchParams(fragment);
-  const googleToken = params.get('id_token');
+  const token = params.get('token');
   const state = params.get('state'); // Get the state parameter with tenant destination
 
-  console.log('[handleAuthCallback] Google token present:', !!googleToken);
+  console.log('[handleAuthCallback] Token present:', !!token);
   console.log('[handleAuthCallback] State present:', !!state);
 
-  if (googleToken) {
-    try {
-      const controlPlaneUrl = import.meta.env.VITE_CONTROL_PLANE_URL;
-      console.log('[handleAuthCallback] Control plane URL:', controlPlaneUrl);
-      console.log('[handleAuthCallback] Exchanging token...');
+  if (token) {
+    setJwt(token);
+    console.log('[handleAuthCallback] JWT stored successfully');
 
-      const response = await fetch(`${controlPlaneUrl}/auth/google`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${googleToken}`,
-        },
-      });
-
-      console.log('[handleAuthCallback] Response status:', response.status);
-
-      if (!response.ok) {
-        console.error('[handleAuthCallback] Failed to exchange Google token for JWT');
-        const errorText = await response.text();
-        console.error('[handleAuthCallback] Error response:', errorText);
-        return false;
-      }
-
-      const data = await response.json();
-      console.log('[handleAuthCallback] Response data:', data);
-
-      if (data.data?.token) {
-        setJwt(data.data.token);
-        console.log('[handleAuthCallback] JWT stored successfully');
-
-        // Redirect to tenant portal if state parameter exists and is not /login
-        if (state) {
-          const decodedState = decodeURIComponent(state);
-          console.log('[handleAuthCallback] State:', decodedState);
-          // Don't redirect to /login to avoid loops
-          if (!decodedState.includes('/login')) {
-            console.log('[handleAuthCallback] Redirecting to state:', decodedState);
-            window.location.href = decodedState;
-            return true;
-          }
-        }
-
-        console.log('[handleAuthCallback] Clearing hash and returning success');
-        window.history.replaceState({}, '', window.location.pathname);
+    // Redirect to tenant portal if state parameter exists and is not /login
+    if (state) {
+      const decodedState = decodeURIComponent(state);
+      console.log('[handleAuthCallback] State:', decodedState);
+      // Don't redirect to /login to avoid loops
+      if (!decodedState.includes('/login')) {
+        console.log('[handleAuthCallback] Redirecting to state:', decodedState);
+        window.location.href = decodedState;
         return true;
       }
-    } catch (error) {
-      console.error('[handleAuthCallback] Error exchanging Google token for JWT:', error);
-      return false;
     }
+
+    console.log('[handleAuthCallback] Clearing hash and returning success');
+    window.history.replaceState({}, '', window.location.pathname);
+    return true;
   } else {
-    console.log('[handleAuthCallback] No Google token found in URL');
+    console.log('[handleAuthCallback] No token found in URL');
   }
   return false;
 }
