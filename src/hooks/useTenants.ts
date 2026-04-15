@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '../lib/api';
+import { api, Tenant } from '../lib/api';
 
 export function useTenants() {
   return useQuery({
@@ -24,7 +24,7 @@ export function useUpdateTenant() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<any> }) =>
+    mutationFn: ({ id, data }: { id: string; data: Partial<Tenant> }) =>
       api.updateTenant(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenants'] });

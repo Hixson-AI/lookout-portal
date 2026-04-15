@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '../lib/api';
+import { api, CreateApiKeyResponse } from '../lib/api';
 
 export function useTenant(id: string) {
   return useQuery({
@@ -20,10 +20,10 @@ export function useApiKeys(tenantId: string) {
 export function useCreateApiKey() {
   const queryClient = useQueryClient();
   
-  return useMutation({
-    mutationFn: ({ tenantId, label }: { tenantId: string; label: string }) =>
+  return useMutation<CreateApiKeyResponse, Error, { tenantId: string; label: string }>({
+    mutationFn: ({ tenantId, label }) =>
       api.createApiKey(tenantId, label),
-    onSuccess: (_data: any, { tenantId }: { tenantId: string; label: string }) => {
+    onSuccess: (_data, { tenantId }) => {
       queryClient.invalidateQueries({ queryKey: ['api-keys', tenantId] });
     },
   });

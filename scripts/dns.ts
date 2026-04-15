@@ -88,7 +88,7 @@ class DnsManager {
   async manageRecords(env?: string): Promise<void> {
     console.log('🌐 Managing DNS records...\n');
     
-    let recordsToProcess: Array<{service: string, env: string, config: DomainConfig}> = [];
+    const recordsToProcess: Array<{service: string, env: string, config: DomainConfig}> = [];
     
     // Collect records based on environment filter
     for (const [service, environments] of Object.entries(this.config.domains)) {
@@ -126,7 +126,7 @@ class DnsManager {
 
   private async syncRecord(service: string, env: string, config: DomainConfig): Promise<void> {
     // Use Fly.io IPs if available, otherwise use CNAME target from YAML or Fly.io hostname
-    let recordType = config.type;
+    const recordType = config.type;
     let recordTarget = config.target;
 
     console.log(`    Fly.io IPs received: ipv4=${this.flyIps?.ipv4}, ipv6_1=${this.flyIps?.ipv6_1}, ipv6_2=${this.flyIps?.ipv6_2}`);
@@ -252,8 +252,8 @@ class DnsManager {
 
     // Find the wildcard domain from config to derive ACME challenge name
     let wildcardDomain = '';
-    for (const [service, environments] of Object.entries(this.config.domains)) {
-      for (const [envName, config] of Object.entries(environments)) {
+    for (const environments of Object.values(this.config.domains)) {
+      for (const config of Object.values(environments)) {
         if (config.domain.startsWith('*.')) {
           wildcardDomain = config.domain;
           break;
@@ -341,7 +341,7 @@ class DnsManager {
         `https://api.cloudflare.com/client/v4/zones/${this.config.cloudflare.zone_id}/dns_records?type=${type}&name=${name}`
       );
 
-      const existingRecord = existingRecords.result.find((r: any) => r.content === apiContent || r.content === content);
+      const existingRecord = existingRecords.result.find((r: { content: string }) => r.content === apiContent || r.content === content);
 
       if (existingRecord) {
         const currentProxy = existingRecord.proxied || false;
@@ -389,7 +389,7 @@ class DnsManager {
     }
   }
 
-  private async fetch(url: string, options: RequestInit = {}): Promise<any> {
+  private async fetch(url: string, options: RequestInit = {}): Promise<{ result: any; success: boolean; errors?: any[] }> {
     const response = await fetch(url, {
       ...options,
       headers: {
@@ -417,7 +417,7 @@ program
   .option('--dry-run', 'Show what would be done without making changes')
   .option('--env <env>', 'Sync only specific environment')
   .option('--yaml <path>', 'Path to YAML file (default: dns.yaml)')
-  .action(async (options: any) => {
+  .action(async (options: { dryRun?: boolean; env?: string; yaml?: string }) => {
     try {
       const manager = new DnsManager(options.dryRun, options.yaml);
       await manager.manageRecords(options.env);
