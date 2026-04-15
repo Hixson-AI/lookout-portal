@@ -25,6 +25,20 @@ interface DnsConfig {
   };
 }
 
+interface CloudflareDnsRecord {
+  id: string;
+  name: string;
+  type: string;
+  content: string;
+  proxied?: boolean;
+}
+
+interface CloudflareResponse<T> {
+  success: boolean;
+  errors: Array<{ code?: number; message: string }>;
+  result: T;
+}
+
 class DnsManager {
   private config: DnsConfig;
   private dryRun: boolean;
@@ -161,16 +175,16 @@ class DnsManager {
 
     try {
       // Check for any existing record with this name (regardless of type)
-      const allExistingRecords = await this.fetch(
+      const allExistingRecords = await this.fetch<CloudflareDnsRecord[]>(
         `https://api.cloudflare.com/client/v4/zones/${this.config.cloudflare.zone_id}/dns_records?name=${config.domain}`
       );
 
       // Filter for records with matching name
-      const existingRecords = allExistingRecords.result.filter((r: any) => r.name === config.domain);
+      const existingRecords = allExistingRecords.result.filter((r) => r.name === config.domain);
 
       if (existingRecords.length > 0) {
         // Check if there's an existing record with the correct type
-        const existingSameType = existingRecords.find((r: any) => r.type === recordType);
+        const existingSameType = existingRecords.find((r) => r.type === recordType);
 
         if (existingSameType) {
           const existing = existingSameType;
@@ -248,7 +262,7 @@ class DnsManager {
 
     // Delete any existing CNAME records for this domain
     try {
-      const existingCnameRecords = await this.fetch(
+      const existingCnameRecords = await this.fetch<CloudflareDnsRecord[]>(
         `https://api.cloudflare.com/client/v4/zones/${this.config.cloudflare.zone_id}/dns_records?type=CNAME&name=${config.domain}`
       );
 
@@ -302,7 +316,7 @@ class DnsManager {
 
     try {
       // Check if record exists
-      const existingRecords = await this.fetch(
+      const existingRecords = await this.fetch<CloudflareDnsRecord[]>(
         `https://api.cloudflare.com/client/v4/zones/${this.config.cloudflare.zone_id}/dns_records?type=CNAME&name=${challengeName}`
       );
 
@@ -358,11 +372,11 @@ class DnsManager {
 
     try {
       // Check if record exists
-      const existingRecords = await this.fetch(
+      const existingRecords = await this.fetch<CloudflareDnsRecord[]>(
         `https://api.cloudflare.com/client/v4/zones/${this.config.cloudflare.zone_id}/dns_records?type=${type}&name=${name}`
       );
 
-      const existingRecord = existingRecords.result.find((r: { content: string }) => r.content === apiContent || r.content === content);
+      const existingRecord = existingRecords.result.find((r) => r.content === apiContent || r.content === content);
 
       if (existingRecord) {
         const currentProxy = existingRecord.proxied || false;
