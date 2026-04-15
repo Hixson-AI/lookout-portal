@@ -103,11 +103,16 @@ export async function handleAuthCallback(): Promise<boolean> {
         setJwt(data.data.token);
         console.log('[handleAuthCallback] JWT stored successfully');
 
-        // Redirect to tenant portal if state parameter exists
+        // Redirect to tenant portal if state parameter exists and is not /login
         if (state) {
-          console.log('[handleAuthCallback] Redirecting to state:', state);
-          window.location.href = decodeURIComponent(state);
-          return true;
+          const decodedState = decodeURIComponent(state);
+          console.log('[handleAuthCallback] State:', decodedState);
+          // Don't redirect to /login to avoid loops
+          if (!decodedState.includes('/login')) {
+            console.log('[handleAuthCallback] Redirecting to state:', decodedState);
+            window.location.href = decodedState;
+            return true;
+          }
         }
 
         console.log('[handleAuthCallback] Clearing hash and returning success');
