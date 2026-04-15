@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import { Copy } from 'lucide-react';
 
 interface ApiKeyCreateDialogProps {
   open: boolean;
@@ -39,11 +40,19 @@ export function ApiKeyCreateDialog({ open, onOpenChange, onCreate, createdKey }:
         </DialogHeader>
         {createdKey ? (
           <div className="space-y-4">
-            <div className="bg-muted p-4 rounded-md">
-              <code className="text-sm break-all">{createdKey}</code>
+            <div className="bg-muted p-4 rounded-md flex items-center justify-between gap-2">
+              <code className="text-sm break-all flex-1">{createdKey}</code>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleCopy}
+                className="shrink-0"
+                title="Copy to clipboard"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
             </div>
             <DialogFooter>
-              <Button onClick={handleCopy}>Copy Key</Button>
               <Button onClick={() => onOpenChange(false)}>Done</Button>
             </DialogFooter>
           </div>

@@ -2,12 +2,18 @@ import { getJwt } from './auth';
 
 const CONTROL_PLANE_URL = import.meta.env.VITE_CONTROL_PLANE_URL;
 
+// API response wrapper type
+interface ApiResponse<T> {
+  data: T;
+}
+
 export interface Tenant {
   id: string;
   name: string;
   slug: string;
   status: 'active' | 'suspended';
   tier: string;
+  profile?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -48,9 +54,12 @@ async function apiRequest<T>(
     throw new Error(error || `API error: ${response.status}`);
   }
 
-  const json = await response.json() as { data?: T };
+  const json = await response.json() as unknown;
   // Unwrap data property if present (backend pattern)
-  return json.data ?? (json as T);
+  if (typeof json === 'object' && json !== null && 'data' in json) {
+    return (json as ApiResponse<T>).data;
+  }
+  return json as T;
 }
 
 export const api = {

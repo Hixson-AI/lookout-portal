@@ -18,6 +18,11 @@ export function OverviewTab({ tenant }: OverviewTabProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [createdKey, setCreatedKey] = useState<string>();
 
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleDateString();
+  };
+
   const handleCreateKey = async (label: string) => {
     try {
       const result = await createApiKey.mutateAsync({ tenantId: tenant.id, label });
@@ -76,11 +81,19 @@ export function OverviewTab({ tenant }: OverviewTabProps) {
                 <span className="capitalize">{tenant.tier}</span>
               </dd>
             </div>
+            {tenant.profile && (
+              <div className="space-y-1">
+                <dt className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Profile</dt>
+                <dd className="flex items-center gap-2">
+                  <span className="capitalize">{tenant.profile}</span>
+                </dd>
+              </div>
+            )}
             <div className="space-y-1">
               <dt className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Created</dt>
               <dd className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                <span>{new Date(tenant.createdAt).toLocaleDateString()}</span>
+                <span>{formatDate(tenant.createdAt)}</span>
               </dd>
             </div>
             <div className="space-y-1">

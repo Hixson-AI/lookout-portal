@@ -28,6 +28,12 @@ export function ApiKeyList({ apiKeys, onRevoke }: ApiKeyListProps) {
     navigator.clipboard.writeText(text);
   };
 
+  const formatDate = (dateString: string | null): string => {
+    if (!dateString) return 'Never';
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleDateString();
+  };
+
   if (apiKeys.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -52,12 +58,8 @@ export function ApiKeyList({ apiKeys, onRevoke }: ApiKeyListProps) {
           <TableRow key={apiKey.id}>
             <TableCell>{apiKey.label}</TableCell>
             <TableCell className="font-mono text-xs">{apiKey.prefix}...</TableCell>
-            <TableCell>{new Date(apiKey.createdAt).toLocaleDateString()}</TableCell>
-            <TableCell>
-              {apiKey.lastUsedAt 
-                ? new Date(apiKey.lastUsedAt).toLocaleDateString() 
-                : 'Never'}
-            </TableCell>
+            <TableCell>{formatDate(apiKey.createdAt)}</TableCell>
+            <TableCell>{formatDate(apiKey.lastUsedAt)}</TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end gap-2">
                 <Button

@@ -6,7 +6,7 @@ const Dialog = ({ open, onOpenChange, children }: { open: boolean; onOpenChange:
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-black/50" onClick={() => onOpenChange(false)} />
-      <div className="relative z-50 bg-background rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+      <div className="relative z-50 card-elevated rounded-lg p-6 max-w-md w-full mx-4 fade-in" style={{ backgroundColor: 'var(--bg-card)' }}>
         {children}
       </div>
     </div>
