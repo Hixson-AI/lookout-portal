@@ -8,16 +8,17 @@ export function useAuth() {
 
   useEffect(() => {
     // Check for auth callback on mount
-    const hasCallback = handleAuthCallback();
-    if (hasCallback) {
-      window.location.reload();
-      return;
-    }
+    handleAuthCallback().then((hasCallback) => {
+      if (hasCallback) {
+        window.location.reload();
+        return;
+      }
 
-    // Get current user
-    const currentUser = getUser();
-    setUser(currentUser);
-    setLoading(false);
+      // Get current user
+      const currentUser = getUser();
+      setUser(currentUser);
+      setLoading(false);
+    });
   }, []);
 
   return { user, loading, logout };
