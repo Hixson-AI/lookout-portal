@@ -132,7 +132,9 @@ jobs:
           
           # Deploy with Docker layer caching
           flyctl deploy --app "$APP_NAME" --config fly.toml --strategy=rolling \
-            --build-arg="BUILDKIT_INLINE_CACHE=1" --no-cache
+            --build-arg="BUILDKIT_INLINE_CACHE=1" \
+            --build-arg="VITE_CONTROL_PLANE_URL=${{ secrets.VITE_CONTROL_PLANE_URL }}" \
+            --no-cache
 
       - name: Get Fly.io IPs and trigger DNS workflow
         env:

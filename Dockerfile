@@ -26,6 +26,9 @@ FROM node:22-alpine AS build
 
 WORKDIR /app
 
+# Accept build arguments
+ARG VITE_CONTROL_PLANE_URL
+
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
 
@@ -40,6 +43,8 @@ RUN pnpm add serve
 
 # Copy source and build
 COPY . .
+ARG VITE_CONTROL_PLANE_URL
+ENV VITE_CONTROL_PLANE_URL=$VITE_CONTROL_PLANE_URL
 RUN pnpm build
 
 # Nginx stage
