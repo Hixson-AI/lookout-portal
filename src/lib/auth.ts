@@ -55,12 +55,12 @@ export function login(): void {
   const subdomain = hostname.split('.')[0]; // First subdomain segment (e.g., "hixson-ai" from "hixson-ai.portal.dev.client.cumberlandstrategygroup.com")
   
   // Always use main portal domain as OAuth redirect_uri (Google doesn't support wildcards)
-  // Extract base domain by replacing tenant subdomain with "portal"
+  // Extract base domain by removing tenant subdomain (second subdomain is already "portal")
   let oauthRedirectUri = redirectUri;
   if (subdomain && subdomain !== 'portal') {
-    // Replace tenant subdomain with "portal" for OAuth redirect
+    // Remove tenant subdomain for OAuth redirect (e.g., hixson-ai.portal.dev... → portal.dev...)
     const parts = hostname.split('.');
-    parts[0] = 'portal';
+    parts.shift(); // Remove first subdomain
     oauthRedirectUri = `${window.location.protocol}//${parts.join('.')}`;
   }
 
