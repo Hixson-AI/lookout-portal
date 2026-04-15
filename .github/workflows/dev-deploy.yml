@@ -69,9 +69,9 @@ jobs:
           fi
           
           # Create app if it doesn't exist (idempotent)
-          if ! flyctl apps show "$APP_NAME" 2>/dev/null; then
+          if ! flyctl apps list | grep -q "$APP_NAME"; then
             echo "Creating app $APP_NAME..."
-            flyctl apps create "$APP_NAME" --org personal
+            flyctl apps create "$APP_NAME" --org personal || echo "App may already exist, continuing..."
           else
             echo "App $APP_NAME already exists"
           fi
