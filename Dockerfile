@@ -51,4 +51,4 @@ USER nodejs
 EXPOSE 3000
 
 # Start server
-CMD ["serve", "-s", "dist", "-l", "3000"]
+CMD ["npx", "serve", "-s", "dist", "-l", "3000"]
