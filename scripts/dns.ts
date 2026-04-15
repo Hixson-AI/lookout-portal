@@ -389,7 +389,7 @@ class DnsManager {
     }
   }
 
-  private async fetch(url: string, options: RequestInit = {}): Promise<{ result: any; success: boolean; errors?: any[] }> {
+  private async fetch<T = unknown>(url: string, options: RequestInit = {}): Promise<CloudflareResponse<T>> {
     const response = await fetch(url, {
       ...options,
       headers: {
