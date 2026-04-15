@@ -35,12 +35,12 @@ COPY package.json pnpm-lock.yaml* ./
 # Install production dependencies only
 RUN pnpm install --prod --frozen-lockfile
 
+# Install serve as a production dependency
+RUN pnpm add serve
+
 # Copy source and build
 COPY . .
 RUN pnpm build
-
-# Install a simple static server (before switching to non-root user)
-RUN pnpm add -g serve
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
