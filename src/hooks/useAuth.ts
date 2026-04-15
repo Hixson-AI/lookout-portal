@@ -10,7 +10,7 @@ export function useAuth() {
     // Check for auth callback on mount
     handleAuthCallback().then((hasCallback) => {
       if (hasCallback) {
-        window.location.reload();
+        // handleAuthCallback already performed the redirect, don't reload
         return;
       }
 
