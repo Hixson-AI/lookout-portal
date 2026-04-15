@@ -55,7 +55,7 @@ COPY --from=build /app/dist /usr/share/nginx/html
 COPY --from=build /app/public/error.html /usr/share/nginx/html/error.html
 
 # Expose port
-EXPOSE 3000
+EXPOSE 8080
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]
