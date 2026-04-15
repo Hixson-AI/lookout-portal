@@ -39,6 +39,9 @@ RUN pnpm install --prod --frozen-lockfile
 COPY . .
 RUN pnpm build
 
+# Install a simple static server (before switching to non-root user)
+RUN pnpm add -g serve
+
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
@@ -46,9 +49,6 @@ USER nodejs
 
 # Expose port
 EXPOSE 3000
-
-# Install a simple static server
-RUN npm install -g serve
 
 # Start server
 CMD ["serve", "-s", "dist", "-l", "3000"]
