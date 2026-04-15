@@ -1,29 +1,49 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login, getUser } from '../lib/auth';
+import { login, getUser, handleAuthCallback } from '../lib/auth';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 
 export function Login() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const user = getUser();
-    if (user) {
-      navigate('/tenants');
-    }
+    // Handle OAuth callback first
+    handleAuthCallback().then((hasCallback) => {
+      if (hasCallback) {
+        // Callback was processed, reload to pick up the JWT
+        window.location.reload();
+        return;
+      }
+
+      // Check if user is already logged in
+      const user = getUser();
+      if (user) {
+        navigate('/tenants');
+      }
+      setLoading(false);
+    });
   }, [navigate]);
 
   const handleLogin = () => {
     login();
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center auth-bg p-4">
+        <div className="text-white text-lg">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center auth-bg p-4">
       <div className="w-full max-w-md fade-in">
         <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-sm card-elevated">
           <CardHeader className="text-center pb-2">
-            <div className="mx-auto mb-4 w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg text-gradient">
+            <div className="mx-auto mb-4 w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg" style={{ background: 'var(--gradient-header)' }}>
               <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
