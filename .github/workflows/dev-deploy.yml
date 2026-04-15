@@ -77,15 +77,9 @@ jobs:
           fi
           
           # Allocate IPs if needed (idempotent)
-          if ! flyctl ips list --app "$APP_NAME" | grep -q "v4"; then
-            echo "Allocating IPv4 address..."
-            flyctl ips allocate-v4 --app "$APP_NAME" --yes || echo "IPv4 already allocated or unavailable"
-          fi
-          
-          if ! flyctl ips list --app "$APP_NAME" | grep -q "v6"; then
-            echo "Allocating IPv6 address..."
-            flyctl ips allocate-v6 --app "$APP_NAME" || echo "IPv6 already allocated or unavailable"
-          fi
+          echo "Allocating IPs if needed..."
+          flyctl ips allocate-v4 --app "$APP_NAME" --yes 2>/dev/null || echo "IPv4 already allocated or unavailable"
+          flyctl ips allocate-v6 --app "$APP_NAME" 2>/dev/null || echo "IPv6 already allocated or unavailable"
           
           # Add custom domain for SSL certificates
           # Extract environment from app name (prod-lookout-portal → prod, dev-lookout-portal → dev)
@@ -100,11 +94,11 @@ jobs:
           DOMAIN=$(echo "$DOMAIN" | sed "s/\${CLOUDFLARE_DOMAIN}/${CLOUDFLARE_DOMAIN}/g")
           
           echo "Adding custom domain $DOMAIN to Fly.io app..."
-          flyctl certs add "$DOMAIN" --app "$APP_NAME" || echo "Domain already exists or certificate issuance in progress"
+          flyctl certs add "$DOMAIN" --app "$APP_NAME" 2>/dev/null || echo "Domain already exists or certificate issuance in progress"
           
           # Get DNS requirements from Fly.io cert
           echo "Retrieving DNS requirements from Fly.io cert..."
-          CERT_JSON=$(flyctl certs show "$DOMAIN" --app "$APP_NAME" -j)
+          CERT_JSON=$(flyctl certs show "$DOMAIN" --app "$APP_NAME" -j 2>/dev/null || echo '{}')
           
           IPV4=$(echo "$CERT_JSON" | jq -r '.dns_requirements.a[0] // empty')
           IPV6_1=$(echo "$CERT_JSON" | jq -r '.dns_requirements.aaaa[0] // empty')
@@ -132,9 +126,9 @@ jobs:
           echo "Setting up secrets..."
           printf '%s\n' \
             "VITE_CONTROL_PLANE_URL=${{ secrets.VITE_CONTROL_PLANE_URL }}" \
-            | flyctl secrets import --app "$APP_NAME" --stage
-          echo "DEBUG: Verifying secrets were staged..."
-          flyctl secrets list --app "$APP_NAME"         
+            | flyctl secrets import --app "$APP_NAME" --stage 2>/dev/null || echo "Secrets already set or import failed"
+          echo "DEBUG: Verifying secrets..."
+          flyctl secrets list --app "$APP_NAME" 2>/dev/null || echo "Could not list secrets"         
           
           # Deploy with Docker layer caching
           flyctl deploy --app "$APP_NAME" --config fly.toml --strategy=rolling \
