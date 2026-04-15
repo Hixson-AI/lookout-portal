@@ -11,7 +11,7 @@ interface TenantCardProps {
 export function TenantCard({ tenant, onClick }: TenantCardProps) {
   return (
     <Card 
-      className="cursor-pointer hover:shadow-lg transition-shadow"
+      className="cursor-pointer card-hover card-elevated"
       onClick={onClick}
     >
       <CardHeader className="pb-3">

@@ -47,9 +47,9 @@ export function OverviewTab({ tenant }: OverviewTabProps) {
   return (
     <div className="space-y-6">
       {/* Tenant Info */}
-      <Card>
+      <Card className="card-elevated">
         <CardHeader>
-          <CardTitle>Tenant Information</CardTitle>
+          <CardTitle className="text-gradient">Tenant Information</CardTitle>
           <CardDescription>Overview of tenant details</CardDescription>
         </CardHeader>
         <CardContent>
@@ -95,14 +95,14 @@ export function OverviewTab({ tenant }: OverviewTabProps) {
       </Card>
 
       {/* API Keys */}
-      <Card>
+      <Card className="card-elevated">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>API Keys</CardTitle>
+              <CardTitle className="text-gradient">API Keys</CardTitle>
               <CardDescription>Manage API keys for this tenant</CardDescription>
             </div>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
+            <Button className="btn-gradient" onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Create Key
             </Button>

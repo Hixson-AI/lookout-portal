@@ -64,9 +64,9 @@ export function SettingsTab({ tenant }: SettingsTabProps) {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="card-elevated">
         <CardHeader>
-          <CardTitle>Tenant Settings</CardTitle>
+          <CardTitle className="text-gradient">Tenant Settings</CardTitle>
           <CardDescription>Update tenant configuration</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -130,7 +130,7 @@ export function SettingsTab({ tenant }: SettingsTabProps) {
 
           {hasChanges && (
             <div className="flex gap-2 pt-4">
-              <Button onClick={handleSave} disabled={updateTenant.isPending}>
+              <Button className="btn-gradient" onClick={handleSave} disabled={updateTenant.isPending}>
                 <Save className="h-4 w-4 mr-2" />
                 Save Changes
               </Button>

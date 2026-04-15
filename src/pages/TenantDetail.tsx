@@ -41,7 +41,7 @@ export function TenantDetail() {
         </Button>
 
         <div>
-          <h1 className="text-3xl font-bold">{tenant.name}</h1>
+          <h1 className="text-3xl font-bold text-gradient">{tenant.name}</h1>
           <p className="text-muted-foreground">@{tenant.slug}</p>
         </div>
 

@@ -6,9 +6,9 @@ export function Header() {
   const { user, logout } = useAuth();
 
   return (
-    <header className="border-b bg-background">
+    <header className="border-b bg-white shadow-sm">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold">Lookout Portal</h1>
+        <h1 className="text-xl font-bold text-gradient">Lookout Portal</h1>
         {user && (
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">{user.email}</span>
