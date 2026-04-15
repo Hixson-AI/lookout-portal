@@ -160,55 +160,72 @@ class DnsManager {
     }
 
     try {
-      // Check if record exists
-      const existingRecords = await this.fetch(
-        `https://api.cloudflare.com/client/v4/zones/${this.config.cloudflare.zone_id}/dns_records?type=${recordType}&name=${config.domain}`
+      // Check for any existing record with this name (regardless of type)
+      const allExistingRecords = await this.fetch(
+        `https://api.cloudflare.com/client/v4/zones/${this.config.cloudflare.zone_id}/dns_records?name=${config.domain}`
       );
 
-      if (existingRecords.result.length > 0) {
-        // Update existing record
-        const existing = existingRecords.result[0];
+      // Filter for records with matching name
+      const existingRecords = allExistingRecords.result.filter((r: any) => r.name === config.domain);
 
-        const currentProxy = existing.proxied || false;
-        const desiredProxy = config.proxy || false;
+      if (existingRecords.length > 0) {
+        // Check if there's an existing record with the correct type
+        const existingSameType = existingRecords.find((r: any) => r.type === recordType);
 
-        if (existing.content === recordTarget && currentProxy === desiredProxy) {
-          console.log(`    ✓ Record already exists with correct content and proxy setting`);
+        if (existingSameType) {
+          const existing = existingSameType;
+          const currentProxy = existing.proxied || false;
+          const desiredProxy = config.proxy || false;
+
+          if (existing.content === recordTarget && currentProxy === desiredProxy) {
+            console.log(`    ✓ Record already exists with correct content and proxy setting`);
+            return;
+          }
+
+          // Update existing record of same type
+          await this.fetch(
+            `https://api.cloudflare.com/client/v4/zones/${this.config.cloudflare.zone_id}/dns_records/${existing.id}`,
+            {
+              method: 'PUT',
+              body: JSON.stringify({
+                type: recordType,
+                name: config.domain,
+                content: recordTarget,
+                ttl: this.config.cloudflare.ttl.default,
+                proxied: config.proxy || false
+              })
+            }
+          );
+          const updateReason = existing.content !== recordTarget ? 'content' : 'proxy setting';
+          console.log(`    📝 Updated existing record (${updateReason})`);
           return;
         }
 
-        await this.fetch(
-          `https://api.cloudflare.com/client/v4/zones/${this.config.cloudflare.zone_id}/dns_records/${existing.id}`,
-          {
-            method: 'PUT',
-            body: JSON.stringify({
-              type: recordType,
-              name: config.domain,
-              content: recordTarget,
-              ttl: this.config.cloudflare.ttl.default,
-              proxied: config.proxy || false
-            })
-          }
-        );
-        const updateReason = existing.content !== recordTarget ? 'content' : 'proxy setting';
-        console.log(`    📝 Updated existing record (${updateReason})`);
-      } else {
-        // Create new record
-        await this.fetch(
-          `https://api.cloudflare.com/client/v4/zones/${this.config.cloudflare.zone_id}/dns_records`,
-          {
-            method: 'POST',
-            body: JSON.stringify({
-              type: recordType,
-              name: config.domain,
-              content: recordTarget,
-              ttl: this.config.cloudflare.ttl.default,
-              proxied: config.proxy || false
-            })
-          }
-        );
-        console.log(`    ➕ Created new record`);
+        // Delete existing records with different types
+        for (const record of existingRecords) {
+          console.log(`    🗑️  Deleting existing ${record.type} record`);
+          await this.fetch(
+            `https://api.cloudflare.com/client/v4/zones/${this.config.cloudflare.zone_id}/dns_records/${record.id}`,
+            { method: 'DELETE' }
+          );
+        }
       }
+
+      // Create new record
+      await this.fetch(
+        `https://api.cloudflare.com/client/v4/zones/${this.config.cloudflare.zone_id}/dns_records`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            type: recordType,
+            name: config.domain,
+            content: recordTarget,
+            ttl: this.config.cloudflare.ttl.default,
+            proxied: config.proxy || false
+          })
+        }
+      );
+      console.log(`    ➕ Created new record`);
     } catch (error) {
       console.error(`    ❌ Failed to sync record: ${error}`);
       throw error;
