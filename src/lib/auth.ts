@@ -58,15 +58,27 @@ export function login(): void {
 }
 
 export async function handleAuthCallback(): Promise<boolean> {
+  console.log('[handleAuthCallback] Starting callback processing');
+  console.log('[handleAuthCallback] Current URL:', window.location.href);
+  console.log('[handleAuthCallback] Hash:', window.location.hash);
+
   // Google OAuth returns token in URL fragment
   const fragment = window.location.hash.substring(1); // Remove '#'
+  console.log('[handleAuthCallback] Fragment:', fragment);
+
   const params = new URLSearchParams(fragment);
   const googleToken = params.get('id_token');
   const state = params.get('state'); // Get the state parameter with tenant destination
 
+  console.log('[handleAuthCallback] Google token present:', !!googleToken);
+  console.log('[handleAuthCallback] State present:', !!state);
+
   if (googleToken) {
     try {
       const controlPlaneUrl = import.meta.env.VITE_CONTROL_PLANE_URL;
+      console.log('[handleAuthCallback] Control plane URL:', controlPlaneUrl);
+      console.log('[handleAuthCallback] Exchanging token...');
+
       const response = await fetch(`${controlPlaneUrl}/auth/google`, {
         method: 'POST',
         headers: {
@@ -75,28 +87,39 @@ export async function handleAuthCallback(): Promise<boolean> {
         },
       });
 
+      console.log('[handleAuthCallback] Response status:', response.status);
+
       if (!response.ok) {
-        console.error('Failed to exchange Google token for JWT');
+        console.error('[handleAuthCallback] Failed to exchange Google token for JWT');
+        const errorText = await response.text();
+        console.error('[handleAuthCallback] Error response:', errorText);
         return false;
       }
 
       const data = await response.json();
+      console.log('[handleAuthCallback] Response data:', data);
+
       if (data.data?.token) {
         setJwt(data.data.token);
+        console.log('[handleAuthCallback] JWT stored successfully');
 
         // Redirect to tenant portal if state parameter exists
         if (state) {
+          console.log('[handleAuthCallback] Redirecting to state:', state);
           window.location.href = decodeURIComponent(state);
           return true;
         }
 
+        console.log('[handleAuthCallback] Clearing hash and returning success');
         window.history.replaceState({}, '', window.location.pathname);
         return true;
       }
     } catch (error) {
-      console.error('Error exchanging Google token for JWT:', error);
+      console.error('[handleAuthCallback] Error exchanging Google token for JWT:', error);
       return false;
     }
+  } else {
+    console.log('[handleAuthCallback] No Google token found in URL');
   }
   return false;
 }

@@ -9,19 +9,28 @@ export function Login() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('[Login] useEffect running');
+    console.log('[Login] Current URL:', window.location.href);
+    console.log('[Login] Hash:', window.location.hash);
+
     // Handle OAuth callback first
     handleAuthCallback().then((hasCallback) => {
+      console.log('[Login] handleAuthCallback returned:', hasCallback);
       if (hasCallback) {
-        // Callback was processed, reload to pick up the JWT
-        window.location.reload();
+        // Callback was processed, navigate to tenants
+        console.log('[Login] Navigating to /tenants');
+        navigate('/tenants');
         return;
       }
 
       // Check if user is already logged in
       const user = getUser();
+      console.log('[Login] User from localStorage:', user);
       if (user) {
+        console.log('[Login] User found, navigating to /tenants');
         navigate('/tenants');
       }
+      console.log('[Login] Setting loading to false');
       setLoading(false);
     });
   }, [navigate]);
