@@ -247,6 +247,9 @@ class DnsManager {
   }
 
   private async syncFlyIpsRecord(config: DomainConfig): Promise<void> {
+    // Delete all existing A/AAAA records for this domain to avoid duplicates
+    await this.deleteExistingRecords(config.domain, ['A', 'AAAA']);
+
     // Sync A record with IPv4
     if (this.flyIps?.ipv4) {
       await this.syncSingleRecord('A', config.domain, this.flyIps.ipv4, config.proxy);
@@ -276,6 +279,29 @@ class DnsManager {
     } catch (error) {
       console.error(`    ⚠️  Failed to delete existing CNAME records: ${error}`);
       // Don't throw error, continue
+    }
+  }
+
+  private async deleteExistingRecords(name: string, types: string[]): Promise<void> {
+    for (const type of types) {
+      try {
+        const existingRecords = await this.fetch<CloudflareDnsRecord[]>(
+          `https://api.cloudflare.com/client/v4/zones/${this.config.cloudflare.zone_id}/dns_records?type=${type}&name=${name}`
+        );
+
+        if (existingRecords.result.length > 0) {
+          console.log(`    🗑️  Deleting ${existingRecords.result.length} existing ${type} record(s) for ${name}`);
+          for (const record of existingRecords.result) {
+            await this.fetch(
+              `https://api.cloudflare.com/client/v4/zones/${this.config.cloudflare.zone_id}/dns_records/${record.id}`,
+              { method: 'DELETE' }
+            );
+          }
+        }
+      } catch (error) {
+        console.error(`    ⚠️  Failed to delete existing ${type} records: ${error}`);
+        // Don't throw error, continue
+      }
     }
   }
 

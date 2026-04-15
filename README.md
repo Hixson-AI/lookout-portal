@@ -21,7 +21,7 @@ See `PROMPT.md` for bootstrap instructions.
 ## Architecture
 
 - **Layer**: Experience surfaces (Slice 8)
-- **Deploys to**: Railway (internal tool)
+- **Deploys to**: Fly.io
 - **Dependencies**: Control Plane API, Grafana
 
 ## License
