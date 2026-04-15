@@ -1,4 +1,4 @@
-app = "lookout-portal-dev"
+app = "{{ env 'FLY_APP_NAME' }}"
 
 [build]
   dockerfile = "Dockerfile"
@@ -12,6 +12,19 @@ app = "lookout-portal-dev"
   auto_stop_machines = false
   auto_start_machines = true
   min_machines_running = 1
+  processes = ["app"]
+
+[[http_service.checks]]
+  interval = "30s"
+  timeout = "10s"
+  grace_period = "60s"
+  method = "GET"
+  path = "/"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 256
 
 [deploy]
   strategy = "rolling"
