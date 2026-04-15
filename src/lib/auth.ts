@@ -51,12 +51,23 @@ export function getUser(): JwtPayload | null {
 
 export function login(): void {
   const redirectUri = window.location.origin;
-  // Extract tenant name from subdomain for tenant portal access
   const hostname = window.location.hostname;
   const subdomain = hostname.split('.')[0]; // First subdomain segment (e.g., "hixson-ai" from "hixson-ai.portal.dev.client.cumberlandstrategygroup.com")
-  const state = subdomain || window.location.href; // Use tenant name from subdomain if available, otherwise full URL
+  
+  // Always use main portal domain as OAuth redirect_uri (Google doesn't support wildcards)
+  // Extract base domain by replacing tenant subdomain with "portal"
+  let oauthRedirectUri = redirectUri;
+  if (subdomain && subdomain !== 'portal') {
+    // Replace tenant subdomain with "portal" for OAuth redirect
+    const parts = hostname.split('.');
+    parts[0] = 'portal';
+    oauthRedirectUri = `${window.location.protocol}//${parts.join('.')}`;
+  }
+
+  // Pass tenant subdomain as state for redirect after OAuth
+  const state = subdomain || window.location.href;
   const controlPlaneUrl = import.meta.env.VITE_CONTROL_PLANE_URL;
-  const authUrl = `${controlPlaneUrl}/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodeURIComponent(state)}`;
+  const authUrl = `${controlPlaneUrl}/auth/google?redirect_uri=${encodeURIComponent(oauthRedirectUri)}&state=${encodeURIComponent(state)}`;
   window.location.href = authUrl;
 }
 
@@ -68,18 +79,29 @@ export async function handleAuthCallback(): Promise<boolean> {
   const state = params.get('state'); // Get the state parameter with tenant destination
 
   if (token) {
-    setJwt(token);
+    setJwt(token); // Store token for current domain
 
     // Redirect to tenant portal if state parameter exists and is not /login
     if (state) {
       const decodedState = decodeURIComponent(state);
       // Don't redirect to /login to avoid loops
       if (!decodedState.includes('/login')) {
-        window.location.href = decodedState;
+        // If state is a tenant slug (not a full URL), redirect back to tenant subdomain with token
+        if (!decodedState.startsWith('http') && !decodedState.startsWith('/')) {
+          // Reconstruct tenant subdomain URL and pass token in fragment
+          const hostname = window.location.hostname;
+          const parts = hostname.split('.');
+          parts[0] = decodedState; // Replace 'portal' with tenant slug
+          const tenantUrl = `${window.location.protocol}//${parts.join('.')}/tenants/${decodedState}#token=${token}`;
+          window.location.href = tenantUrl;
+        } else {
+          window.location.href = decodedState;
+        }
         return true;
       }
     }
 
+    // Clean up URL fragment after storing token
     window.history.replaceState({}, '', window.location.pathname);
     return true;
   }
