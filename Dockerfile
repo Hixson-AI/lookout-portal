@@ -1,5 +1,5 @@
 # Development stage - includes all deps for vite dev server
-FROM node:22-alpine AS build
+FROM node:22-alpine AS dev
 
 WORKDIR /app
 
@@ -22,7 +22,7 @@ EXPOSE 3000
 CMD ["pnpm", "dev"]
 
 # Production stage - static build only
-FROM node:22-alpine AS production
+FROM node:22-alpine AS build
 
 WORKDIR /app
 
@@ -42,13 +42,20 @@ RUN pnpm add serve
 COPY . .
 RUN pnpm build
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
-USER nodejs
+# Nginx stage
+FROM nginx:alpine AS production
+
+# Copy nginx config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy built files from build stage
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Copy error page
+COPY --from=build /app/public/error.html /usr/share/nginx/html/error.html
 
 # Expose port
 EXPOSE 3000
 
-# Start server
-CMD ["npx", "serve", "-s", "dist", "-l", "3000"]
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]

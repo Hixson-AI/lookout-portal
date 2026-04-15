@@ -7,3 +7,9 @@
 - **Improvement**: Switch to nginx for better robustness, stability, and security
 - **Rationale**: nginx is purpose-built for static file serving, has smaller attack surface, better performance, and more mature security track record
 - **Priority**: Low (current solution works fine)
+
+### Static Fallback Error Page
+- **Current**: No fallback error page - app just spins if deployment fails
+- **Improvement**: Add static fallback error page for deployment failures
+- **Rationale**: Better user experience when app is down or failing to start
+- **Priority**: Medium (improves error visibility)
