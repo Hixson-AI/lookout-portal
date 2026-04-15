@@ -1,0 +1,165 @@
+name: dev-deploy
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: ['**']
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: read
+  id-token: write
+  actions: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: dev
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Install yq and jq
+        run: |
+          wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
+          chmod +x /usr/local/bin/yq
+          sudo apt-get install -y jq
+
+      - name: Build app
+        run: |
+          pnpm install
+          pnpm lint
+          pnpm test
+          pnpm build
+        env:
+          VITE_CONTROL_PLANE_URL: ${{ secrets.VITE_CONTROL_PLANE_URL }}
+      
+      - name: Deploy to environment
+        id: deploy
+        env:
+          FLY_APP_NAME: ${{ vars.DEV_FLY_APP_NAME }}
+          CLOUDFLARE_DOMAIN: ${{ vars.CLOUDFLARE_DOMAIN }}
+        run: |
+          set -euo pipefail
+          
+          # Use environment variable for app name
+          echo "Deploying to app: $FLY_APP_NAME"
+          APP_NAME="${FLY_APP_NAME}"
+          
+          if [ -z "$APP_NAME" ]; then
+            echo "ERROR: FLY_APP_NAME is empty! vars.FLY_APP_NAME not set or not accessible."
+            exit 1
+          fi
+          
+          # Create app if it doesn't exist (idempotent)
+          if ! flyctl apps show "$APP_NAME" 2>/dev/null; then
+            echo "Creating app $APP_NAME..."
+            flyctl apps create "$APP_NAME" --org personal
+          else
+            echo "App $APP_NAME already exists"
+          fi
+          
+          # Allocate IPs if needed (idempotent)
+          if ! flyctl ips list --app "$APP_NAME" | grep -q "v4"; then
+            echo "Allocating IPv4 address..."
+            flyctl ips allocate-v4 --app "$APP_NAME" --yes || echo "IPv4 already allocated or unavailable"
+          fi
+          
+          if ! flyctl ips list --app "$APP_NAME" | grep -q "v6"; then
+            echo "Allocating IPv6 address..."
+            flyctl ips allocate-v6 --app "$APP_NAME" || echo "IPv6 already allocated or unavailable"
+          fi
+          
+          # Add custom domain for SSL certificates
+          # Extract environment from app name (prod-lookout-portal → prod, dev-lookout-portal → dev)
+          if [[ "$APP_NAME" == prod-* ]]; then
+            ENVIRONMENT="prod"
+          else
+            ENVIRONMENT="dev"
+          fi
+          DNS_FILE="config/dns-${ENVIRONMENT}.yaml"
+          DOMAIN=$(yq ".domains.portal.${ENVIRONMENT}.domain" "$DNS_FILE")
+          # Substitute environment variables in domain
+          DOMAIN=$(echo "$DOMAIN" | sed "s/\${CLOUDFLARE_DOMAIN}/${CLOUDFLARE_DOMAIN}/g")
+          
+          echo "Adding custom domain $DOMAIN to Fly.io app..."
+          flyctl certs add "$DOMAIN" --app "$APP_NAME" || echo "Domain already exists or certificate issuance in progress"
+          
+          # Get DNS requirements from Fly.io cert
+          echo "Retrieving DNS requirements from Fly.io cert..."
+          CERT_JSON=$(flyctl certs show "$DOMAIN" --app "$APP_NAME" -j)
+          
+          IPV4=$(echo "$CERT_JSON" | jq -r '.dns_requirements.a[0] // empty')
+          IPV6_1=$(echo "$CERT_JSON" | jq -r '.dns_requirements.aaaa[0] // empty')
+          IPV6_2=$(echo "$CERT_JSON" | jq -r '.dns_requirements.aaaa[1] // empty')
+          FLY_HOSTNAME=$(echo "$CERT_JSON" | jq -r '.dns_requirements.cname // empty')
+          OWNERSHIP_NAME=$(echo "$CERT_JSON" | jq -r '.dns_requirements.ownership.name // empty')
+          OWNERSHIP_VALUE=$(echo "$CERT_JSON" | jq -r '.dns_requirements.ownership.app_value // empty')
+
+          echo "Fly.io DNS requirements:"
+          echo "  IPv4: $IPV4"
+          echo "  IPv6: $IPV6_1, $IPV6_2"
+          echo "  CNAME: $FLY_HOSTNAME"
+          echo "  Ownership TXT: $OWNERSHIP_NAME → $OWNERSHIP_VALUE"
+
+          # Set outputs for use in subsequent steps
+          echo "ipv4=$IPV4" >> $GITHUB_OUTPUT
+          echo "ipv6_1=$IPV6_1" >> $GITHUB_OUTPUT
+          echo "ipv6_2=$IPV6_2" >> $GITHUB_OUTPUT
+          echo "hostname=$FLY_HOSTNAME" >> $GITHUB_OUTPUT
+          echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
+          echo "ownership_name=$OWNERSHIP_NAME" >> $GITHUB_OUTPUT
+          echo "ownership_value=$OWNERSHIP_VALUE" >> $GITHUB_OUTPUT
+          
+          # Set up secrets — portal only needs build-time vars as runtime secrets for static build
+          echo "Setting up secrets..."
+          printf '%s\n' \
+            "VITE_CONTROL_PLANE_URL=${{ secrets.VITE_CONTROL_PLANE_URL }}" \
+            | flyctl secrets import --app "$APP_NAME" --stage
+          echo "DEBUG: Verifying secrets were staged..."
+          flyctl secrets list --app "$APP_NAME"         
+          
+          # Deploy with Docker layer caching
+          flyctl deploy --app "$APP_NAME" --config fly.toml --strategy=rolling \
+            --build-arg="BUILDKIT_INLINE_CACHE=1" --no-cache
+
+      - name: Get Fly.io IPs and trigger DNS workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "🌐 Triggering DNS management..."
+          
+          # Extract environment from app name (prod-lookout-portal → prod, dev-lookout-portal → dev)
+          if [[ "${{ steps.deploy.outputs.environment }}" == "prod" ]]; then
+            DNS_FILE="config/dns-prod.yaml"
+          else
+            DNS_FILE="config/dns-dev.yaml"
+          fi
+          
+          gh workflow run dns.yml --repo ${{ github.repository }} --ref ${{ github.ref_name }} \
+            -f dns_file="$DNS_FILE" \
+            -f ipv4="${{ steps.deploy.outputs.ipv4 }}" \
+            -f ipv6_1="${{ steps.deploy.outputs.ipv6_1 }}" \
+            -f ipv6_2="${{ steps.deploy.outputs.ipv6_2 }}" \
+            -f hostname="${{ steps.deploy.outputs.hostname }}" \
+            -f ownership_name="${{ steps.deploy.outputs.ownership_name }}" \
+            -f ownership_value="${{ steps.deploy.outputs.ownership_value }}" \
+            -f acme_challenge="${{ steps.deploy.outputs.acme_challenge }}" \
+            -f cloudflare_domain="${{ vars.CLOUDFLARE_DOMAIN }}"

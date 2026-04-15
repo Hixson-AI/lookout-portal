@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  portal:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: build
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - VITE_CONTROL_PLANE_URL=http://localhost:8080
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: pnpm dev
