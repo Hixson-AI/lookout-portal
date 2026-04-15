@@ -51,49 +51,37 @@ export function getUser(): JwtPayload | null {
 
 export function login(): void {
   const redirectUri = window.location.origin;
-  const state = window.location.href; // Store current URL (tenant portal) as state
+  // Extract tenant name from subdomain for tenant portal access
+  const hostname = window.location.hostname;
+  const subdomain = hostname.split('.')[0]; // First subdomain segment (e.g., "hixson-ai" from "hixson-ai.portal.dev.client.cumberlandstrategygroup.com")
+  const state = subdomain || window.location.href; // Use tenant name from subdomain if available, otherwise full URL
   const controlPlaneUrl = import.meta.env.VITE_CONTROL_PLANE_URL;
   const authUrl = `${controlPlaneUrl}/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodeURIComponent(state)}`;
   window.location.href = authUrl;
 }
 
 export async function handleAuthCallback(): Promise<boolean> {
-  console.log('[handleAuthCallback] Starting callback processing');
-  console.log('[handleAuthCallback] Current URL:', window.location.href);
-  console.log('[handleAuthCallback] Hash:', window.location.hash);
-
   // OAuth returns platform JWT in URL fragment
   const fragment = window.location.hash.substring(1); // Remove '#'
-  console.log('[handleAuthCallback] Fragment:', fragment);
-
   const params = new URLSearchParams(fragment);
   const token = params.get('token');
   const state = params.get('state'); // Get the state parameter with tenant destination
 
-  console.log('[handleAuthCallback] Token present:', !!token);
-  console.log('[handleAuthCallback] State present:', !!state);
-
   if (token) {
     setJwt(token);
-    console.log('[handleAuthCallback] JWT stored successfully');
 
     // Redirect to tenant portal if state parameter exists and is not /login
     if (state) {
       const decodedState = decodeURIComponent(state);
-      console.log('[handleAuthCallback] State:', decodedState);
       // Don't redirect to /login to avoid loops
       if (!decodedState.includes('/login')) {
-        console.log('[handleAuthCallback] Redirecting to state:', decodedState);
         window.location.href = decodedState;
         return true;
       }
     }
 
-    console.log('[handleAuthCallback] Clearing hash and returning success');
     window.history.replaceState({}, '', window.location.pathname);
     return true;
-  } else {
-    console.log('[handleAuthCallback] No token found in URL');
   }
   return false;
 }

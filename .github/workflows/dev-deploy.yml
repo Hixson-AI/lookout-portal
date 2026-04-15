@@ -95,11 +95,20 @@ jobs:
           
           echo "Adding custom domain $DOMAIN to Fly.io app..."
           flyctl certs add "$DOMAIN" --app "$APP_NAME" 2>/dev/null || echo "Domain already exists or certificate issuance in progress"
-          
+
+          # Add wildcard domain for tenant subdomains
+          WILDCARD_DOMAIN="*.portal.dev.client.${CLOUDFLARE_DOMAIN}"
+          echo "Adding wildcard domain $WILDCARD_DOMAIN to Fly.io app..."
+          flyctl certs add "$WILDCARD_DOMAIN" --app "$APP_NAME" 2>/dev/null || echo "Wildcard domain already exists or certificate issuance in progress"
+
           # Get DNS requirements from Fly.io cert
           echo "Retrieving DNS requirements from Fly.io cert..."
           CERT_JSON=$(flyctl certs show "$DOMAIN" --app "$APP_NAME" -j 2>/dev/null || echo '{}')
-          
+
+          # Get DNS-01 challenge for wildcard cert
+          WILDCARD_CERT_JSON=$(flyctl certs show "$WILDCARD_DOMAIN" --app "$APP_NAME" -j 2>/dev/null || echo '{}')
+          ACME_CHALLENGE=$(echo "$WILDCARD_CERT_JSON" | jq -r '.dns_requirements.acme_challenge.target // empty')
+
           IPV4=$(echo "$CERT_JSON" | jq -r '.dns_requirements.a[0] // empty')
           IPV6_1=$(echo "$CERT_JSON" | jq -r '.dns_requirements.aaaa[0] // empty')
           IPV6_2=$(echo "$CERT_JSON" | jq -r '.dns_requirements.aaaa[1] // empty')

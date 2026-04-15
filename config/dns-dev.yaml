@@ -8,6 +8,14 @@ domains:
       ssl: true
       proxy: false
       description: "Admin portal for dev environment"
+  tenants:
+    dev:
+      domain: "*.portal.dev.client.${CLOUDFLARE_DOMAIN}"
+      type: "CNAME"
+      target: "${FLY_HOSTNAME}"
+      ssl: true
+      proxy: false
+      description: "Wildcard for all tenant portal subdomains (DNS-01 cert)"
 
 cloudflare:
   zone_id: "${CLOUDFLARE_ZONE_ID}"
