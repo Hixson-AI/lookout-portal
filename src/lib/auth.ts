@@ -64,10 +64,11 @@ export function login(): void {
     oauthRedirectUri = `${window.location.protocol}//${parts.join('.')}`;
   }
 
-  // Pass tenant subdomain as state for redirect after OAuth
-  const state = subdomain || window.location.href;
+  // Pass tenant subdomain as state for redirect after OAuth (base64-encoded JSON like control plane expects)
+  const statePayload = JSON.stringify({ redirectUri: oauthRedirectUri, originalState: subdomain || window.location.href });
+  const encodedState = Buffer.from(statePayload).toString('base64');
   const controlPlaneUrl = import.meta.env.VITE_CONTROL_PLANE_URL;
-  const authUrl = `${controlPlaneUrl}/auth/google?redirect_uri=${encodeURIComponent(oauthRedirectUri)}&state=${encodeURIComponent(state)}`;
+  const authUrl = `${controlPlaneUrl}/auth/google?redirect_uri=${encodeURIComponent(oauthRedirectUri)}&state=${encodeURIComponent(encodedState)}`;
   window.location.href = authUrl;
 }
 
