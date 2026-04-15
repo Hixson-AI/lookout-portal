@@ -130,6 +130,7 @@ jobs:
           echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
           echo "ownership_name=$OWNERSHIP_NAME" >> $GITHUB_OUTPUT
           echo "ownership_value=$OWNERSHIP_VALUE" >> $GITHUB_OUTPUT
+          echo "acme_challenge=$ACME_CHALLENGE" >> $GITHUB_OUTPUT
           
           # Set up secrets — portal only needs build-time vars as runtime secrets for static build
           echo "Setting up secrets..."

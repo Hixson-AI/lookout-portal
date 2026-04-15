@@ -125,29 +125,33 @@ class DnsManager {
   }
 
   private async syncRecord(service: string, env: string, config: DomainConfig): Promise<void> {
-    // Use Fly.io IPs if available, otherwise use CNAME target from YAML or Fly.io hostname
+    // Respect the type from config - if it's CNAME, use CNAME regardless of Fly.io IPs
     const recordType = config.type;
     let recordTarget = config.target;
 
     console.log(`    Fly.io IPs received: ipv4=${this.flyIps?.ipv4}, ipv6_1=${this.flyIps?.ipv6_1}, ipv6_2=${this.flyIps?.ipv6_2}`);
     console.log(`    Fly.io hostname: ${this.flyHostname}`);
 
-    if (this.flyIps?.ipv4 && this.flyIps.ipv6_1 &&
+    // For CNAME records, use CNAME target even if Fly.io IPs are available
+    if (recordType === 'CNAME') {
+      // Use Fly.io hostname if available, otherwise use YAML target
+      if (this.flyHostname) {
+        recordTarget = this.flyHostname;
+      }
+      console.log(`  ${env}: ${config.domain} (CNAME → ${recordTarget})`);
+    } else if (this.flyIps?.ipv4 && this.flyIps.ipv6_1 &&
         this.flyIps.ipv4 !== '' && this.flyIps.ipv6_1 !== '') {
-      // Use A/AAAA records with Fly.io IPs instead of CNAME
+      // Use A/AAAA records with Fly.io IPs for non-CNAME types
       console.log(`  ${env}: ${config.domain} (using Fly.io IPs)`);
       await this.syncFlyIpsRecord(config);
       return;
-    }
-
-    console.log(`    ⚠️  Not all Fly.io IPs present, falling back to CNAME`);
-
-    // Use Fly.io hostname if available for CNAME, otherwise use YAML target
-    if (this.flyHostname && config.type === 'CNAME') {
-      recordTarget = this.flyHostname;
-      console.log(`  ${env}: ${config.domain} (CNAME → ${recordTarget})`);
     } else {
-      console.log(`  ${env}: ${config.domain} (${config.type} → ${config.target})`);
+      console.log(`    ⚠️  Not all Fly.io IPs present, falling back to CNAME`);
+      // Use Fly.io hostname if available for CNAME, otherwise use YAML target
+      if (this.flyHostname && config.type === 'CNAME') {
+        recordTarget = this.flyHostname;
+      }
+      console.log(`  ${env}: ${config.domain} (${config.type} → ${recordTarget})`);
     }
 
     if (this.dryRun) {
