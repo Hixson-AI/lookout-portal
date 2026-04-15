@@ -61,7 +61,7 @@ export async function handleAuthCallback(): Promise<boolean> {
   // Google OAuth returns token in URL fragment
   const fragment = window.location.hash.substring(1); // Remove '#'
   const params = new URLSearchParams(fragment);
-  const googleToken = params.get('access_token');
+  const googleToken = params.get('id_token');
   const state = params.get('state'); // Get the state parameter with tenant destination
 
   if (googleToken) {
