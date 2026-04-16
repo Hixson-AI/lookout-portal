@@ -50,7 +50,7 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
   const fetchAiKeys = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_CONTROL_PLANE_URL}/tenants/${tenant.id}/ai-keys`, {
+      const response = await fetch(`${import.meta.env.VITE_CONTROL_PLANE_URL}/v1/tenants/${tenant.id}/ai-keys`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -82,7 +82,7 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
         body.limitReset = limitReset;
       }
 
-      const response = await fetch(`${import.meta.env.VITE_CONTROL_PLANE_URL}/tenants/${tenant.id}/ai-keys`, {
+      const response = await fetch(`${import.meta.env.VITE_CONTROL_PLANE_URL}/v1/tenants/${tenant.id}/ai-keys`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -113,7 +113,7 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_CONTROL_PLANE_URL}/tenants/${tenant.id}/ai-keys/${provider}`, {
+      const response = await fetch(`${import.meta.env.VITE_CONTROL_PLANE_URL}/v1/tenants/${tenant.id}/ai-keys/${provider}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -134,7 +134,7 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
   const handleViewKey = async (keyId: string, provider: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_CONTROL_PLANE_URL}/tenants/${tenant.id}/ai-keys/${provider}/decrypt`, {
+      const response = await fetch(`${import.meta.env.VITE_CONTROL_PLANE_URL}/v1/tenants/${tenant.id}/ai-keys/${provider}/decrypt`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
