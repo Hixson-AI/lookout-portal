@@ -2,12 +2,30 @@ import * as React from "react"
 import { cn } from "../../lib/utils"
 
 const Dialog = ({ open, onOpenChange, children }: { open: boolean; onOpenChange: (open: boolean) => void; children: React.ReactNode }) => {
-  if (!open) return null
+  // Clone children to pass onOpenChange to DialogTrigger
+  const childrenWithProps = React.Children.map(children, (child) => {
+    if (React.isValidElement(child) && child.type === DialogTrigger) {
+      return React.cloneElement(child, { onOpenChange } as any);
+    }
+    return child;
+  });
+
+  if (!open) {
+    // When closed, only render the DialogTrigger (if it exists)
+    const trigger = React.Children.toArray(children).find(
+      (child) => React.isValidElement(child) && child.type === DialogTrigger
+    );
+    if (trigger) {
+      return React.cloneElement(trigger as React.ReactElement, { onOpenChange } as any);
+    }
+    return null;
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-black/50" onClick={() => onOpenChange(false)} />
       <div className="relative z-50 card-elevated rounded-lg p-6 max-w-md w-full mx-4 fade-in" style={{ backgroundColor: 'var(--bg-card)' }}>
-        {children}
+        {childrenWithProps}
       </div>
     </div>
   )
@@ -33,11 +51,11 @@ const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
   <div className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 pt-4", className)} {...props} />
 )
 
-const DialogTrigger = ({ asChild, children, onClick }: { asChild?: boolean; children: React.ReactNode; onClick?: () => void }) => {
+const DialogTrigger = ({ asChild, children, onOpenChange }: { asChild?: boolean; children: React.ReactNode; onOpenChange?: (open: boolean) => void }) => {
   if (asChild) {
     return <>{children}</>
   }
-  return <button onClick={onClick}>{children}</button>
+  return <button onClick={() => onOpenChange?.(true)}>{children}</button>
 }
 
 export { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter, DialogTrigger }
