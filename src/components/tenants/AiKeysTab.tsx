@@ -41,6 +41,7 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
 
   useEffect(() => {
     fetchAiKeys();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenant.id]);
 
   const fetchAiKeys = async () => {

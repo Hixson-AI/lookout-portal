@@ -58,6 +58,7 @@ export function UsageTab({ tenant }: UsageTabProps) {
     if (startDate && endDate) {
       fetchUsage();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenant.id, startDate, endDate]);
 
   const fetchUsage = async () => {
