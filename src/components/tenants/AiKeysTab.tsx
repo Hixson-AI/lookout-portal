@@ -5,7 +5,7 @@ import { Badge } from '../ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Plus, Trash2, Key } from 'lucide-react';
+import { Plus, Trash2, Key, Eye, EyeOff, Copy, Check, Sparkles } from 'lucide-react';
 
 interface Tenant {
   id: string;
@@ -38,6 +38,9 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
   const [apiKey, setApiKey] = useState('');
   const [creditLimit, setCreditLimit] = useState<number | undefined>();
   const [limitReset, setLimitReset] = useState<'daily' | 'weekly' | 'monthly'>('monthly');
+  const [visibleKeys, setVisibleKeys] = useState<Record<string, boolean>>({});
+  const [decryptedKeys, setDecryptedKeys] = useState<Record<string, string>>({});
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAiKeys();
@@ -104,7 +107,7 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
   };
 
   const handleDeleteKey = async (provider: string) => {
-    if (!confirm(`Are you sure you want to delete the ${provider} key?`)) {
+    if (!confirm(`Are you sure you want to delete the ${provider} key? This action cannot be undone.`)) {
       return;
     }
 
@@ -125,6 +128,38 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
     } catch (error) {
       console.error('Failed to delete AI key:', error);
       alert('Failed to delete AI key');
+    }
+  };
+
+  const handleViewKey = async (keyId: string, provider: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.VITE_CONTROL_PLANE_URL}/tenants/${tenant.id}/ai-keys/${provider}/decrypt`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setDecryptedKeys(prev => ({ ...prev, [keyId]: data.data.key }));
+        setVisibleKeys(prev => ({ ...prev, [keyId]: true }));
+      } else {
+        alert('Failed to decrypt AI key');
+      }
+    } catch (error) {
+      console.error('Failed to decrypt AI key:', error);
+      alert('Failed to decrypt AI key');
+    }
+  };
+
+  const handleCopyKey = async (key: string, keyId: string) => {
+    try {
+      await navigator.clipboard.writeText(key);
+      setCopiedKey(keyId);
+      setTimeout(() => setCopiedKey(null), 2000);
+    } catch (error) {
+      console.error('Failed to copy key:', error);
     }
   };
 
@@ -149,10 +184,13 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">AI Keys</h2>
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-purple-500" />
+            AI Keys
+          </h2>
           <p style={{ color: 'var(--text-secondary)' }}>
             Manage AI provider keys for this tenant. 
-            {tenant.profile === 'shared' ? ' Shared tenants use OpenRouter.' : ' Dedicated tenants use Anthropic.'}
+            {tenant.profile === 'shared' ? ' Shared tenants use OpenRouter for non-PHI workloads.' : ' Dedicated tenants use Anthropic for PHI workloads under BAA.'}
           </p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -239,55 +277,82 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
       </div>
 
       {aiKeys.length === 0 ? (
-        <Card className="p-8 text-center">
-          <Key className="h-12 w-12 mx-auto mb-4" style={{ color: 'var(--text-secondary)' }} />
-          <p style={{ color: 'var(--text-secondary)' }}>No AI keys configured</p>
-          <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
+        <Card className="p-12 text-center border-dashed">
+          <Key className="h-16 w-16 mx-auto mb-4 opacity-50" style={{ color: 'var(--text-secondary)' }} />
+          <h3 className="text-lg font-semibold mb-2">No AI keys configured</h3>
+          <p style={{ color: 'var(--text-secondary)' }}>
             Add an AI key to enable AI features for this tenant
           </p>
         </Card>
       ) : (
         <div className="grid gap-4">
           {aiKeys.map((key) => (
-            <Card key={key.id} className="p-4">
+            <Card key={key.id} className="p-6 hover:shadow-lg transition-shadow">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge className={getProviderBadgeColor(key.provider)}>
-                      {key.provider}
+                  <div className="flex items-center gap-2 mb-3">
+                    <Badge className={`${getProviderBadgeColor(key.provider)} text-white font-medium`}>
+                      {key.provider === 'openrouter' ? 'OpenRouter' : 'Anthropic'}
                     </Badge>
-                    <Badge className={getStatusBadgeColor(key.status)}>
+                    <Badge className={`${getStatusBadgeColor(key.status)} text-white`}>
                       {key.status}
                     </Badge>
                   </div>
-                  <div className="space-y-1 text-sm">
-                    <p>
-                      <span style={{ color: 'var(--text-secondary)' }}>Key Prefix:</span>{' '}
-                      <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
-                        {key.key_prefix}
+                  
+                  <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border" style={{ borderColor: 'var(--border)' }}>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 font-mono text-sm break-all">
+                        {visibleKeys[key.id] ? decryptedKeys[key.id] || 'Loading...' : `${key.key_prefix}••••••••••••••••`}
                       </code>
-                    </p>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => {
+                          if (!visibleKeys[key.id]) {
+                            handleViewKey(key.id, key.provider);
+                          } else {
+                            setVisibleKeys(prev => ({ ...prev, [key.id]: false }));
+                          }
+                        }}
+                      >
+                        {visibleKeys[key.id] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                      {visibleKeys[key.id] && decryptedKeys[key.id] && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleCopyKey(decryptedKeys[key.id]!, key.id)}
+                        >
+                          {copiedKey === key.id ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                     {key.credit_limit && (
-                      <p>
-                        <span style={{ color: 'var(--text-secondary)' }}>Credit Limit:</span>{' '}
-                        ${key.credit_limit}
-                      </p>
+                      <div>
+                        <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Credit Limit</p>
+                        <p className="font-semibold">${key.credit_limit}</p>
+                      </div>
                     )}
                     {key.limit_reset && (
-                      <p>
-                        <span style={{ color: 'var(--text-secondary)' }}>Reset:</span>{' '}
-                        {key.limit_reset}
-                      </p>
+                      <div>
+                        <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Reset</p>
+                        <p className="font-semibold capitalize">{key.limit_reset}</p>
+                      </div>
                     )}
-                    <p>
-                      <span style={{ color: 'var(--text-secondary)' }}>Created:</span>{' '}
-                      {new Date(key.created_at).toLocaleDateString()}
-                    </p>
+                    <div>
+                      <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Created</p>
+                      <p className="font-semibold">{new Date(key.created_at).toLocaleDateString()}</p>
+                    </div>
                     {key.last_used_at && (
-                      <p>
-                        <span style={{ color: 'var(--text-secondary)' }}>Last Used:</span>{' '}
-                        {new Date(key.last_used_at).toLocaleDateString()}
-                      </p>
+                      <div>
+                        <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Last Used</p>
+                        <p className="font-semibold">{new Date(key.last_used_at).toLocaleDateString()}</p>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -295,7 +360,7 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
                   variant="ghost"
                   size="icon"
                   onClick={() => handleDeleteKey(key.provider)}
-                  className="text-red-500 hover:text-red-700"
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
