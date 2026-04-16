@@ -5,6 +5,8 @@ import { Button } from '../components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
 import { OverviewTab } from '../components/tenants/OverviewTab';
 import { SettingsTab } from '../components/tenants/SettingsTab';
+import { AiKeysTab } from '../components/tenants/AiKeysTab';
+import { UsageTab } from '../components/tenants/UsageTab';
 import { ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 
@@ -48,10 +50,18 @@ export function TenantDetail() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="ai-keys">AI Keys</TabsTrigger>
+            <TabsTrigger value="usage">Usage</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
           <TabsContent value="overview" activeValue={activeTab}>
             <OverviewTab tenant={tenant} />
+          </TabsContent>
+          <TabsContent value="ai-keys" activeValue={activeTab}>
+            <AiKeysTab tenant={tenant} />
+          </TabsContent>
+          <TabsContent value="usage" activeValue={activeTab}>
+            <UsageTab tenant={tenant} />
           </TabsContent>
           <TabsContent value="settings" activeValue={activeTab}>
             <SettingsTab tenant={tenant} />

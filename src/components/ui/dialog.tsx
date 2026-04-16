@@ -33,4 +33,11 @@ const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
   <div className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 pt-4", className)} {...props} />
 )
 
-export { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter }
+const DialogTrigger = ({ asChild, children, onClick }: { asChild?: boolean; children: React.ReactNode; onClick?: () => void }) => {
+  if (asChild) {
+    return <>{children}</>
+  }
+  return <button onClick={onClick}>{children}</button>
+}
+
+export { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter, DialogTrigger }
