@@ -1,4 +1,4 @@
-import { isJwtExpired, clearJwt } from './auth';
+import { clearJwt } from './auth';
 
 const CONTROL_PLANE_URL = import.meta.env.VITE_CONTROL_PLANE_URL;
 
