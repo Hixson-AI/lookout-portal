@@ -5,7 +5,7 @@ const Dialog = ({ open, onOpenChange, children }: { open: boolean; onOpenChange:
   // Clone children to pass onOpenChange to DialogTrigger
   const childrenWithProps = React.Children.map(children, (child) => {
     if (React.isValidElement(child) && child.type === DialogTrigger) {
-      return React.cloneElement(child, { onOpenChange } as any);
+      return React.cloneElement(child, { onOpenChange } as React.HTMLAttributes<HTMLElement>);
     }
     return child;
   });
@@ -16,7 +16,7 @@ const Dialog = ({ open, onOpenChange, children }: { open: boolean; onOpenChange:
       (child) => React.isValidElement(child) && child.type === DialogTrigger
     );
     if (trigger) {
-      return React.cloneElement(trigger as React.ReactElement, { onOpenChange } as any);
+      return React.cloneElement(trigger as React.ReactElement, { onOpenChange } as React.HTMLAttributes<HTMLElement>);
     }
     return null;
   }
@@ -55,7 +55,7 @@ const DialogTrigger = ({ asChild, children, onOpenChange }: { asChild?: boolean;
   if (asChild && React.isValidElement(children)) {
     return React.cloneElement(children, {
       onClick: () => onOpenChange?.(true)
-    } as any);
+    } as React.HTMLAttributes<HTMLElement>);
   }
   return <button onClick={() => onOpenChange?.(true)}>{children}</button>
 }
