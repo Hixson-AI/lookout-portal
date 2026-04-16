@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Plus, Trash2, Key, Eye, EyeOff, Copy, Check, Sparkles } from 'lucide-react';
@@ -193,14 +193,14 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
             {tenant.profile === 'shared' ? ' Shared tenants use OpenRouter for non-PHI workloads.' : ' Dedicated tenants use Anthropic for PHI workloads under BAA.'}
           </p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add AI Key
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add AI Key
+        </Button>
+      </div>
+
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent>
             <DialogHeader>
               <DialogTitle>Add AI Key</DialogTitle>
             </DialogHeader>
@@ -274,7 +274,6 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
 
       {aiKeys.length === 0 ? (
         <Card className="p-12 text-center border-dashed">
