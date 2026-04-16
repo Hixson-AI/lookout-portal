@@ -1,4 +1,4 @@
-import { getJwt, isJwtExpired, clearJwt } from './auth';
+import { isJwtExpired, clearJwt } from './auth';
 
 const CONTROL_PLANE_URL = import.meta.env.VITE_CONTROL_PLANE_URL;
 
@@ -35,25 +35,11 @@ async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = getJwt();
-  if (!token) {
-    clearJwt();
-    window.location.href = '/login';
-    throw new Error('No authentication token');
-  }
-
-  // Check if token is expired before making request
-  if (isJwtExpired(token)) {
-    clearJwt();
-    window.location.href = '/login';
-    throw new Error('Token expired');
-  }
-
   const response = await fetch(`${CONTROL_PLANE_URL}${endpoint}`, {
     ...options,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
       ...options.headers,
     },
   });

@@ -63,18 +63,15 @@ export function UsageTab({ tenant }: UsageTabProps) {
 
   const fetchUsage = async () => {
     try {
-      const token = localStorage.getItem('token');
       const params = new URLSearchParams({
         startDate,
         endDate,
       });
-      
+
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/tenants/${tenant.id}/usage?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        credentials: 'include',
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setUsage(data.data.usage || []);

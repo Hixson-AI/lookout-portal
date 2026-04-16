@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Plus, Trash2, Key, Eye, EyeOff, Copy, Check, Sparkles } from 'lucide-react';
-import { getJwt, isJwtExpired, clearJwt } from '../../lib/auth';
+import { clearJwt } from '../../lib/auth';
 
 interface Tenant {
   id: string;
@@ -51,17 +51,8 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
 
   const fetchAiKeys = async () => {
     try {
-      const token = getJwt();
-      if (!token || isJwtExpired(token)) {
-        clearJwt();
-        window.location.href = '/login';
-        return;
-      }
-
       const response = await fetch(`${import.meta.env.VITE_CONTROL_PLANE_URL}/v1/tenants/${tenant.id}/ai-keys`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        credentials: 'include',
       });
 
       if (response.status === 401) {
@@ -75,7 +66,7 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
       }
 
       const data = await response.json();
-      setAiKeys(data.data);
+      setAiKeys(data.data || []);
     } catch (error) {
       console.error('Error fetching AI keys:', error);
     } finally {
@@ -85,13 +76,6 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
 
   const handleCreateKey = async () => {
     try {
-      const token = getJwt();
-      if (!token || isJwtExpired(token)) {
-        clearJwt();
-        window.location.href = '/login';
-        return;
-      }
-
       const body: { provider: string; apiKey?: string; creditLimit?: number; limitReset?: string } = { provider };
 
       if (provider === 'anthropic') {
@@ -106,8 +90,8 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
 
       const response = await fetch(`${import.meta.env.VITE_CONTROL_PLANE_URL}/v1/tenants/${tenant.id}/ai-keys`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(body),
@@ -140,18 +124,9 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
     }
 
     try {
-      const token = getJwt();
-      if (!token || isJwtExpired(token)) {
-        clearJwt();
-        window.location.href = '/login';
-        return;
-      }
-
       const response = await fetch(`${import.meta.env.VITE_CONTROL_PLANE_URL}/v1/tenants/${tenant.id}/ai-keys/${provider}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        credentials: 'include',
       });
 
       if (response.status === 401) {
@@ -172,17 +147,8 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
 
   const handleViewKey = async (keyId: string, provider: string) => {
     try {
-      const token = getJwt();
-      if (!token || isJwtExpired(token)) {
-        clearJwt();
-        window.location.href = '/login';
-        return;
-      }
-
       const response = await fetch(`${import.meta.env.VITE_CONTROL_PLANE_URL}/v1/tenants/${tenant.id}/ai-keys/${provider}/decrypt`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        credentials: 'include',
       });
 
       if (response.status === 401) {
@@ -326,7 +292,7 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
           </DialogContent>
         </Dialog>
 
-      {aiKeys.length === 0 ? (
+      {!aiKeys || aiKeys.length === 0 ? (
         <Card className="p-12 text-center border-dashed">
           <Key className="h-16 w-16 mx-auto mb-4 opacity-50" style={{ color: 'var(--text-secondary)' }} />
           <h3 className="text-lg font-semibold mb-2">No AI keys configured</h3>
