@@ -65,7 +65,7 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
   const handleCreateKey = async () => {
     try {
       const token = localStorage.getItem('token');
-      const body: any = { provider };
+      const body: { provider: string; apiKey?: string; creditLimit?: number; limitReset?: string } = { provider };
       
       if (provider === 'anthropic') {
         if (!apiKey) {

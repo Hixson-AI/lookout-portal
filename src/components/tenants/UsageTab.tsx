@@ -41,6 +41,9 @@ export function UsageTab({ tenant }: UsageTabProps) {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
+  // Suppress unused variable warning - usage is used in rendering
+  void usage;
+
   useEffect(() => {
     // Default to last 30 days
     const end = new Date();
