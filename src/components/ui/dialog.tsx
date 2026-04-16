@@ -52,8 +52,10 @@ const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
 )
 
 const DialogTrigger = ({ asChild, children, onOpenChange }: { asChild?: boolean; children: React.ReactNode; onOpenChange?: (open: boolean) => void }) => {
-  if (asChild) {
-    return <>{children}</>
+  if (asChild && React.isValidElement(children)) {
+    return React.cloneElement(children, {
+      onClick: () => onOpenChange?.(true)
+    } as any);
   }
   return <button onClick={() => onOpenChange?.(true)}>{children}</button>
 }
