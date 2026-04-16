@@ -43,6 +43,25 @@ export function parseJwt(token: string): JwtPayload | null {
   }
 }
 
+export function isJwtExpired(token: string): boolean {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const payload = JSON.parse(jsonPayload);
+    const exp = payload.exp;
+    if (!exp) return false;
+    return exp * 1000 < Date.now();
+  } catch (e) {
+    return true;
+  }
+}
+
 export function getUser(): JwtPayload | null {
   const token = getJwt();
   if (!token) return null;

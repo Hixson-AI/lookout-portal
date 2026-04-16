@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Plus, Trash2, Key, Eye, EyeOff, Copy, Check, Sparkles } from 'lucide-react';
+import { getJwt, isJwtExpired, clearJwt } from '../../lib/auth';
 
 interface Tenant {
   id: string;
@@ -17,13 +18,14 @@ interface Tenant {
 interface AiKey {
   id: string;
   provider: 'openrouter' | 'anthropic';
+  status: 'active' | 'disabled' | 'revoked';
   key_prefix: string;
   provider_key_id: string;
   credit_limit: number | null;
   limit_reset: string | null;
-  status: 'active' | 'disabled' | 'revoked';
   last_used_at: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 interface AiKeysTabProps {
@@ -49,18 +51,33 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
 
   const fetchAiKeys = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = getJwt();
+      if (!token || isJwtExpired(token)) {
+        clearJwt();
+        window.location.href = '/login';
+        return;
+      }
+
       const response = await fetch(`${import.meta.env.VITE_CONTROL_PLANE_URL}/v1/tenants/${tenant.id}/ai-keys`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
-      if (response.ok) {
-        const data = await response.json();
-        setAiKeys(data.data || []);
+
+      if (response.status === 401) {
+        clearJwt();
+        window.location.href = '/login';
+        return;
       }
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch AI keys');
+      }
+
+      const data = await response.json();
+      setAiKeys(data.data);
     } catch (error) {
-      console.error('Failed to fetch AI keys:', error);
+      console.error('Error fetching AI keys:', error);
     } finally {
       setIsLoading(false);
     }
@@ -68,17 +85,22 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
 
   const handleCreateKey = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = getJwt();
+      if (!token || isJwtExpired(token)) {
+        clearJwt();
+        window.location.href = '/login';
+        return;
+      }
+
       const body: { provider: string; apiKey?: string; creditLimit?: number; limitReset?: string } = { provider };
-      
+
       if (provider === 'anthropic') {
-        if (!apiKey) {
-          alert('API key is required for Anthropic');
-          return;
-        }
         body.apiKey = apiKey;
-      } else {
-        if (creditLimit) body.creditLimit = creditLimit;
+      }
+      if (creditLimit !== undefined) {
+        body.creditLimit = creditLimit;
+      }
+      if (limitReset) {
         body.limitReset = limitReset;
       }
 
@@ -91,18 +113,24 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
         body: JSON.stringify(body),
       });
 
-      if (response.ok) {
-        setIsCreateDialogOpen(false);
-        setApiKey('');
-        setCreditLimit(undefined);
-        fetchAiKeys();
-      } else {
-        const error = await response.json();
-        alert(error.error?.message || 'Failed to create AI key');
+      if (response.status === 401) {
+        clearJwt();
+        window.location.href = '/login';
+        return;
       }
+
+      if (!response.ok) {
+        throw new Error('Failed to create AI key');
+      }
+
+      setIsCreateDialogOpen(false);
+      setProvider('openrouter');
+      setApiKey('');
+      setCreditLimit(undefined);
+      setLimitReset('monthly');
+      fetchAiKeys();
     } catch (error) {
-      console.error('Failed to create AI key:', error);
-      alert('Failed to create AI key');
+      console.error('Error creating AI key:', error);
     }
   };
 
@@ -112,7 +140,13 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      const token = getJwt();
+      if (!token || isJwtExpired(token)) {
+        clearJwt();
+        window.location.href = '/login';
+        return;
+      }
+
       const response = await fetch(`${import.meta.env.VITE_CONTROL_PLANE_URL}/v1/tenants/${tenant.id}/ai-keys/${provider}`, {
         method: 'DELETE',
         headers: {
@@ -120,35 +154,52 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
         },
       });
 
-      if (response.ok) {
-        fetchAiKeys();
-      } else {
-        alert('Failed to delete AI key');
+      if (response.status === 401) {
+        clearJwt();
+        window.location.href = '/login';
+        return;
       }
+
+      if (!response.ok) {
+        throw new Error('Failed to delete AI key');
+      }
+
+      fetchAiKeys();
     } catch (error) {
-      console.error('Failed to delete AI key:', error);
-      alert('Failed to delete AI key');
+      console.error('Error deleting AI key:', error);
     }
   };
 
   const handleViewKey = async (keyId: string, provider: string) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = getJwt();
+      if (!token || isJwtExpired(token)) {
+        clearJwt();
+        window.location.href = '/login';
+        return;
+      }
+
       const response = await fetch(`${import.meta.env.VITE_CONTROL_PLANE_URL}/v1/tenants/${tenant.id}/ai-keys/${provider}/decrypt`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setDecryptedKeys(prev => ({ ...prev, [keyId]: data.data.key }));
-        setVisibleKeys(prev => ({ ...prev, [keyId]: true }));
-      } else {
-        alert('Failed to decrypt AI key');
+      if (response.status === 401) {
+        clearJwt();
+        window.location.href = '/login';
+        return;
       }
+
+      if (!response.ok) {
+        throw new Error('Failed to decrypt AI key');
+      }
+
+      const data = await response.json();
+      setDecryptedKeys(prev => ({ ...prev, [keyId]: data.data.key }));
+      setVisibleKeys(prev => ({ ...prev, [keyId]: true }));
     } catch (error) {
-      console.error('Failed to decrypt AI key:', error);
+      console.error('Error decrypting AI key:', error);
       alert('Failed to decrypt AI key');
     }
   };
