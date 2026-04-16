@@ -69,22 +69,25 @@ export function getUser(): JwtPayload | null {
 }
 
 export function login(): void {
-  const redirectUri = window.location.origin;
   const hostname = window.location.hostname;
-  const subdomain = hostname.split('.')[0]; // First subdomain segment (e.g., "hixson-ai" from "hixson-ai.portal.dev.client.cumberlandstrategygroup.com")
+  const parts = hostname.split('.');
   
   // Always use main portal domain as OAuth redirect_uri (Google doesn't support wildcards)
-  // Extract base domain by removing tenant subdomain (second subdomain is already "portal")
-  let oauthRedirectUri = redirectUri;
-  if (subdomain && subdomain !== 'portal') {
-    // Remove tenant subdomain for OAuth redirect (e.g., hixson-ai.portal.dev... → portal.dev...)
-    const parts = hostname.split('.');
-    parts.shift(); // Remove first subdomain
+  // Expected structure: portal.dev.client.domain or tenant.portal.dev.client.domain
+  let oauthRedirectUri = window.location.origin;
+  
+  // If we're on a tenant subdomain (e.g., hixson-ai.portal.dev.client.domain),
+  // remove the tenant prefix to get the base portal domain
+  if (parts.length >= 4 && parts[1] === 'portal') {
+    // Remove first subdomain (tenant) to get portal.dev.client.domain
+    parts.shift();
     oauthRedirectUri = `${window.location.protocol}//${parts.join('.')}`;
   }
 
-  // Pass tenant subdomain as state for redirect after OAuth (control plane will re-encode it)
-  const state = subdomain || window.location.href;
+  // Pass tenant subdomain as state for redirect after OAuth
+  const tenantSubdomain = parts.length >= 4 ? hostname.split('.')[0] : null;
+  const state = tenantSubdomain || window.location.href;
+  
   const controlPlaneUrl = import.meta.env.VITE_CONTROL_PLANE_URL;
   const authUrl = `${controlPlaneUrl}/auth/google?redirect_uri=${encodeURIComponent(oauthRedirectUri)}&state=${encodeURIComponent(state)}`;
   window.location.href = authUrl;
