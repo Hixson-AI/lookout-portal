@@ -36,10 +36,7 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
-      - name: Install jq
-        run: |
-          sudo apt-get install -y jq
-
+      
       - name: Build app
         run: |
           pnpm install
