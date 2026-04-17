@@ -1,4 +1,4 @@
-import { ApiKey } from '../../lib/api';
+import type { ApiKey } from '../../lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { Button } from '../ui/button';
 import { Copy, Trash2, Eye, EyeOff } from 'lucide-react';

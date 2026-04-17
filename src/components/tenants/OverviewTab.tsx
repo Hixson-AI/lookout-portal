@@ -1,4 +1,4 @@
-import { Tenant } from '../../lib/api';
+import type { Tenant } from '../../lib/types';
 import { useApiKeys, useCreateApiKey, useDeleteApiKey } from '../../hooks/useTenant';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
@@ -6,6 +6,7 @@ import { ApiKeyList } from './ApiKeyList';
 import { ApiKeyCreateDialog } from './ApiKeyCreateDialog';
 import { useState } from 'react';
 import { Plus, Globe, Calendar, Building2, BadgeCheck } from 'lucide-react';
+import { formatDate } from '../../lib/utils/formatters';
 
 interface OverviewTabProps {
   tenant: Tenant;
@@ -18,10 +19,6 @@ export function OverviewTab({ tenant }: OverviewTabProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [createdKey, setCreatedKey] = useState<string>();
 
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleDateString();
-  };
 
   const handleCreateKey = async (label: string) => {
     try {

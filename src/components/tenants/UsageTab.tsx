@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { BarChart3, TrendingUp } from 'lucide-react';
-import { api } from '../../lib/api';
-import type { UsageRecord, UsageSummary } from '../../lib/api';
+import { useUsage } from '../../hooks/useUsage';
+import { formatCurrency, formatTokens } from '../../lib/utils/formatters';
+import { getProviderBadgeColor } from '../../lib/utils/badge-colors';
 
 interface Tenant {
   id: string;
@@ -16,66 +16,8 @@ interface UsageTabProps {
 }
 
 export function UsageTab({ tenant }: UsageTabProps) {
-  const [usage, setUsage] = useState<UsageRecord[]>([]);
-  const [summary, setSummary] = useState<UsageSummary[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const { summary, isLoading, startDate, endDate, setStartDate, setEndDate } = useUsage(tenant.id);
 
-  // Suppress unused variable warning - usage is used in rendering
-  void usage;
-
-  useEffect(() => {
-    // Default to last 30 days
-    const end = new Date();
-    const start = new Date();
-    start.setDate(start.getDate() - 30);
-    
-    setStartDate(start.toISOString().split('T')[0]);
-    setEndDate(end.toISOString().split('T')[0]);
-  }, []);
-
-  useEffect(() => {
-    if (startDate && endDate) {
-      fetchUsage();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tenant.id, startDate, endDate]);
-
-  const fetchUsage = async () => {
-    try {
-      const data = await api.getUsage(tenant.id, startDate, endDate);
-      setUsage(Array.isArray(data.usage) ? data.usage : []);
-      setSummary(Array.isArray(data.summary) ? data.summary : []);
-    } catch (error) {
-      console.error('Failed to fetch usage:', error);
-      setUsage([]);
-      setSummary([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const getProviderBadgeColor = (provider: string) => {
-    return provider === 'openrouter' ? 'bg-blue-500' : 'bg-purple-500';
-  };
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value);
-  };
-
-  const formatTokens = (value: number) => {
-    if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(2)}M`;
-    }
-    if (value >= 1000) {
-      return `${(value / 1000).toFixed(2)}K`;
-    }
-    return value.toString();
-  };
 
   if (isLoading) {
     return <div className="text-center py-8" style={{ color: 'var(--text-secondary)' }}>Loading usage data...</div>;

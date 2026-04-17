@@ -1,4 +1,4 @@
-import { Tenant } from '../../lib/api';
+import type { Tenant } from '../../lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Building2, Calendar } from 'lucide-react';

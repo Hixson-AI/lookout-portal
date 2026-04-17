@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api, Tenant } from '../lib/api';
+import { api } from '../lib/api';
+import type { Tenant } from '../lib/types';
 
 export function useTenants() {
   return useQuery({
