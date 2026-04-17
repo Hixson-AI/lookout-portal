@@ -8,13 +8,9 @@ export function useAuth() {
 
   useEffect(() => {
     // Check for auth callback on mount
-    handleAuthCallback().then((hasCallback) => {
-      if (hasCallback) {
-        // handleAuthCallback already performed the redirect, don't reload
-        return;
-      }
-
-      // Get current user
+    handleAuthCallback().then(() => {
+      // Always resolve user state — if handleAuthCallback redirected,
+      // the page navigates away and these calls are harmless no-ops.
       const currentUser = getUser();
       setUser(currentUser);
       setLoading(false);
