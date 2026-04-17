@@ -1,4 +1,4 @@
-import { clearJwt } from './auth';
+import { clearJwt, getJwt } from './auth';
 
 const CONTROL_PLANE_URL = import.meta.env.VITE_CONTROL_PLANE_URL;
 
@@ -35,11 +35,13 @@ async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
+  const token = getJwt();
   const response = await fetch(`${CONTROL_PLANE_URL}${endpoint}`, {
     ...options,
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   });
