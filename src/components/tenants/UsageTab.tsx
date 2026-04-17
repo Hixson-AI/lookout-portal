@@ -45,10 +45,12 @@ export function UsageTab({ tenant }: UsageTabProps) {
   const fetchUsage = async () => {
     try {
       const data = await api.getUsage(tenant.id, startDate, endDate);
-      setUsage(data.usage || []);
-      setSummary(data.summary || []);
+      setUsage(Array.isArray(data.usage) ? data.usage : []);
+      setSummary(Array.isArray(data.summary) ? data.summary : []);
     } catch (error) {
       console.error('Failed to fetch usage:', error);
+      setUsage([]);
+      setSummary([]);
     } finally {
       setIsLoading(false);
     }

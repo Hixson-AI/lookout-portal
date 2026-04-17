@@ -40,9 +40,10 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
   const fetchAiKeys = async () => {
     try {
       const keys = await api.getAiKeys(tenant.id);
-      setAiKeys(keys || []);
+      setAiKeys(Array.isArray(keys) ? keys : []);
     } catch (error) {
       console.error('Error fetching AI keys:', error);
+      setAiKeys([]);
     } finally {
       setIsLoading(false);
     }
