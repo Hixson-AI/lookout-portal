@@ -1,17 +1,14 @@
 import { useNavigate } from 'react-router-dom';
-import { getUser } from '../lib/auth';
+import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Layout } from '../components/layout/Layout';
 
 export function Home() {
   const navigate = useNavigate();
-  const user = getUser();
+  const { user } = useAuth();
 
-  if (!user) {
-    navigate('/login');
-    return null;
-  }
+  if (!user) return null;
 
   return (
     <Layout>

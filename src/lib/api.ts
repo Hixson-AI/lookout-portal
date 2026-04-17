@@ -1,6 +1,13 @@
-import { clearJwt, getJwt } from './auth';
+import { getJwt } from './auth';
 
 const CONTROL_PLANE_URL = import.meta.env.VITE_CONTROL_PLANE_URL;
+const API_URL = import.meta.env.VITE_API_URL;
+
+let onAuthError: (() => void) | null = null;
+
+export function setOnAuthError(handler: () => void) {
+  onAuthError = handler;
+}
 
 // API response wrapper type
 interface ApiResponse<T> {
@@ -31,14 +38,48 @@ export interface CreateApiKeyResponse {
   apiKey: ApiKey;
 }
 
+export interface AiKey {
+  id: string;
+  provider: 'openrouter' | 'anthropic';
+  status: 'active' | 'disabled' | 'revoked';
+  key_prefix: string;
+  provider_key_id: string;
+  credit_limit: number | null;
+  limit_reset: string | null;
+  last_used_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UsageSummary {
+  provider: string;
+  model: string;
+  total_input_tokens: number;
+  total_output_tokens: number;
+  total_cost_usd: number;
+  request_count: number;
+}
+
+export interface UsageRecord {
+  id: string;
+  tenant_id: string;
+  provider: 'openrouter' | 'anthropic';
+  model: string;
+  input_tokens: number;
+  output_tokens: number;
+  cost_usd: number;
+  request_id: string;
+  created_at: string;
+}
+
 async function apiRequest<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  baseUrl: string = CONTROL_PLANE_URL
 ): Promise<T> {
   const token = getJwt();
-  const response = await fetch(`${CONTROL_PLANE_URL}${endpoint}`, {
+  const response = await fetch(`${baseUrl}${endpoint}`, {
     ...options,
-    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -47,10 +88,8 @@ async function apiRequest<T>(
   });
 
   if (!response.ok) {
-    // Handle 401 Unauthorized - token expired or invalid
     if (response.status === 401) {
-      clearJwt();
-      window.location.href = '/login';
+      if (onAuthError) onAuthError();
       throw new Error('Authentication failed');
     }
     const error = await response.text();
@@ -99,4 +138,30 @@ export const api = {
     apiRequest<void>(`/v1/tenants/${tenantId}/api-keys/${keyId}`, {
       method: 'DELETE',
     }),
+
+  // AI Keys
+  getAiKeys: (tenantId: string): Promise<AiKey[]> =>
+    apiRequest<AiKey[]>(`/v1/tenants/${tenantId}/ai-keys`),
+
+  createAiKey: (tenantId: string, data: { provider: string; apiKey?: string; creditLimit?: number; limitReset?: string }): Promise<AiKey> =>
+    apiRequest<AiKey>(`/v1/tenants/${tenantId}/ai-keys`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  deleteAiKey: (tenantId: string, provider: string): Promise<void> =>
+    apiRequest<void>(`/v1/tenants/${tenantId}/ai-keys/${provider}`, {
+      method: 'DELETE',
+    }),
+
+  decryptAiKey: (tenantId: string, provider: string): Promise<{ key: string }> =>
+    apiRequest<{ key: string }>(`/v1/tenants/${tenantId}/ai-keys/${provider}/decrypt`),
+
+  // Usage (hits lookout-api, not control plane)
+  getUsage: (tenantId: string, startDate: string, endDate: string): Promise<{ usage: UsageRecord[]; summary: UsageSummary[] }> =>
+    apiRequest<{ usage: UsageRecord[]; summary: UsageSummary[] }>(
+      `/api/v1/tenants/${tenantId}/usage?startDate=${startDate}&endDate=${endDate}`,
+      {},
+      API_URL
+    ),
 };

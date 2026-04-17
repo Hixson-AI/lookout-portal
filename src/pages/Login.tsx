@@ -1,52 +1,11 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { login, getUser, handleAuthCallback } from '../lib/auth';
+import { login } from '../lib/auth';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 
 export function Login() {
-  console.log('[Login] Component mounting');
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    console.log('[Login] useEffect running');
-    console.log('[Login] Current URL:', window.location.href);
-    console.log('[Login] Hash:', window.location.hash);
-
-    // Handle OAuth callback first
-    handleAuthCallback().then((hasCallback) => {
-      console.log('[Login] handleAuthCallback returned:', hasCallback);
-      if (hasCallback) {
-        // Callback was processed, navigate to tenants
-        console.log('[Login] Navigating to /tenants');
-        navigate('/tenants');
-        return;
-      }
-
-      // Check if user is already logged in
-      const user = getUser();
-      console.log('[Login] User from localStorage:', user);
-      if (user) {
-        console.log('[Login] User found, navigating to /tenants');
-        navigate('/tenants');
-      }
-      console.log('[Login] Setting loading to false');
-      setLoading(false);
-    });
-  }, [navigate]);
-
   const handleLogin = () => {
     login();
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center auth-bg p-4">
-        <div className="text-white text-lg">Loading...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center auth-bg p-4">

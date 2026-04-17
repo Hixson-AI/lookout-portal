@@ -6,26 +6,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Plus, Trash2, Key, Eye, EyeOff, Copy, Check, Sparkles } from 'lucide-react';
-import { clearJwt } from '../../lib/auth';
+import { api } from '../../lib/api';
+import type { AiKey } from '../../lib/api';
 
 interface Tenant {
   id: string;
   name: string;
   slug: string;
   profile?: string;
-}
-
-interface AiKey {
-  id: string;
-  provider: 'openrouter' | 'anthropic';
-  status: 'active' | 'disabled' | 'revoked';
-  key_prefix: string;
-  provider_key_id: string;
-  credit_limit: number | null;
-  limit_reset: string | null;
-  last_used_at: string | null;
-  created_at: string;
-  updated_at: string;
 }
 
 interface AiKeysTabProps {
@@ -51,22 +39,8 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
 
   const fetchAiKeys = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_CONTROL_PLANE_URL}/v1/tenants/${tenant.id}/ai-keys`, {
-        credentials: 'include',
-      });
-
-      if (response.status === 401) {
-        clearJwt();
-        window.location.href = '/login';
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch AI keys');
-      }
-
-      const data = await response.json();
-      setAiKeys(data.data || []);
+      const keys = await api.getAiKeys(tenant.id);
+      setAiKeys(keys || []);
     } catch (error) {
       console.error('Error fetching AI keys:', error);
     } finally {
@@ -88,24 +62,7 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
         body.limitReset = limitReset;
       }
 
-      const response = await fetch(`${import.meta.env.VITE_CONTROL_PLANE_URL}/v1/tenants/${tenant.id}/ai-keys`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (response.status === 401) {
-        clearJwt();
-        window.location.href = '/login';
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error('Failed to create AI key');
-      }
+      await api.createAiKey(tenant.id, body);
 
       setIsCreateDialogOpen(false);
       setProvider('openrouter');
@@ -124,20 +81,7 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_CONTROL_PLANE_URL}/v1/tenants/${tenant.id}/ai-keys/${provider}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-
-      if (response.status === 401) {
-        clearJwt();
-        window.location.href = '/login';
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error('Failed to delete AI key');
-      }
+      await api.deleteAiKey(tenant.id, provider);
 
       fetchAiKeys();
     } catch (error) {
@@ -147,22 +91,8 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
 
   const handleViewKey = async (keyId: string, provider: string) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_CONTROL_PLANE_URL}/v1/tenants/${tenant.id}/ai-keys/${provider}/decrypt`, {
-        credentials: 'include',
-      });
-
-      if (response.status === 401) {
-        clearJwt();
-        window.location.href = '/login';
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error('Failed to decrypt AI key');
-      }
-
-      const data = await response.json();
-      setDecryptedKeys(prev => ({ ...prev, [keyId]: data.data.key }));
+      const data = await api.decryptAiKey(tenant.id, provider);
+      setDecryptedKeys(prev => ({ ...prev, [keyId]: data.key }));
       setVisibleKeys(prev => ({ ...prev, [keyId]: true }));
     } catch (error) {
       console.error('Error decrypting AI key:', error);

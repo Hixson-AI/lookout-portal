@@ -2,32 +2,13 @@ import { useState, useEffect } from 'react';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { BarChart3, TrendingUp } from 'lucide-react';
+import { api } from '../../lib/api';
+import type { UsageRecord, UsageSummary } from '../../lib/api';
 
 interface Tenant {
   id: string;
   name: string;
   slug: string;
-}
-
-interface UsageRecord {
-  id: string;
-  tenant_id: string;
-  provider: 'openrouter' | 'anthropic';
-  model: string;
-  input_tokens: number;
-  output_tokens: number;
-  cost_usd: number;
-  request_id: string;
-  created_at: string;
-}
-
-interface UsageSummary {
-  provider: string;
-  model: string;
-  total_input_tokens: number;
-  total_output_tokens: number;
-  total_cost_usd: number;
-  request_count: number;
 }
 
 interface UsageTabProps {
@@ -63,20 +44,9 @@ export function UsageTab({ tenant }: UsageTabProps) {
 
   const fetchUsage = async () => {
     try {
-      const params = new URLSearchParams({
-        startDate,
-        endDate,
-      });
-
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/tenants/${tenant.id}/usage?${params}`, {
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUsage(data.data.usage || []);
-        setSummary(data.data.summary || []);
-      }
+      const data = await api.getUsage(tenant.id, startDate, endDate);
+      setUsage(data.usage || []);
+      setSummary(data.summary || []);
     } catch (error) {
       console.error('Failed to fetch usage:', error);
     } finally {
