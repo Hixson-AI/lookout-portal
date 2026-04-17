@@ -1,15 +1,8 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import { getUser, handleAuthCallback, clearJwt } from '../lib/auth';
 import { setOnAuthError } from '../lib/api';
 import type { JwtPayload } from '../lib/auth';
-
-interface AuthContextValue {
-  user: JwtPayload | null;
-  loading: boolean;
-  logout: () => void;
-}
-
-const AuthContext = createContext<AuthContextValue | null>(null);
+import { AuthContext } from './authContextValue';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<JwtPayload | null>(null);
@@ -40,12 +33,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 }
