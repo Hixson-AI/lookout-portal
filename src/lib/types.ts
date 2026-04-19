@@ -1,3 +1,6 @@
+export type { WorkflowStep, Workflow, App, AppExecution } from './api/apps';
+export type { AppSecretMeta } from './api/app-secrets';
+
 // API response wrapper type
 export interface ApiResponse<T> {
   data: T;

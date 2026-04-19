@@ -24,7 +24,7 @@ interface Workflow {
 }
 
 export default function AppBuilder() {
-  const { user } = useAuth();
+  useAuth();
   const [workflow, setWorkflow] = useState<Workflow>({
     name: '',
     description: '',

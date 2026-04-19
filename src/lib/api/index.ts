@@ -4,6 +4,10 @@ import * as tenants from './tenants';
 import * as apiKeys from './api-keys';
 import * as aiKeys from './ai-keys';
 import * as usage from './usage';
+import * as apps from './apps';
+import * as appSecrets from './app-secrets';
+import * as steps from './steps';
+import * as agents from './agents';
 
 const CONTROL_PLANE_URL = import.meta.env.VITE_CONTROL_PLANE_URL;
 
@@ -50,9 +54,17 @@ export const api = {
   ...apiKeys,
   ...aiKeys,
   ...usage,
+  ...apps,
+  ...appSecrets,
+  ...steps,
+  ...agents,
 };
 
 export * from './tenants';
 export * from './api-keys';
 export * from './ai-keys';
 export * from './usage';
+export * from './apps';
+export * from './app-secrets';
+export * from './steps';
+export * from './agents';
