@@ -108,7 +108,8 @@ SCOPE_PREAMBLE="RULES (follow exactly):
 4. Keep every changed file under 300 lines — split if needed.
 5. All props passed to components with useEffect must use useCallback/useMemo.
 6. Run tsc mentally before finishing — no type errors allowed.
-7. Make the smallest possible change. Do not refactor unrelated code."
+7. Make the smallest possible change. Do not refactor unrelated code.
+8. NEVER change 'md:grid-cols-12', 'md:col-span-3', 'md:col-span-5', or 'md:col-span-4' to 'lg:' variants in AppBuilder.tsx — the D8 test runs at 900px where lg: breakpoints break pointer-event handling."
 
 # ── Dim-specific prompts (read from agents.json) ─────────────────────
 prompt_for_dim() {
