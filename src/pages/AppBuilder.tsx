@@ -382,10 +382,10 @@ export default function AppBuilder() {
       <div className="flex-1 overflow-hidden flex flex-col gap-3 p-3">
 
       {/* ── 3-column grid ───────────────────────────────────────────── */}
-      <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-3 min-h-0">
+      <div className="flex-1 overflow-hidden grid grid-cols-1 md:grid-cols-12 gap-3 min-h-0">
 
         {/* ── Left: Settings + Secrets ─────────────────────────────── */}
-        <div className="lg:col-span-3 flex flex-col gap-3 overflow-y-auto">
+        <div className="md:col-span-3 flex flex-col gap-3 overflow-y-auto">
 
           {/* Settings card */}
           <Card className="shadow-sm">
@@ -514,7 +514,7 @@ export default function AppBuilder() {
         </div>
 
         {/* ── Center: Canvas ───────────────────────────────────────── */}
-        <div className="lg:col-span-5 flex flex-col gap-3 min-h-0">
+        <div className="md:col-span-5 flex flex-col gap-3 min-h-0">
           <Card className="shadow-sm flex-1 flex flex-col min-h-0">
             <CardHeader className="py-3 px-4 flex-shrink-0">
               <div className="flex items-center justify-between">
@@ -611,7 +611,7 @@ export default function AppBuilder() {
         </div>
 
         {/* ── Right: Step Catalog ──────────────────────────────────── */}
-        <div className="lg:col-span-4 overflow-y-auto">
+        <div className="md:col-span-4 overflow-y-auto">
           <Card className="shadow-sm h-full">
             <CardHeader className="py-3 px-4">
               <CardTitle className="text-sm font-semibold">Step Catalog</CardTitle>
