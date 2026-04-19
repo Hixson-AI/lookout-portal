@@ -342,10 +342,11 @@ export default function AppBuilder() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={handleUndo} disabled={undoDisabled} title="Undo">
+          <Button variant="ghost" size="sm" onClick={handleUndo} disabled={undoDisabled} title="Undo (Ctrl+Z)" aria-label="Undo (Ctrl+Z)" aria-keyshortcuts="Control+z">
             <Undo2 className="h-4 w-4" />
+            <span className="hidden md:inline text-xs ml-1 text-gray-400">⌘Z</span>
           </Button>
-          <Button variant="ghost" size="sm" onClick={handleValidate} disabled={validating} title="Validate" aria-label="Validate">
+          <Button variant="ghost" size="sm" onClick={handleValidate} disabled={validating} title="Validate workflow" aria-label="Validate workflow">
             {validating ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
           </Button>
           {validateResult && (
@@ -356,11 +357,20 @@ export default function AppBuilder() {
           <Button variant="ghost" size="sm" onClick={() => setShowHelp(h => !h)} title="Help">
             <HelpCircle className="h-4 w-4" />
           </Button>
-          <Button onClick={handleSave} disabled={saving || !workflow.name} size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white">
+          <Button onClick={handleSave} disabled={saving || !workflow.name} size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white" title="Save (Ctrl+S)" aria-label="Save workflow (Ctrl+S)" aria-keyshortcuts="Control+s">
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
             Save
+            <span className="hidden md:inline text-xs ml-1 opacity-70">⌘S</span>
           </Button>
         </div>
+      </div>
+
+      {/* ── Keyboard shortcuts bar (always visible) ─────────────────────── */}
+      <div className="px-4 py-1 bg-gray-50 border-b border-gray-200 flex items-center gap-4 text-xs text-gray-400 flex-shrink-0" role="toolbar" aria-label="Keyboard shortcuts">
+        <span><kbd className="px-1 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono">Ctrl+S</kbd> Save</span>
+        <span><kbd className="px-1 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono">Ctrl+Z</kbd> Undo</span>
+        <span><kbd className="px-1 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono">Del</kbd> Remove node</span>
+        <span><kbd className="px-1 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono">Click</kbd> Select node</span>
       </div>
 
       {/* ── Help overlay ─────────────────────────────────────────────── */}
@@ -501,6 +511,13 @@ export default function AppBuilder() {
               {!currentAppId && (
                 <p className="text-xs text-amber-600">⚠️ Save the workflow first to manage secrets.</p>
               )}
+              <div className="pt-2 border-t border-gray-100">
+                <p className="text-xs text-gray-500 font-medium mb-1">Usage in steps:</p>
+                <code className="block text-xs bg-gray-100 text-indigo-700 px-2 py-1 rounded font-mono break-all">
+                  {'{{SECRET_NAME}}'}
+                </code>
+                <p className="text-xs text-gray-400 mt-1">Reference any secret in step config fields using the <span className="font-mono text-indigo-600">{'{{KEY}}'}</span> syntax.</p>
+              </div>
             </CardContent>
           </Card>
 
