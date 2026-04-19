@@ -91,17 +91,28 @@ Be specific. Reference actual UI elements you see. Do not be vague.`;
   const msg = response.choices[0].message as any;
   const raw = msg.content ?? '{}';
 
-  // Extract JSON from fenced code block if present
-  const fenceMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
-  const jsonStr = fenceMatch ? fenceMatch[1].trim() : raw.trim();
+  // Extract JSON from fenced code block if present — try all fences
+  let jsonStr = raw.trim();
+  const fenceMatches = [...raw.matchAll(/```(?:json)?\s*([\s\S]*?)```/g)];
+  if (fenceMatches.length > 0) {
+    // Use the last fence match (models sometimes wrap their thinking in a fence first)
+    jsonStr = fenceMatches[fenceMatches.length - 1][1].trim();
+  }
 
   try {
     const parsed = JSON.parse(jsonStr) as VisionResult;
     if (!parsed.reasoning && msg.reasoning) {
       parsed.reasoning = (msg.reasoning as string).trim().slice(0, 500);
     }
+    // Ensure answer is a string
+    if (parsed.answer == null) parsed.answer = '';
     return parsed;
   } catch {
+    // Try to extract score from raw text as last resort
+    const scoreMatch = raw.match(/"answer"\s*:\s*"?(\d+)"?/);
+    if (scoreMatch) {
+      return { answer: scoreMatch[1], reasoning: raw.slice(0, 500), suggestions: [], issues: [] };
+    }
     // Model returned prose — wrap it
     return { answer: raw.slice(0, 200), reasoning: raw, suggestions: [], issues: [] };
   }
