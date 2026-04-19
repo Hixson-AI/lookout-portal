@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "version": 2,
+    "version": 3,
     "updated": "2026-04-19",
     "note": "Per-dim agent config. Mutated by reflect.mjs after each rubric run based on score deltas."
   },
@@ -17,40 +17,40 @@
     "notes": "CSS tweak — gemini"
   },
   "D3": {
-    "model": "openrouter/anthropic/claude-sonnet-4.6",
+    "model": "openrouter/moonshotai/kimi-k2",
     "temperature": 0.2,
-    "prompt": "Edit ONLY: src/components/workflow/StepConfigPanel.tsx. In the HttpRequestConfig component: (1) Move the Auth JSX block (the section containing auth type select and credential inputs) to appear before the Headers JSX block. (2) Remove the condition that gates the Body textarea on HTTP method — render the Body textarea unconditionally. Do not change any other component, logic, or styling.",
-    "notes": "Empty patch with minimax — switching to claude-sonnet for better instruction following; prompt made more surgical with explicit JSX block descriptions."
+    "prompt": "Edit ONLY: src/components/workflow/StepConfigPanel.tsx. Two changes inside the HttpRequestConfig component function: (1) Locate the JSX block that renders the auth type <select> and credential <input> fields — cut that entire block and paste it immediately before the JSX block that renders the Headers section (the block starting with a label or heading containing 'Headers'). (2) Find the JSX block that renders the Body <textarea> — remove the surrounding conditional expression (e.g. `{method === 'POST' && ...}` or similar) so the textarea renders unconditionally. Make no other edits.",
+    "notes": "Empty patch twice (minimax, claude-sonnet). Trying kimi-k2; prompt now describes JSX blocks by their visible content anchors (auth select, Headers label, Body textarea) rather than abstract names."
   },
   "D4": {
-    "model": "openrouter/google/gemini-2.5-pro",
+    "model": "openrouter/moonshotai/kimi-k2",
     "temperature": 0.2,
-    "prompt": "Edit ONLY: src/components/workflow/FlowCanvas.tsx. In TriggerNode: show full webhookUrl prop if set, else show placeholder text '/webhooks/{id} — save to activate'. Add Zap icon from lucide-react next to trigger label.",
-    "notes": "Node rendering — visual agent"
+    "prompt": "Edit ONLY: src/components/workflow/FlowCanvas.tsx. Inside the TriggerNode component: (1) Add `import { Zap } from 'lucide-react'` if not already imported. (2) Locate the element that renders the trigger label text and prepend a `<Zap className='h-3 w-3 inline mr-1' />` icon directly before that text. (3) Find where the node displays the webhook URL (or its placeholder) and change the rendered string to: if the `webhookUrl` prop is a non-empty string render it, otherwise render the literal string '/webhooks/{id} — save to activate'. Do not edit any other component or file.",
+    "notes": "Empty patch with gemini-2.5-pro. Switching to kimi-k2; anchoring each change to specific component name (TriggerNode) and exact placeholder string to avoid ambiguity."
   },
   "D5": {
-    "model": "openrouter/anthropic/claude-sonnet-4.6",
+    "model": "openrouter/moonshotai/kimi-k2",
     "temperature": 0.2,
-    "prompt": "Edit ONLY: src/components/workflow/StepConfigPanel.tsx and src/components/workflow/FlowCanvas.tsx. In StepConfigPanel.tsx: below the config form JSX, add a 'Test Step' button that calls api.testStep(tenantId, appId, step) on click, stores the JSON result in local useState, and renders it in a <pre className='text-xs overflow-auto'> element below the button. In FlowCanvas.tsx: inside the WorkflowNode component, when data.hasValidationError is truthy, render a <span className='absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500 animate-pulse' /> inside the node wrapper (ensure wrapper has position-relative). Do not modify any other files.",
-    "notes": "Empty patch with kimi-k2 — switching to claude-sonnet; prompt split into two explicit per-file instructions with exact class strings."
+    "prompt": "Edit ONLY: src/components/workflow/StepConfigPanel.tsx. Inside StepConfigPanel: (1) Add a `const [testResult, setTestResult] = React.useState<unknown>(null)` state variable. (2) Below the closing tag of the config form JSX block, insert: a <button> with text 'Test Step' and an onClick handler that calls `api.testStep(tenantId, appId, step).then(setTestResult)`; and below that button, `{testResult && <pre className='text-xs overflow-auto'>{JSON.stringify(testResult, null, 2)}</pre>}`. Edit ONLY: src/components/workflow/FlowCanvas.tsx. Inside the WorkflowNode component: (1) Ensure the outermost wrapper div has `className` including `relative`. (2) Add `{data.hasValidationError && <span className='absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500 animate-pulse' />}` as the last child of that wrapper div. Do not modify any other files.",
+    "notes": "Empty patch with kimi-k2 and claude-sonnet. Trying kimi-k2 with prompt restructured to give per-file sections with line-level insertion instructions rather than prose descriptions."
   },
   "D6": {
-    "model": "openrouter/google/gemini-2.5-pro",
+    "model": "openrouter/moonshotai/kimi-k2",
     "temperature": 0.2,
-    "prompt": "Edit ONLY: src/pages/AppBuilder.tsx. (1) Add a HelpCircle icon button (from lucide-react) in the canvas CardHeader; clicking it toggles a boolean state that shows/hides an overlay div listing the 3 panels and their purpose. (2) Ensure the empty-state overlay div (shown when steps.length === 0) remains visible until steps.length > 0 — do not hide it prematurely. Do not touch any other file.",
-    "notes": "Previous patch modified only the CI workflow file — wrong file entirely. Switching to gemini-2.5-pro and making the target file constraint explicit."
+    "prompt": "Edit ONLY: src/pages/AppBuilder.tsx. Two changes: (1) Add `const [helpOpen, setHelpOpen] = React.useState(false)` state. In the canvas CardHeader JSX, add a `<button onClick={() => setHelpOpen(h => !h)}><HelpCircle className='h-4 w-4' /></button>` element; import HelpCircle from lucide-react if not present. Below the CardHeader (still inside the canvas card), add `{helpOpen && <div className='absolute inset-0 z-10 bg-white/90 p-4'><p>Settings panel: configure selected step.</p><p>Canvas panel: visual workflow.</p><p>Catalog panel: add new steps.</p></div>}` — ensure the canvas card wrapper has `relative` in its className. (2) Find the empty-state overlay div (the one rendered when steps.length === 0) and confirm its condition is exactly `{steps.length === 0 && ...}` — do not change this condition. Do not edit any other file.",
+    "notes": "Empty patch with gemini-2.5-pro. Switching to kimi-k2; split the two changes into numbered paragraphs with exact JSX snippets and import instructions."
   },
   "D7": {
     "model": "openrouter/anthropic/claude-sonnet-4.6",
     "temperature": 0.2,
-    "prompt": "Edit ONLY: src/pages/AppBuilder.tsx. Make these three targeted changes: (1) Add className='font-semibold' to every <CardTitle> element in this file. (2) Find the Save button and ensure its text content is the string 'Save' with no conditional asterisk or suffix. (3) In the step catalog item render, change the icon wrapper gap class to gap-2.5. Do not alter any other JSX, logic, or styling.",
-    "notes": "Empty patch with gemini-2.5-pro — switching to claude-sonnet; each of the three changes is now individually enumerated."
+    "prompt": "Edit ONLY: src/pages/AppBuilder.tsx. Make exactly two changes (the third change from the previous round is already applied — do NOT re-apply the Save button text change): (1) Find every <CardTitle> element in this file and add className='font-semibold' to it (or append 'font-semibold' to an existing className string). (2) Find the step catalog item render — the JSX that maps over catalog items — and locate the icon wrapper div; change whichever gap class it has to gap-2.5. Do not alter any other JSX, logic, or styling.",
+    "notes": "Previous patch removed the ⌘S span (partially correct) but score stayed at 4. Score goal is improvement on font-semibold and gap changes. Keeping claude-sonnet; removing the already-done Save change and narrowing to only the two remaining changes."
   },
   "D8": {
-    "model": "openrouter/anthropic/claude-sonnet-4.6",
+    "model": "openrouter/moonshotai/kimi-k2",
     "temperature": 0.2,
-    "prompt": "Edit ONLY: src/pages/AppBuilder.tsx. Find the outer grid container className and replace 'grid-cols-1 lg:grid-cols-12' with 'grid-cols-1 md:grid-cols-12'. Then set the Settings panel column span to md:col-span-3, the Canvas panel to md:col-span-5, and the Catalog panel to md:col-span-4. Change only these class strings — do not alter any other markup or logic.",
-    "notes": "Empty patch with gemini-2.5-pro — switching to claude-sonnet; prompt gives exact before/after class strings to maximize precision."
+    "prompt": "Edit ONLY: src/pages/AppBuilder.tsx. Find the single outer grid container div — it has a className containing both 'grid-cols-1' and 'lg:grid-cols-12'. Make these exact string replacements inside that className: replace 'lg:grid-cols-12' with 'md:grid-cols-12'. Then find the three child panel divs: the Settings panel div (className containing 'lg:col-span-3' or similar), the Canvas panel div ('lg:col-span-5' or similar), and the Catalog panel div ('lg:col-span-4' or similar). Replace their lg: column-span classes with 'md:col-span-3', 'md:col-span-5', and 'md:col-span-4' respectively. Change only these four class strings — do not alter any other markup, logic, or file.",
+    "notes": "Empty patch with claude-sonnet. Switching to kimi-k2; prompt now names exact before-strings ('lg:grid-cols-12', 'lg:col-span-3' etc.) so the model can locate them by literal text search."
   },
   "D9": {
     "model": "openrouter/google/gemini-2.5-pro",

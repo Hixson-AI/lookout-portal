@@ -360,7 +360,6 @@ export default function AppBuilder() {
           <Button onClick={handleSave} disabled={saving || !workflow.name} size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white" title="Save (Ctrl+S)" aria-label="Save workflow (Ctrl+S)" aria-keyshortcuts="Control+s">
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
             Save
-            <span className="hidden md:inline text-xs ml-1 opacity-70">⌘S</span>
           </Button>
         </div>
       </div>
@@ -461,24 +460,16 @@ export default function AppBuilder() {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4 space-y-3">
-              {secrets.length > 0 ? (
-                <div className="space-y-1">
-                  {secrets.map(s => (
-                    <div key={s.key} className="flex items-center justify-between px-2 py-1.5 bg-amber-50 border border-amber-200 rounded-lg">
-                      <div className="flex items-center gap-1.5">
-                        <Lock className="h-3 w-3 text-amber-600" />
-                        <span className="text-xs font-mono font-medium text-amber-900">{s.key}</span>
-                        <span className="text-xs text-gray-400">••••••</span>
-                      </div>
-                      <button onClick={() => handleDeleteSecret(s.key)} className="text-gray-400 hover:text-red-500 ml-1" title="Remove secret">
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-gray-400 italic">No secrets yet. Add API keys, tokens, or credentials below.</p>
-              )}
+              <div className="flex flex-wrap gap-2">
+                {secrets.map(s => (
+                  <span key={s.key} className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full inline-flex items-center">
+                    {s.key}
+                    <button onClick={() => handleDeleteSecret(s.key)} className="ml-1.5 -mr-0.5" title="Remove secret">
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
               <div className="space-y-1.5">
                 <input
                   type="text"
