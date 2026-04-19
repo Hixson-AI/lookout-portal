@@ -11,6 +11,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React, { useCallback, useRef } from 'react';
+import { Zap } from 'lucide-react';
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -195,12 +196,12 @@ function TriggerNode({ data }: { data: WorkflowNodeData }) {
     >
       <div className="px-3 py-2">
         <div>
-          <span className="block text-sm font-semibold text-gray-800 leading-tight">{data.label}</span>
+           <span className="block text-sm font-semibold text-gray-800 leading-tight"><Zap className='h-3 w-3 inline mr-1' />{data.label}</span>
           <span className={`inline-block text-[9px] font-medium px-1.5 py-0 rounded mt-0.5 ${style.badge}`}>
             Trigger
           </span>
         </div>
-        {data.webhookUrl && (
+        {data.webhookUrl && data.webhookUrl !== '' ? (
           <div className="mt-1.5 flex items-center gap-1">
             <code className="text-[9px] text-gray-500 font-mono truncate flex-1" style={{ maxWidth: 150 }}>
               {data.webhookUrl.replace(/^https?:\/\/[^/]+/, '')}
@@ -215,9 +216,8 @@ function TriggerNode({ data }: { data: WorkflowNodeData }) {
               </svg>
             </button>
           </div>
-        )}
-        {!data.webhookUrl && (
-          <p className="text-[9px] text-amber-500 mt-1">Save to get webhook URL</p>
+        ) : (
+           <p className="text-[9px] text-amber-500 mt-1">/webhooks/{'{id}'} — save to activate</p>
         )}
       </div>
       <Handle type="source" position={Position.Bottom} style={{ background: style.border }} />
@@ -432,14 +432,10 @@ function FlowCanvasInner({
         nodeTypes={NODE_TYPES}
         fitView
         fitViewOptions={{ padding: 0.25 }}
-        deleteKeyCode="Delete"
+        deleteKeyCode={null}
         connectionLineStyle={{ stroke: '#6366f1', strokeWidth: 2 }}
         defaultEdgeOptions={{ type: 'smoothstep', animated: false, style: { stroke: '#6366f1', strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: '#6366f1', width: 16, height: 16 } }}
-        onKeyDown={(e) => {
-          if ((e.key === 'Delete' || e.key === 'Backspace') && selectedStepId && selectedStepId !== '__trigger__') {
-            onDeleteStep(selectedStepId);
-          }
-        }}
+
         proOptions={{ hideAttribution: true }}
       >
         <Background color="#e5e7eb" gap={16} />
