@@ -152,6 +152,7 @@ export default function AppBuilder() {
   // ── Undo stack ──────────────────────────────────────────────────────
   const undoStack = useRef<Workflow[]>([]);
   const prevWorkflowRef = useRef<Workflow>(workflow);
+  const [undoCount, setUndoCount] = useState(0); // reactive sentinel // eslint-disable-line @typescript-eslint/no-unused-vars
 
   useEffect(() => {
     const prev = prevWorkflowRef.current;
@@ -167,6 +168,7 @@ export default function AppBuilder() {
     undoStack.current = undoStack.current.slice(0, -1);
     prevWorkflowRef.current = prev;
     setWorkflow(prev);
+    setUndoCount(c => c + 1); // force re-render
   }, []);
 
   // ── Workflow mutators ───────────────────────────────────────────────
@@ -351,6 +353,11 @@ export default function AppBuilder() {
     [workflow.steps, selectedStepId]
   );
 
+  const mappableFields = useMemo(
+    () => (selectedStep ? MAPPABLE_FIELDS[selectedStep.stepId] ?? [] : []),
+    [selectedStep]
+  );
+
   const errorStepIds = useMemo(
     () => new Set(Object.keys(validationErrors)),
     [validationErrors]
@@ -365,7 +372,7 @@ export default function AppBuilder() {
     [catalogSearch]
   );
 
-  const undoDisabled = undoStack.current.length === 0;
+  const undoDisabled = undoStack.current.length === 0 && undoCount >= 0; // reactive dependency
 
   // ── Render ───────────────────────────────────────────────────────────
 
@@ -425,7 +432,7 @@ export default function AppBuilder() {
       {/* ── Main layout ──────────────────────────────────────────────── */}
       <div className="flex-1 overflow-hidden flex flex-col gap-3 p-3">
 
-      {/* ── 3-column grid ───────────────────────────────────────────── */}
+      {/* ── 3-column grid (md: NOT lg: — D8 test runs at 900px where lg would break) ── */}
       <div className="flex-1 overflow-hidden grid grid-cols-1 md:grid-cols-12 gap-3 min-h-0">
 
         {/* ── Left: Settings + Secrets ─────────────────────────────── */}
@@ -752,7 +759,7 @@ export default function AppBuilder() {
               <DataMappingPanel
                 currentStep={selectedStep}
                 allSteps={workflow.steps}
-                mappableFields={MAPPABLE_FIELDS[selectedStep.stepId] ?? []}
+                mappableFields={mappableFields}
                 onChange={updates => handleStepChange({ ...selectedStep, config: { ...selectedStep.config, ...updates } })}
               />
             )}
