@@ -629,14 +629,13 @@ export function StepConfigPanel({ step, allSteps = [], onChange, tenantId, appId
   const [testResult, setTestResult] = useState<any>(null);
   const [isTesting, setIsTesting] = useState(false);
 
-  // Sync local meta state when the selected step changes
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Sync local meta state when the selected step changes (id-driven, not name)
   useEffect(() => {
     setStepName(step.name);
     setStepId(step.id);
     setTestResult(null);
     setTab('config');
-  }, [step.id]);
+  }, [step.id, step.name]);
 
   const commitMeta = () => onChange({ ...step, name: stepName, id: stepId });
   const mappableFields = MAPPABLE_FIELDS[step.stepId] ?? [];
