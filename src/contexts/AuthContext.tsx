@@ -16,8 +16,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Register 401 handler so api.ts can clear auth state without hard redirect
     setOnAuthError(() => {
-      clearJwt();
-      setUser(null);
+      console.warn('[auth] 401 received from API — session may be invalid');
     });
 
     // Handle OAuth callback on mount, then resolve user state
