@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { Login } from './pages/Login';
+import { AuthCallback } from './pages/AuthCallback';
 import { Home } from './pages/Home';
 import { TenantList } from './pages/TenantList';
 import { TenantDetail } from './pages/TenantDetail';
@@ -21,6 +22,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
+        <Route path="/auth/google" element={<AuthCallback />} />
         <Route path="/" element={user ? <Home /> : <Navigate to="/login" />} />
         <Route
           path="/tenants"
