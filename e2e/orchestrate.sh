@@ -312,19 +312,20 @@ echo ""
 cd "$PORTAL_DIR"
 
 PLAYWRIGHT="$PORTAL_DIR/node_modules/.pnpm/@playwright+test@1.59.1/node_modules/@playwright/test/node_modules/.bin/playwright"
+E2E_ENV="OPENROUTER_E2E_KEY=${OPENROUTER_E2E_KEY:-} JWT_SECRET=${JWT_SECRET:-} E2E_TENANT_ID=${E2E_TENANT_ID:-}"
 if [ "$MODE" = "dim" ] && [ -n "$TARGET_DIM" ]; then
   echo "📊 Running targeted rubric: $TARGET_DIM only..."
-  "$PLAYWRIGHT" test --project=chromium e2e/rubric.spec.ts --grep "$TARGET_DIM —" 2>&1 | tail -20 | cat
+  env $E2E_ENV "$PLAYWRIGHT" test --project=chromium e2e/rubric.spec.ts --grep "$TARGET_DIM —" 2>&1 | tail -20 | cat
 elif [ "$MODE" = "light" ]; then
   GREP_PATTERN=$(echo "$LOWEST_JSON" | node -e "
 const dims = JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));
 console.log(dims.map(([k]) => k + ' —').join('|'));
 ")
   echo "📊 Running light rubric (lowest dims only): $GREP_PATTERN"
-  "$PLAYWRIGHT" test --project=chromium e2e/rubric.spec.ts --grep "$GREP_PATTERN" 2>&1 | tail -30 | cat
+  env $E2E_ENV "$PLAYWRIGHT" test --project=chromium e2e/rubric.spec.ts --grep "$GREP_PATTERN" 2>&1 | tail -30 | cat
 else
   echo "📊 Running full rubric (all 11 dimensions)..."
-  "$PLAYWRIGHT" test --project=chromium e2e/rubric.spec.ts 2>&1 | grep -E "^(📊|🏆|   Score|✓|✘|📈|   D[0-9]|   Round|   Average)" | cat
+  env $E2E_ENV "$PLAYWRIGHT" test --project=chromium e2e/rubric.spec.ts 2>&1 | grep -E "^(📊|🏆|   Score|✓|✘|📈|   D[0-9]|   Round|   Average)" | cat
 fi
 
 # ── Self-improvement: reflect + update agents.json ───────────────────
