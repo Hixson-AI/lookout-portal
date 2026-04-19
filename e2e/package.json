@@ -1,0 +1,8 @@
+{
+  "name": "lookout-portal-e2e",
+  "private": true,
+  "dependencies": {
+    "@playwright/test": "1.59.1",
+    "openai": "^6.0.0"
+  }
+}
