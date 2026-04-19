@@ -4,6 +4,7 @@ import { Login } from './pages/Login';
 import { Home } from './pages/Home';
 import { TenantList } from './pages/TenantList';
 import { TenantDetail } from './pages/TenantDetail';
+import AppBuilder from './pages/AppBuilder';
 
 function App() {
   const { user, loading } = useAuth();
@@ -28,6 +29,14 @@ function App() {
         <Route
           path="/tenants/:id"
           element={user ? <TenantDetail /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/tenants/:id/apps/new"
+          element={user ? <AppBuilder /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/tenants/:id/apps/:appId"
+          element={user ? <AppBuilder /> : <Navigate to="/login" />}
         />
       </Routes>
     </Router>
