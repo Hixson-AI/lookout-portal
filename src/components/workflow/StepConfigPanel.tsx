@@ -630,6 +630,7 @@ export function StepConfigPanel({ step, allSteps = [], onChange, tenantId, appId
   const [isTesting, setIsTesting] = useState(false);
 
   // Sync local meta state when the selected step changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     setStepName(step.name);
     setStepId(step.id);

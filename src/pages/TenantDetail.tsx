@@ -7,6 +7,7 @@ import { OverviewTab } from '../components/tenants/OverviewTab';
 import { SettingsTab } from '../components/tenants/SettingsTab';
 import { AiKeysTab } from '../components/tenants/AiKeysTab';
 import { UsageTab } from '../components/tenants/UsageTab';
+import { AppsTab } from '../components/tenants/AppsTab';
 import { ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 
@@ -52,6 +53,7 @@ export function TenantDetail() {
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="ai-keys">AI Keys</TabsTrigger>
             <TabsTrigger value="usage">Usage</TabsTrigger>
+            <TabsTrigger value="apps">Apps</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
           <TabsContent value="overview" activeValue={activeTab}>
@@ -62,6 +64,9 @@ export function TenantDetail() {
           </TabsContent>
           <TabsContent value="usage" activeValue={activeTab}>
             <UsageTab tenant={tenant} />
+          </TabsContent>
+          <TabsContent value="apps" activeValue={activeTab}>
+            <AppsTab tenant={tenant} />
           </TabsContent>
           <TabsContent value="settings" activeValue={activeTab}>
             <SettingsTab tenant={tenant} />

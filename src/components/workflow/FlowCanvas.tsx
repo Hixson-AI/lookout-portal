@@ -386,7 +386,7 @@ function FlowCanvasInner({
     setRfEdges(Array.isArray(nextEdges) ? nextEdges : []);
     // Re-fit after a tick so new nodes are measured before fitView
     setTimeout(() => rfInstance?.fitView({ padding: 0.25 }), 50);
-  }, [steps, triggerType, selectedStepId, webhookUrl, errorStepIds, handleSelect, handleDelete]);
+  }, [steps, triggerType, selectedStepId, webhookUrl, errorStepIds, handleSelect, handleDelete, catalogCategories, rfInstance, setRfEdges, setRfNodes]);
 
   const onConnect: OnConnect = useCallback(
     (connection: Connection) => {
