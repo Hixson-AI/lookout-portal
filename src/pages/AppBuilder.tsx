@@ -10,7 +10,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import {
-  Save, Undo2, Zap, Globe, HelpCircle, Lock, Plus, Trash2,
+  Save, Undo2, Zap, Globe, HelpCircle, Lock, Plus,
   CheckCircle, Loader2, ShieldCheck, Sparkles, KeyRound, Terminal,
 } from 'lucide-react';
 import { FlowCanvas } from '../components/workflow/FlowCanvas';
@@ -95,6 +95,14 @@ export default function AppBuilder() {
   const [validateResult, setValidateResult] = useState<'pass' | 'fail' | null>(null);
   const [executionLog, setExecutionLog] = useState<string[]>([]);
   const [showLog, setShowLog] = useState(false);
+  const executionLogRef = useRef<HTMLPreElement>(null);
+
+  // Auto-scroll execution log to bottom
+  useEffect(() => {
+    if (executionLogRef.current && executionLog.length > 0) {
+      executionLogRef.current.scrollTop = executionLogRef.current.scrollHeight;
+    }
+  }, [executionLog]);
 
   // ── Validate ────────────────────────────────────────────────────────
 
@@ -211,11 +219,7 @@ export default function AppBuilder() {
     } catch { /* silent */ } finally { setSavingSecret(false); }
   };
 
-  const handleDeleteSecret = async (key: string) => {
-    if (!currentAppId) return;
-    await api.deleteAppSecret(tid, currentAppId, key);
-    setSecrets(s => s.filter(x => x.key !== key));
-  };
+
 
   // ── Canvas handlers ─────────────────────────────────────────────────
 
@@ -262,18 +266,32 @@ export default function AppBuilder() {
   const handleTestStep = useCallback(async (step: WorkflowStep) => {
     if (!currentAppId) return;
     setTestingStep(step.id);
+    setExecutionLog(log => [
+      ...log,
+      `[${new Date().toLocaleTimeString()}] ▶ Testing: ${step.name}`,
+    ]);
+    setShowLog(true);
     try {
       const result = await api.testStep(tid, currentAppId, step);
       setTestResults(r => ({ ...r, [step.id]: typeof result === 'string' ? result : JSON.stringify(result, null, 2) }));
       setValidationErrors(e => { const next = { ...e }; delete next[step.id]; return next; });
+      setExecutionLog(log => [
+        ...log,
+        `[${new Date().toLocaleTimeString()}] ✓ ${step.name}: OK`,
+      ]);
     } catch (err) {
-      setValidationErrors(e => ({ ...e, [step.id]: err instanceof Error ? err.message : 'Test failed' }));
+      const errorMsg = err instanceof Error ? err.message : 'Test failed';
+      setValidationErrors(e => ({ ...e, [step.id]: errorMsg }));
+      setExecutionLog(log => [
+        ...log,
+        `[${new Date().toLocaleTimeString()}] ✗ ${step.name}: ${errorMsg}`,
+      ]);
     } finally { setTestingStep(null); }
   }, [currentAppId, tid]);
 
   // ── Save ────────────────────────────────────────────────────────────
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (!workflow.name) return;
     setSaving(true);
     try {
@@ -308,7 +326,7 @@ export default function AppBuilder() {
       }
       setSavedAt(new Date());
     } catch { /* silent */ } finally { setSaving(false); }
-  };
+  }, [workflow.name, workflow.description, workflow.triggerConfig, workflow.steps, currentAppId, tid]);
 
   // ── Keyboard shortcuts ───────────────────────────────────────────────
   useEffect(() => {
@@ -482,11 +500,8 @@ export default function AppBuilder() {
             <CardContent className="px-4 pb-4 space-y-3">
               <div className="flex flex-wrap gap-2">
                 {secrets.map(s => (
-                  <span key={s.key} className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full inline-flex items-center">
+                  <span key={s.key} className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">
                     {s.key}
-                    <button onClick={() => handleDeleteSecret(s.key)} className="ml-1.5 -mr-0.5" title="Remove secret">
-                      <Trash2 className="h-3 w-3" />
-                    </button>
                   </span>
                 ))}
               </div>
@@ -754,7 +769,7 @@ export default function AppBuilder() {
             </div>
           </CardHeader>
           <CardContent className="px-4 pb-3">
-            <pre className="text-xs font-mono bg-gray-950 text-green-400 rounded-lg p-3 overflow-auto max-h-28 leading-relaxed">
+            <pre ref={executionLogRef} className="text-xs font-mono bg-gray-950 text-green-400 rounded-lg p-3 overflow-auto max-h-28 leading-relaxed">
               {executionLog.join('\n')}
             </pre>
           </CardContent>

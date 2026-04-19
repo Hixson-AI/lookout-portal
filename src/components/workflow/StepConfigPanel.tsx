@@ -633,6 +633,7 @@ export function StepConfigPanel({ step, allSteps = [], onChange, tenantId, appId
     setStepName(step.name);
     setStepId(step.id);
     setTestResult(null);
+    setTab('config');
   }, [step.id]);
 
   const commitMeta = () => onChange({ ...step, name: stepName, id: stepId });
