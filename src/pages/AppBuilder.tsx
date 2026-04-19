@@ -11,7 +11,7 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Save, Undo2, Zap, Globe, HelpCircle, Lock, Plus, Trash2,
-  CheckCircle, Loader2, ShieldCheck,
+  CheckCircle, Loader2, ShieldCheck, Sparkles, KeyRound, Terminal,
 } from 'lucide-react';
 import { FlowCanvas } from '../components/workflow/FlowCanvas';
 import { StepConfigPanel } from '../components/workflow/StepConfigPanel';
@@ -93,27 +93,53 @@ export default function AppBuilder() {
   const [configTab, setConfigTab] = useState<'config' | 'mapping'>('config');
   const [validating, setValidating] = useState(false);
   const [validateResult, setValidateResult] = useState<'pass' | 'fail' | null>(null);
+  const [executionLog, setExecutionLog] = useState<string[]>([]);
+  const [showLog, setShowLog] = useState(false);
 
   // ── Validate ────────────────────────────────────────────────────────
 
   const handleValidate = useCallback(async () => {
     setValidating(true);
     setValidateResult(null);
-    await new Promise(r => setTimeout(r, 800));
+    const log: string[] = [];
+    log.push(`[${new Date().toLocaleTimeString()}] ▶ Starting validation…`);
+    await new Promise(r => setTimeout(r, 600));
     const errors: Record<string, string> = {};
     for (const step of workflow.steps) {
+      log.push(`[${new Date().toLocaleTimeString()}] Checking: ${step.name}`);
       if (step.stepId === 'step:http-request' && !step.config?.url) {
         errors[step.id] = 'URL is required';
+        log.push(`  ✗ ${step.name}: URL is required`);
       } else if (step.stepId === 'step:ai-processing' && !step.config?.prompt) {
         errors[step.id] = 'Prompt is required';
+        log.push(`  ✗ ${step.name}: Prompt is required`);
       } else if (step.stepId === 'step:email-send' && !step.config?.to) {
         errors[step.id] = 'To address is required';
+        log.push(`  ✗ ${step.name}: To address is required`);
+      } else {
+        log.push(`  ✓ ${step.name}: OK`);
       }
     }
+    const passed = Object.keys(errors).length === 0;
+    log.push(`[${new Date().toLocaleTimeString()}] ${passed ? '✅ All checks passed' : `❌ ${Object.keys(errors).length} error(s) found`}`);
     setValidationErrors(errors);
-    setValidateResult(Object.keys(errors).length === 0 ? 'pass' : 'fail');
+    setValidateResult(passed ? 'pass' : 'fail');
+    setExecutionLog(log);
+    setShowLog(true);
     setValidating(false);
   }, [workflow.steps]);
+
+  // ── AI Assist ────────────────────────────────────────────────────────
+  const handleAiAssist = useCallback(() => {
+    if (workflow.steps.length === 0) {
+      const suggestedSteps: WorkflowStep[] = [
+        { id: 'step-ai-1', stepId: 'step:http-request', name: 'Fetch Data', config: { method: 'GET', url: 'https://api.example.com/data' } },
+        { id: 'step-ai-2', stepId: 'step:ai-processing', name: 'AI Analysis', config: { model: 'gpt-4o-mini', prompt: 'Analyze the following data: {{step-ai-1.body}}' } },
+        { id: 'step-ai-3', stepId: 'step:condition', name: 'Check Result', config: { condition: '{{step-ai-2.output}} contains "positive"' } },
+      ];
+      setWorkflow(w => ({ ...w, name: w.name || 'AI-Generated Workflow', steps: suggestedSteps }));
+    }
+  }, [workflow.steps.length]);
 
   // ── Undo stack ──────────────────────────────────────────────────────
   const undoStack = useRef<Workflow[]>([]);
@@ -267,6 +293,16 @@ export default function AppBuilder() {
     } catch { /* silent */ } finally { setSaving(false); }
   };
 
+  // ── Keyboard shortcuts ───────────────────────────────────────────────
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); handleSave(); }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); handleUndo(); }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [handleSave, handleUndo]);
+
   // ── Derived ──────────────────────────────────────────────────────────
 
   const selectedStep = useMemo(
@@ -330,7 +366,7 @@ export default function AppBuilder() {
       {/* ── Help overlay ─────────────────────────────────────────────── */}
       {showHelp && (
         <div className="mx-4 mt-2 p-3 rounded-lg bg-indigo-50 border border-indigo-200 text-sm text-indigo-800 flex-shrink-0">
-          <strong>Panels:</strong> Settings (left) · Canvas (center, drag steps onto it) · Catalog (right, click or drag). Select a node to configure it below. Use Undo to revert changes.
+          <strong>Panels:</strong> Settings (left) · Canvas (center) · Catalog (right, click or drag to canvas). Select a node to configure it. <strong>Keyboard:</strong> Delete = remove selected node · Ctrl+Z = undo · Ctrl+S = save.
         </div>
       )}
 
@@ -411,20 +447,29 @@ export default function AppBuilder() {
           <Card className="shadow-sm">
             <CardHeader className="py-3 px-4">
               <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-                <Lock className="h-3.5 w-3.5" /> Secrets
+                <KeyRound className="h-3.5 w-3.5 text-amber-600" /> Secrets
+                <span className="ml-auto text-xs font-normal text-green-600 flex items-center gap-0.5"><Lock className="h-3 w-3" /> Encrypted at rest</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4 space-y-3">
-              <div className="flex flex-wrap gap-1.5">
-                {secrets.map(s => (
-                  <div key={s.key} className="flex items-center gap-1 px-2 py-0.5 bg-green-100 border border-green-200 rounded-full text-xs text-green-800">
-                    <span className="font-mono">{s.key}</span>
-                    <button onClick={() => handleDeleteSecret(s.key)} className="text-green-600 hover:text-red-500 ml-0.5">
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
+              {secrets.length > 0 ? (
+                <div className="space-y-1">
+                  {secrets.map(s => (
+                    <div key={s.key} className="flex items-center justify-between px-2 py-1.5 bg-amber-50 border border-amber-200 rounded-lg">
+                      <div className="flex items-center gap-1.5">
+                        <Lock className="h-3 w-3 text-amber-600" />
+                        <span className="text-xs font-mono font-medium text-amber-900">{s.key}</span>
+                        <span className="text-xs text-gray-400">••••••</span>
+                      </div>
+                      <button onClick={() => handleDeleteSecret(s.key)} className="text-gray-400 hover:text-red-500 ml-1" title="Remove secret">
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-gray-400 italic">No secrets yet. Add API keys, tokens, or credentials below.</p>
+              )}
               <div className="space-y-1.5">
                 <input
                   type="text"
@@ -432,6 +477,7 @@ export default function AppBuilder() {
                   onChange={e => setSecretKey(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, ''))}
                   className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs font-mono"
                   placeholder="SECRET_KEY"
+                  aria-label="Secret key name"
                 />
                 <input
                   type="password"
@@ -439,19 +485,21 @@ export default function AppBuilder() {
                   onChange={e => setSecretVal(e.target.value)}
                   className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs font-mono"
                   placeholder="secret value"
+                  aria-label="Secret value"
                 />
                 <Button
                   size="sm"
                   className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs"
                   onClick={handleAddSecret}
-                  disabled={savingSecret || !secretKey || !secretVal}
+                  disabled={savingSecret || !secretKey || !secretVal || !currentAppId}
+                  title={!currentAppId ? 'Save the workflow first to add secrets' : 'Add encrypted secret'}
                 >
                   {savingSecret ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Plus className="h-3 w-3 mr-1" />}
                   Add Secret
                 </Button>
               </div>
               {!currentAppId && (
-                <p className="text-xs text-gray-400">Save the workflow first to manage secrets.</p>
+                <p className="text-xs text-amber-600">⚠️ Save the workflow first to manage secrets.</p>
               )}
             </CardContent>
           </Card>
@@ -495,10 +543,44 @@ export default function AppBuilder() {
                 </div>
               )}
               {workflow.steps.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full min-h-[320px] text-gray-400 pointer-events-none select-none">
-                  <Zap className="h-10 w-10 mb-3 opacity-30" />
-                  <p className="text-sm font-medium">Drop steps here to build your workflow</p>
-                  <p className="text-xs mt-1">Click a step in the catalog or drag it onto the canvas</p>
+                <div className="flex flex-col items-center justify-center h-full min-h-[320px] gap-4 p-6">
+                  <div className="text-center pointer-events-none select-none">
+                    <Zap className="h-10 w-10 mb-3 opacity-20 mx-auto text-indigo-400" />
+                    <p className="text-sm font-medium text-gray-500">Drop steps here to build your workflow</p>
+                    <p className="text-xs mt-1 text-gray-400">Click a step in the catalog or drag it onto the canvas</p>
+                  </div>
+                  <div className="flex gap-2 pointer-events-auto">
+                    <button
+                      onClick={handleAiAssist}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" /> AI Assist
+                    </button>
+                    <button
+                      onClick={() => {
+                        ['step:http-request', 'step:ai-processing', 'step:condition'].forEach((id) => {
+                          const item = CATALOG.find(c => c.id === id)!;
+                          handleDropStep(item.id, item.name);
+                        });
+                        setWorkflow(w => ({ ...w, name: w.name || 'HTTP → AI → Branch' }));
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-gray-700 text-xs font-medium hover:border-indigo-400 hover:bg-indigo-50 transition-colors"
+                    >
+                      🌐 API + AI template
+                    </button>
+                    <button
+                      onClick={() => {
+                        ['step:http-request', 'step:email-send'].forEach((id) => {
+                          const item = CATALOG.find(c => c.id === id)!;
+                          handleDropStep(item.id, item.name);
+                        });
+                        setWorkflow(w => ({ ...w, name: w.name || 'Fetch + Email Notify' }));
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-gray-700 text-xs font-medium hover:border-indigo-400 hover:bg-indigo-50 transition-colors"
+                    >
+                      📧 Notify template
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div style={{ height: '100%', minHeight: 320 }}>
@@ -623,6 +705,31 @@ export default function AppBuilder() {
                 onChange={updates => handleStepChange({ ...selectedStep, config: { ...selectedStep.config, ...updates } })}
               />
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Execution Log (D5) ────────────────────────────────────────── */}
+      {showLog && executionLog.length > 0 && (
+        <Card className="shadow-sm flex-shrink-0 mx-0 border-gray-200">
+          <CardHeader className="py-2 px-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
+                <Terminal className="h-3.5 w-3.5 text-gray-500" />
+                Execution Log
+                {validateResult && (
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ml-1 ${validateResult === 'pass' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {validateResult === 'pass' ? '✓ All checks passed' : `✗ ${Object.keys(validationErrors).length} error(s)`}
+                  </span>
+                )}
+              </CardTitle>
+              <button onClick={() => setShowLog(false)} className="text-xs text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+          </CardHeader>
+          <CardContent className="px-4 pb-3">
+            <pre className="text-xs font-mono bg-gray-950 text-green-400 rounded-lg p-3 overflow-auto max-h-28 leading-relaxed">
+              {executionLog.join('\n')}
+            </pre>
           </CardContent>
         </Card>
       )}
