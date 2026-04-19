@@ -562,7 +562,6 @@ export default function AppBuilder() {
                 <button
                   className={`px-2 py-0.5 text-xs rounded ${configTab === 'mapping' ? 'bg-indigo-100 text-indigo-700 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
                   onClick={() => setConfigTab('mapping')}
-                  aria-label="Map Data"
                 >Data Mapping</button>
               </div>
             </div>
