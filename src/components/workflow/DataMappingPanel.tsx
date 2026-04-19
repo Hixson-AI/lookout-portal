@@ -196,7 +196,7 @@ export function DataMappingPanel({
   useEffect(() => {
     const cfg = (currentStep.config ?? {}) as Record<string, string>;
     setValues(Object.fromEntries(mappableFields.map(f => [f.key, cfg[f.key] ?? ''])));
-  }, [currentStep, mappableFields]);
+  }, [currentStep.id, mappableFields]);
 
   // Upstream steps only (those before current in workflow)
   const currentIdx = allSteps.findIndex(s => s.id === currentStep.id);

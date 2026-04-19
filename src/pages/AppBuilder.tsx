@@ -143,22 +143,29 @@ export default function AppBuilder() {
 
   // ── Undo stack ──────────────────────────────────────────────────────
   const undoStack = useRef<Workflow[]>([]);
+  const prevWorkflowRef = useRef<Workflow>(workflow);
 
-  const pushUndo = useCallback((prev: Workflow) => {
-    undoStack.current = [...undoStack.current.slice(-9), prev];
-  }, []);
+  useEffect(() => {
+    const prev = prevWorkflowRef.current;
+    if (prev !== workflow) {
+      undoStack.current = [...undoStack.current.slice(-9), prev];
+      prevWorkflowRef.current = workflow;
+    }
+  }, [workflow]);
 
   const handleUndo = useCallback(() => {
     if (!undoStack.current.length) return;
-    const prev = undoStack.current.pop()!;
+    const prev = undoStack.current[undoStack.current.length - 1];
+    undoStack.current = undoStack.current.slice(0, -1);
+    prevWorkflowRef.current = prev;
     setWorkflow(prev);
   }, []);
 
   // ── Workflow mutators ───────────────────────────────────────────────
 
   const updateWorkflow = useCallback((next: Workflow) => {
-    setWorkflow(cur => { pushUndo(cur); return next; });
-  }, [pushUndo]);
+    setWorkflow(next);
+  }, []);
 
   // ── Autosave ────────────────────────────────────────────────────────
 
@@ -237,8 +244,18 @@ export default function AppBuilder() {
   }, [workflow, updateWorkflow]);
 
   const handleStepChange = useCallback((updated: WorkflowStep) => {
-    updateWorkflow({ ...workflow, steps: workflow.steps.map(s => s.id === updated.id ? updated : s) });
-  }, [workflow, updateWorkflow]);
+    // Match by updated.id first; fall back to selectedStepId to handle id renames
+    updateWorkflow({
+      ...workflow,
+      steps: workflow.steps.map(s =>
+        (s.id === updated.id || s.id === selectedStepId) ? updated : s
+      ),
+    });
+    // If the step's id was renamed, keep selectedStepId in sync
+    if (selectedStepId !== null && updated.id !== selectedStepId) {
+      setSelectedStepId(updated.id);
+    }
+  }, [workflow, updateWorkflow, selectedStepId]);
 
   // ── Test step ───────────────────────────────────────────────────────
 
@@ -361,6 +378,9 @@ export default function AppBuilder() {
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
             Save
           </Button>
+          {currentAppId && (
+            <span className="text-xs text-green-600 font-medium">Autosave on</span>
+          )}
         </div>
       </div>
 
