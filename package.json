@@ -14,11 +14,13 @@
     "@tanstack/react-query": "^5.99.0",
     "@xyflow/react": "^12.10.2",
     "lucide-react": "^1.8.0",
+    "openai": "^6.34.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.14.1"
   },
   "devDependencies": {
+    "@playwright/test": "1.59.1",
     "@types/commander": "^2.12.5",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^25.6.0",
