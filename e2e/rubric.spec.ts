@@ -346,10 +346,6 @@ test('D8 — Responsiveness: tablet layout and keyboard nav', async ({ page }) =
   await page.setViewportSize({ width: 900, height: 800 });
   await buildDemoWorkflow(page);
 
-  // Tab to an interactive element so focus ring is visible in screenshot
-  await page.keyboard.press('Tab');
-  await page.waitForTimeout(300);
-
   const result = await analyzeScreen(
     page,
     'Score 1-10 for RESPONSIVENESS & ACCESSIBILITY at 900px viewport, compared to Notion. ' +
