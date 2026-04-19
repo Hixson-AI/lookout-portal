@@ -11,7 +11,7 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Save, Undo2, Zap, Globe, HelpCircle, Lock, Plus, Trash2,
-  CheckCircle, Loader2,
+  CheckCircle, Loader2, ShieldCheck,
 } from 'lucide-react';
 import { FlowCanvas } from '../components/workflow/FlowCanvas';
 import { StepConfigPanel } from '../components/workflow/StepConfigPanel';
@@ -91,6 +91,29 @@ export default function AppBuilder() {
   const [showHelp, setShowHelp] = useState(false);
   const [catalogSearch, setCatalogSearch] = useState('');
   const [configTab, setConfigTab] = useState<'config' | 'mapping'>('config');
+  const [validating, setValidating] = useState(false);
+  const [validateResult, setValidateResult] = useState<'pass' | 'fail' | null>(null);
+
+  // ── Validate ────────────────────────────────────────────────────────
+
+  const handleValidate = useCallback(async () => {
+    setValidating(true);
+    setValidateResult(null);
+    await new Promise(r => setTimeout(r, 800));
+    const errors: Record<string, string> = {};
+    for (const step of workflow.steps) {
+      if (step.stepId === 'step:http-request' && !step.config?.url) {
+        errors[step.id] = 'URL is required';
+      } else if (step.stepId === 'step:ai-processing' && !step.config?.prompt) {
+        errors[step.id] = 'Prompt is required';
+      } else if (step.stepId === 'step:email-send' && !step.config?.to) {
+        errors[step.id] = 'To address is required';
+      }
+    }
+    setValidationErrors(errors);
+    setValidateResult(Object.keys(errors).length === 0 ? 'pass' : 'fail');
+    setValidating(false);
+  }, [workflow.steps]);
 
   // ── Undo stack ──────────────────────────────────────────────────────
   const undoStack = useRef<Workflow[]>([]);
@@ -286,6 +309,14 @@ export default function AppBuilder() {
           <Button variant="ghost" size="sm" onClick={handleUndo} disabled={undoDisabled} title="Undo">
             <Undo2 className="h-4 w-4" />
           </Button>
+          <Button variant="ghost" size="sm" onClick={handleValidate} disabled={validating} title="Validate" aria-label="Validate">
+            {validating ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+          </Button>
+          {validateResult && (
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${validateResult === 'pass' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+              {validateResult === 'pass' ? '✓ Valid' : `✗ ${Object.keys(validationErrors).length} error${Object.keys(validationErrors).length !== 1 ? 's' : ''}`}
+            </span>
+          )}
           <Button variant="ghost" size="sm" onClick={() => setShowHelp(h => !h)} title="Help">
             <HelpCircle className="h-4 w-4" />
           </Button>
@@ -303,8 +334,11 @@ export default function AppBuilder() {
         </div>
       )}
 
-      {/* ── Main 3-column grid ───────────────────────────────────────── */}
-      <div className="flex-1 overflow-hidden grid grid-cols-1 md:grid-cols-12 gap-3 p-3">
+      {/* ── Main layout ──────────────────────────────────────────────── */}
+      <div className="flex-1 overflow-hidden flex flex-col gap-3 p-3">
+
+      {/* ── 3-column grid ───────────────────────────────────────────── */}
+      <div className="flex-1 overflow-hidden grid grid-cols-1 md:grid-cols-12 gap-3 min-h-0">
 
         {/* ── Left: Settings + Secrets ─────────────────────────────── */}
         <div className="md:col-span-3 flex flex-col gap-3 overflow-y-auto">
@@ -381,18 +415,16 @@ export default function AppBuilder() {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4 space-y-3">
-              {secrets.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {secrets.map(s => (
-                    <div key={s.key} className="flex items-center gap-1 px-2 py-0.5 bg-green-100 border border-green-200 rounded-full text-xs text-green-800">
-                      <span className="font-mono">{s.key}</span>
-                      <button onClick={() => handleDeleteSecret(s.key)} className="text-green-600 hover:text-red-500 ml-0.5">
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="flex flex-wrap gap-1.5">
+                {secrets.map(s => (
+                  <div key={s.key} className="flex items-center gap-1 px-2 py-0.5 bg-green-100 border border-green-200 rounded-full text-xs text-green-800">
+                    <span className="font-mono">{s.key}</span>
+                    <button onClick={() => handleDeleteSecret(s.key)} className="text-green-600 hover:text-red-500 ml-0.5">
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
               <div className="space-y-1.5">
                 <input
                   type="text"
@@ -470,68 +502,6 @@ export default function AppBuilder() {
             </CardContent>
           </Card>
 
-          {/* Step config / data mapping sub-panel */}
-          {selectedStep && (
-            <Card className="shadow-sm flex-shrink-0">
-              <CardHeader className="py-2 px-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-semibold">Configure: {selectedStep.name}</CardTitle>
-                  <div className="flex items-center gap-1">
-                    <button
-                      className={`px-2 py-0.5 text-xs rounded ${configTab === 'config' ? 'bg-indigo-100 text-indigo-700 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
-                      onClick={() => setConfigTab('config')}
-                    >Config</button>
-                    <button
-                      className={`px-2 py-0.5 text-xs rounded ${configTab === 'mapping' ? 'bg-indigo-100 text-indigo-700 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
-                      onClick={() => setConfigTab('mapping')}
-                    >Data Mapping</button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="px-4 pb-4">
-                {configTab === 'config' ? (
-                  <div className="space-y-3">
-                    <StepConfigPanel
-                      step={selectedStep}
-                      allSteps={workflow.steps}
-                      onChange={handleStepChange}
-                      tenantId={tid}
-                      appId={currentAppId ?? undefined}
-                    />
-                    {/* Test Step button */}
-                    <div className="pt-2 border-t border-gray-100">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleTestStep(selectedStep)}
-                        disabled={testingStep === selectedStep.id}
-                        className="w-full text-xs border-indigo-300 text-indigo-700 hover:bg-indigo-50"
-                      >
-                        {testingStep === selectedStep.id
-                          ? <><Loader2 className="h-3 w-3 animate-spin mr-1" />Testing…</>
-                          : <><Zap className="h-3 w-3 mr-1" />Test Step</>}
-                      </Button>
-                      {validationErrors[selectedStep.id] && (
-                        <p className="text-xs text-red-600 mt-1">{validationErrors[selectedStep.id]}</p>
-                      )}
-                      {testResults[selectedStep.id] && (
-                        <pre className="mt-2 text-xs bg-gray-50 border border-gray-200 rounded p-2 overflow-auto max-h-32 font-mono">
-                          {JSON.stringify(testResults[selectedStep.id], null, 2)}
-                        </pre>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <DataMappingPanel
-                    currentStep={selectedStep}
-                    allSteps={workflow.steps}
-                    mappableFields={MAPPABLE_FIELDS[selectedStep.stepId] ?? []}
-                    onChange={updates => handleStepChange({ ...selectedStep, config: { ...selectedStep.config, ...updates } })}
-                  />
-                )}
-              </CardContent>
-            </Card>
-          )}
         </div>
 
         {/* ── Right: Step Catalog ──────────────────────────────────── */}
@@ -575,6 +545,71 @@ export default function AppBuilder() {
             </CardContent>
           </Card>
         </div>
+
+      </div>
+
+      {/* ── Step config panel (outside grid to avoid ReactFlow z-index) ── */}
+      {selectedStep && (
+        <Card className="shadow-sm flex-shrink-0 mx-0">
+          <CardHeader className="py-2 px-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold">Configure: {selectedStep.name}</CardTitle>
+              <div className="flex items-center gap-1">
+                <button
+                  className={`px-2 py-0.5 text-xs rounded ${configTab === 'config' ? 'bg-indigo-100 text-indigo-700 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
+                  onClick={() => setConfigTab('config')}
+                >Config</button>
+                <button
+                  className={`px-2 py-0.5 text-xs rounded ${configTab === 'mapping' ? 'bg-indigo-100 text-indigo-700 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
+                  onClick={() => setConfigTab('mapping')}
+                  aria-label="Map Data"
+                >Data Mapping</button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            {configTab === 'config' ? (
+              <div className="space-y-3">
+                <StepConfigPanel
+                  step={selectedStep}
+                  allSteps={workflow.steps}
+                  onChange={handleStepChange}
+                  tenantId={tid}
+                  appId={currentAppId ?? undefined}
+                />
+                <div className="pt-2 border-t border-gray-100">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleTestStep(selectedStep)}
+                    disabled={testingStep === selectedStep.id}
+                    className="w-full text-xs border-indigo-300 text-indigo-700 hover:bg-indigo-50"
+                  >
+                    {testingStep === selectedStep.id
+                      ? <><Loader2 className="h-3 w-3 animate-spin mr-1" />Testing…</>
+                      : <><Zap className="h-3 w-3 mr-1" />Test Step</>}
+                  </Button>
+                  {validationErrors[selectedStep.id] && (
+                    <p className="text-xs text-red-600 mt-1">{validationErrors[selectedStep.id]}</p>
+                  )}
+                  {testResults[selectedStep.id] && (
+                    <pre className="mt-2 text-xs bg-gray-50 border border-gray-200 rounded p-2 overflow-auto max-h-32 font-mono">
+                      {testResults[selectedStep.id]}
+                    </pre>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <DataMappingPanel
+                currentStep={selectedStep}
+                allSteps={workflow.steps}
+                mappableFields={MAPPABLE_FIELDS[selectedStep.stepId] ?? []}
+                onChange={updates => handleStepChange({ ...selectedStep, config: { ...selectedStep.config, ...updates } })}
+              />
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       </div>
     </div>
