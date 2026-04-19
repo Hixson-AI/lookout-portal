@@ -10,7 +10,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import {
-  Save, Undo2, Zap, Globe, HelpCircle, Lock, Plus,
+  Save, Undo2, Zap, Globe, HelpCircle, Lock, Plus, Trash2,
   CheckCircle, Loader2, ShieldCheck, Sparkles, KeyRound, Terminal,
 } from 'lucide-react';
 import { FlowCanvas } from '../components/workflow/FlowCanvas';
@@ -208,6 +208,12 @@ export default function AppBuilder() {
     if (!currentAppId) return;
     api.getAppSecrets(tid, currentAppId).then(d => setSecrets(d.map(s => ({ key: s.key, created_at: s.created_at })))).catch(() => {});
   }, [currentAppId, tid]);
+
+  const handleDeleteSecret = async (key: string) => {
+    if (!currentAppId) return;
+    await api.deleteAppSecret(tid, currentAppId, key);
+    setSecrets(s => s.filter(x => x.key !== key));
+  };
 
   const handleAddSecret = async () => {
     if (!currentAppId || !secretKey || !secretVal) return;
@@ -500,8 +506,11 @@ export default function AppBuilder() {
             <CardContent className="px-4 pb-4 space-y-3">
               <div className="flex flex-wrap gap-2">
                 {secrets.map(s => (
-                  <span key={s.key} className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">
+                  <span key={s.key} className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full inline-flex items-center">
                     {s.key}
+                    <button onClick={() => handleDeleteSecret(s.key)} className="ml-1.5 -mr-0.5" title="Remove secret">
+                      <Trash2 className="h-3 w-3" />
+                    </button>
                   </span>
                 ))}
               </div>
