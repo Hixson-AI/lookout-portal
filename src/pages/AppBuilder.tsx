@@ -474,9 +474,26 @@ export default function AppBuilder() {
                     {Object.keys(validationErrors).length} error{Object.keys(validationErrors).length !== 1 ? 's' : ''}
                   </Badge>
                 )}
+                <button
+                  className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
+                  onClick={() => setShowHelp(h => !h)}
+                  title="Help"
+                >
+                  <HelpCircle className="h-4 w-4" />
+                </button>
               </div>
             </CardHeader>
-            <CardContent className="p-0 flex-1 min-h-0">
+            <CardContent className="p-0 flex-1 min-h-0 relative">
+              {showHelp && workflow.steps.length === 0 && (
+                <div className="absolute inset-0 bg-white/95 z-10 flex flex-col items-center justify-center p-4 text-center">
+                  <h3 className="text-sm font-semibold text-gray-800 mb-3">3 Panels</h3>
+                  <div className="space-y-2 text-xs text-gray-600 max-w-[240px]">
+                    <p><strong className="text-indigo-600">Settings (left)</strong><br />Workflow name, trigger, secrets</p>
+                    <p><strong className="text-indigo-600">Canvas (center)</strong><br />Drag steps here to build your workflow</p>
+                    <p><strong className="text-indigo-600">Catalog (right)</strong><br />Click or drag steps to add</p>
+                  </div>
+                </div>
+              )}
               {workflow.steps.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full min-h-[320px] text-gray-400 pointer-events-none select-none">
                   <Zap className="h-10 w-10 mb-3 opacity-30" />

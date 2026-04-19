@@ -3,10 +3,14 @@ dist/
 .env
 .env.local
 .env.*.local
+.env.e2e
 *.log
 .DS_Store
 .vscode/
 .idea/
 coverage/
+playwright-report/
+e2e/runs/
+e2e/.agent-logs
 .cache/
 .vite/

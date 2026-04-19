@@ -44,7 +44,8 @@ jobs:
           pnpm test
           pnpm build
         env:
-          VITE_CONTROL_PLANE_URL: ${{ secrets.VITE_CONTROL_PLANE_URL }}
+          VITE_CONTROL_PLANE_URL: ${{ secrets.DEV_CONTROL_PLANE_URL }}
+          VITE_API_BASE_URL: ${{ secrets.DEV_API_BASE_URL }}
       
       - name: Deploy to environment
         id: deploy
@@ -130,7 +131,7 @@ jobs:
           # Set up secrets — portal only needs build-time vars as runtime secrets for static build
           echo "Setting up secrets..."
           printf '%s\n' \
-            "VITE_CONTROL_PLANE_URL=${{ secrets.VITE_CONTROL_PLANE_URL }}" \
+            "VITE_CONTROL_PLANE_URL=${{ secrets.DEV_CONTROL_PLANE_URL }}" \
             | flyctl secrets import --app "$APP_NAME" --stage 2>/dev/null || echo "Secrets already set or import failed"
           echo "DEBUG: Verifying secrets..."
           flyctl secrets list --app "$APP_NAME" 2>/dev/null || echo "Could not list secrets"         
@@ -138,7 +139,8 @@ jobs:
           # Deploy with Docker layer caching
           flyctl deploy --app "$APP_NAME" --config fly.toml --strategy=rolling \
             --build-arg="BUILDKIT_INLINE_CACHE=1" \
-            --build-arg="VITE_CONTROL_PLANE_URL=${{ secrets.VITE_CONTROL_PLANE_URL }}" \
+            --build-arg="VITE_CONTROL_PLANE_URL=${{ secrets.DEV_CONTROL_PLANE_URL }}" \
+            --build-arg="VITE_API_BASE_URL=${{ secrets.DEV_API_BASE_URL }}" \
             --no-cache
 
       - name: Get Fly.io IPs and trigger DNS workflow

@@ -1,0 +1,67 @@
+{
+  "_meta": {
+    "version": 2,
+    "updated": "2026-04-19",
+    "note": "Per-dim agent config. Mutated by reflect.mjs after each rubric run based on score deltas."
+  },
+  "D1": {
+    "model": "openrouter/google/gemini-2.5-pro",
+    "temperature": 0.2,
+    "prompt": "Edit ONLY: src/components/workflow/FlowCanvas.tsx. Add MiniMap from @xyflow/react inside the ReactFlow component. Make trigger node background indigo-50 border indigo-400. Ensure fitView fires after setRfNodes.",
+    "notes": "Visual layout change — gemini handles CSS/JSX well"
+  },
+  "D2": {
+    "model": "openrouter/google/gemini-2.5-pro",
+    "temperature": 0.2,
+    "prompt": "Edit ONLY: src/components/workflow/DataMappingPanel.tsx. On the source field <code> element change class 'truncate' to 'break-all'. Set the left column min-h-[280px] overflow-y-auto.",
+    "notes": "CSS tweak — gemini"
+  },
+  "D3": {
+    "model": "openrouter/anthropic/claude-sonnet-4.6",
+    "temperature": 0.2,
+    "prompt": "Edit ONLY: src/components/workflow/StepConfigPanel.tsx. In the HttpRequestConfig component: (1) Move the Auth JSX block (the section containing auth type select and credential inputs) to appear before the Headers JSX block. (2) Remove the condition that gates the Body textarea on HTTP method — render the Body textarea unconditionally. Do not change any other component, logic, or styling.",
+    "notes": "Empty patch with minimax — switching to claude-sonnet for better instruction following; prompt made more surgical with explicit JSX block descriptions."
+  },
+  "D4": {
+    "model": "openrouter/google/gemini-2.5-pro",
+    "temperature": 0.2,
+    "prompt": "Edit ONLY: src/components/workflow/FlowCanvas.tsx. In TriggerNode: show full webhookUrl prop if set, else show placeholder text '/webhooks/{id} — save to activate'. Add Zap icon from lucide-react next to trigger label.",
+    "notes": "Node rendering — visual agent"
+  },
+  "D5": {
+    "model": "openrouter/anthropic/claude-sonnet-4.6",
+    "temperature": 0.2,
+    "prompt": "Edit ONLY: src/components/workflow/StepConfigPanel.tsx and src/components/workflow/FlowCanvas.tsx. In StepConfigPanel.tsx: below the config form JSX, add a 'Test Step' button that calls api.testStep(tenantId, appId, step) on click, stores the JSON result in local useState, and renders it in a <pre className='text-xs overflow-auto'> element below the button. In FlowCanvas.tsx: inside the WorkflowNode component, when data.hasValidationError is truthy, render a <span className='absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500 animate-pulse' /> inside the node wrapper (ensure wrapper has position-relative). Do not modify any other files.",
+    "notes": "Empty patch with kimi-k2 — switching to claude-sonnet; prompt split into two explicit per-file instructions with exact class strings."
+  },
+  "D6": {
+    "model": "openrouter/google/gemini-2.5-pro",
+    "temperature": 0.2,
+    "prompt": "Edit ONLY: src/pages/AppBuilder.tsx. (1) Add a HelpCircle icon button (from lucide-react) in the canvas CardHeader; clicking it toggles a boolean state that shows/hides an overlay div listing the 3 panels and their purpose. (2) Ensure the empty-state overlay div (shown when steps.length === 0) remains visible until steps.length > 0 — do not hide it prematurely. Do not touch any other file.",
+    "notes": "Previous patch modified only the CI workflow file — wrong file entirely. Switching to gemini-2.5-pro and making the target file constraint explicit."
+  },
+  "D7": {
+    "model": "openrouter/anthropic/claude-sonnet-4.6",
+    "temperature": 0.2,
+    "prompt": "Edit ONLY: src/pages/AppBuilder.tsx. Make these three targeted changes: (1) Add className='font-semibold' to every <CardTitle> element in this file. (2) Find the Save button and ensure its text content is the string 'Save' with no conditional asterisk or suffix. (3) In the step catalog item render, change the icon wrapper gap class to gap-2.5. Do not alter any other JSX, logic, or styling.",
+    "notes": "Empty patch with gemini-2.5-pro — switching to claude-sonnet; each of the three changes is now individually enumerated."
+  },
+  "D8": {
+    "model": "openrouter/anthropic/claude-sonnet-4.6",
+    "temperature": 0.2,
+    "prompt": "Edit ONLY: src/pages/AppBuilder.tsx. Find the outer grid container className and replace 'grid-cols-1 lg:grid-cols-12' with 'grid-cols-1 md:grid-cols-12'. Then set the Settings panel column span to md:col-span-3, the Canvas panel to md:col-span-5, and the Catalog panel to md:col-span-4. Change only these class strings — do not alter any other markup or logic.",
+    "notes": "Empty patch with gemini-2.5-pro — switching to claude-sonnet; prompt gives exact before/after class strings to maximize precision."
+  },
+  "D9": {
+    "model": "openrouter/google/gemini-2.5-pro",
+    "temperature": 0.2,
+    "prompt": "Edit ONLY: src/pages/AppBuilder.tsx. In the Secrets card: (1) Remove any condition that hides the Add Secret form (key input + password input + Add button) based on requiredSecrets.length — always render the form. (2) Render each already-saved secret as a <span className='bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full'> badge. Do not modify any other file.",
+    "notes": "Previous patch modified only the CI workflow — wrong file. Switching to gemini-2.5-pro; added strict single-file constraint and badge className."
+  },
+  "D10": {
+    "model": "openrouter/anthropic/claude-sonnet-4.6",
+    "temperature": 0.2,
+    "prompt": "Edit ONLY: src/pages/AppBuilder.tsx. (1) When currentAppId is truthy, render a <span className='text-xs text-green-600 font-medium'>Autosave on</span> badge adjacent to the Save button. (2) Add a undoStack useRef<Workflow[]>([]) capped at 10 entries; push a copy of the current workflow to it on every workflow state change using useEffect. (3) Add an Undo button with the Undo2 icon from lucide-react in the header; clicking it pops the stack and restores that workflow; disable the button when undoStack.current.length === 0. Wrap stable callbacks in useCallback. Do not modify any other file.",
+    "notes": "Empty patch with kimi-k2 — switching to claude-sonnet; undo implementation details made fully explicit to leave no ambiguity."
+  }
+}
