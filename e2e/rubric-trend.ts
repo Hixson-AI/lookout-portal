@@ -7,9 +7,19 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+interface Run {
+  round: number;
+  date: string;
+  scores: Record<string, number | null>;
+}
+
 const histPath = path.join(__dirname, 'rubric-history.json');
 const history = JSON.parse(fs.readFileSync(histPath, 'utf8'));
-const runs = history.runs;
+const runs = history.runs as Run[];
+
+function formatScore(s: number | null): string {
+  return s == null ? '   ·' : String(s).padStart(4);
+}
 
 const dims = ['D1','D2','D3','D4','D5','D6','D7','D8','D9','D10'] as const;
 const BARS = ' ▁▂▃▄▅▆▇█';
@@ -25,24 +35,23 @@ function delta(a: number | null, b: number | null): string {
 }
 
 console.log('\n📈 RUBRIC SCORE TRENDS\n');
-console.log('Dim  ' + runs.map((r: any) => `R${r.round}`.padStart(4)).join('') + '  Trend  Δ');
+console.log('Dim  ' + runs.map((r) => `R${r.round}`.padStart(4)).join('') + '  Trend  Δ');
 console.log('─'.repeat(20 + runs.length * 4));
 
 for (const dim of dims) {
-  const scores = runs.map((r: any) => r.scores[dim]);
+  const scores = runs.map((r) => r.scores[dim]);
   const latest = scores[scores.length - 1];
   const prev = scores[scores.length - 2];
   const spark = sparkline(scores);
   const d = delta(prev, latest);
-  const latestStr = latest == null ? ' ·' : String(latest).padStart(2);
-  console.log(`${dim.padEnd(5)}${scores.map((s: number | null) => (s == null ? '   ·' : String(s).padStart(4))).join('')}  ${spark}  ${d}`);
+  console.log(`${dim.padEnd(5)}${scores.map((s: number | null) => formatScore(s)).join('')}  ${spark}  ${d}`);
 }
 
-const avgs = runs.map((r: any) => {
-  const vals = dims.map(d => r.scores[d]).filter((v: any): v is number => typeof v === 'number');
+const avgs = runs.map((r) => {
+  const vals = dims.map(d => r.scores[d]).filter((v: number | null): v is number => typeof v === 'number');
   return vals.length ? +(vals.reduce((a: number, b: number) => a + b, 0) / vals.length).toFixed(1) : null;
 });
 
 console.log('─'.repeat(20 + runs.length * 4));
-console.log(`AVG  ${avgs.map((s: number | null) => (s == null ? '   ·' : String(s).padStart(4))).join('')}  ${sparkline(avgs)}  ${delta(avgs[avgs.length-2], avgs[avgs.length-1])}`);
+console.log(`AVG  ${avgs.map((s: number | null) => formatScore(s)).join('')}  ${sparkline(avgs)}  ${delta(avgs[avgs.length-2], avgs[avgs.length-1])}`);
 console.log();

@@ -20,7 +20,7 @@
 
 import { test, expect } from '@playwright/test';
 import { authenticateAs } from './helpers/auth';
-import { analyzeScreen, auditScreen, VISION_MODEL_DEEP } from './helpers/ai-vision';
+import { analyzeScreen, VISION_MODEL_DEEP } from './helpers/ai-vision';
 import * as fs from 'fs';
 import * as path from 'path';
 

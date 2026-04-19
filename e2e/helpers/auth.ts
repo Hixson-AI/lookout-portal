@@ -7,7 +7,7 @@
  */
 
 import { Page } from '@playwright/test';
-import { createHmac, createSign } from 'crypto';
+import { createHmac } from 'crypto';
 
 // ── Minimal JWT implementation (HS256) ───────────────────────────────
 

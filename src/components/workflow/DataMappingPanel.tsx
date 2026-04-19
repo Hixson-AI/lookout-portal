@@ -6,7 +6,6 @@
  * Users click a source field to copy its reference path ({{stepId.field}})
  * into the focused destination field.
  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useRef, useEffect } from 'react';
 import { ChevronRight, Copy, Check, Zap } from 'lucide-react';

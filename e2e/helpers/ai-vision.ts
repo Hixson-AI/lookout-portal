@@ -88,7 +88,7 @@ Be specific. Reference actual UI elements you see. Do not be vague.`;
     max_tokens: 2048,
   });
 
-  const msg = response.choices[0].message as any;
+  const msg = response.choices[0].message;
   const raw = msg.content ?? '{}';
 
   // Extract JSON from fenced code block if present — try all fences

@@ -16,8 +16,6 @@ import { analyzeScreen, auditScreen, VISION_MODEL_DEEP } from './helpers/ai-visi
 
 const JWT_SECRET = process.env.JWT_SECRET ?? '231e94d3cba03fec2585417151aafd4ee8a36b350c69f19d1843efc79e7d49c5';
 const TENANT_ID = process.env.E2E_TENANT_ID ?? '00000000-0000-0000-0000-000000000001';
-const BASE_URL = process.env.E2E_BASE_URL ?? 'https://localhost:7333';
-
 // Shared builder URL for new-app flow
 const NEW_BUILDER_PATH = `/tenants/${TENANT_ID}/apps/new`;
 const TENANT_PATH = `/tenants/${TENANT_ID}`;
