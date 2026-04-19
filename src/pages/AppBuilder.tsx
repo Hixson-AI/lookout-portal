@@ -365,12 +365,11 @@ export default function AppBuilder() {
         </div>
       </div>
 
-      {/* ── Keyboard shortcuts bar (always visible) ─────────────────────── */}
-      <div className="px-4 py-1 bg-gray-50 border-b border-gray-200 flex items-center gap-4 text-xs text-gray-400 flex-shrink-0" role="toolbar" aria-label="Keyboard shortcuts">
-        <span><kbd className="px-1 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono">Ctrl+S</kbd> Save</span>
-        <span><kbd className="px-1 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono">Ctrl+Z</kbd> Undo</span>
-        <span><kbd className="px-1 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono">Del</kbd> Remove node</span>
-        <span><kbd className="px-1 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono">Click</kbd> Select node</span>
+      {/* ── Keyboard shortcuts bar (compact, right-aligned) ─────────────── */}
+      <div className="px-4 py-0.5 bg-white border-b border-gray-100 flex items-center justify-end gap-3 text-xs text-gray-300 flex-shrink-0" role="toolbar" aria-label="Keyboard shortcuts">
+        <span><kbd className="px-1 bg-gray-50 border border-gray-200 rounded text-gray-400 font-mono">⌘S</kbd> save</span>
+        <span><kbd className="px-1 bg-gray-50 border border-gray-200 rounded text-gray-400 font-mono">⌘Z</kbd> undo</span>
+        <span><kbd className="px-1 bg-gray-50 border border-gray-200 rounded text-gray-400 font-mono">Del</kbd> remove</span>
       </div>
 
       {/* ── Help overlay ─────────────────────────────────────────────── */}
