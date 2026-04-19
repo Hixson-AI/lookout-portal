@@ -1,14 +1,14 @@
 {
   "_meta": {
-    "version": 3,
+    "version": 4,
     "updated": "2026-04-19",
     "note": "Per-dim agent config. Mutated by reflect.mjs after each rubric run based on score deltas."
   },
   "D1": {
-    "model": "openrouter/google/gemini-2.5-pro",
+    "model": "openrouter/anthropic/claude-sonnet-4.6",
     "temperature": 0.2,
-    "prompt": "Edit ONLY: src/components/workflow/FlowCanvas.tsx. Add MiniMap from @xyflow/react inside the ReactFlow component. Make trigger node background indigo-50 border indigo-400. Ensure fitView fires after setRfNodes.",
-    "notes": "Visual layout change — gemini handles CSS/JSX well"
+    "prompt": "Edit ONLY: src/components/workflow/FlowCanvas.tsx. Make exactly three changes: (1) Add `import { MiniMap } from '@xyflow/react'` to the existing @xyflow/react import line. (2) Inside the JSX returned by the component that renders `<ReactFlow ...>`, add `<MiniMap />` as a direct child of `<ReactFlow>`, placed after the last existing child element. (3) In the TriggerNode component (or wherever node styles/classNames are set for trigger-type nodes), add or merge `bg-indigo-50 border-indigo-400` into the className. (4) Confirm that `fitView` is called inside a callback or useEffect that runs after `setRfNodes` completes — if it is already called after setRfNodes, leave it; if not, move the fitView call so it executes in a subsequent effect or callback. Do not edit any other file.",
+    "notes": "Empty patch with gemini-2.5-pro twice. Switching to claude-sonnet; decomposed into 4 numbered atomic changes with exact import syntax and placement anchors."
   },
   "D2": {
     "model": "openrouter/google/gemini-2.5-pro",
@@ -17,28 +17,28 @@
     "notes": "CSS tweak — gemini"
   },
   "D3": {
-    "model": "openrouter/moonshotai/kimi-k2",
+    "model": "openrouter/anthropic/claude-sonnet-4.6",
     "temperature": 0.2,
-    "prompt": "Edit ONLY: src/components/workflow/StepConfigPanel.tsx. Two changes inside the HttpRequestConfig component function: (1) Locate the JSX block that renders the auth type <select> and credential <input> fields — cut that entire block and paste it immediately before the JSX block that renders the Headers section (the block starting with a label or heading containing 'Headers'). (2) Find the JSX block that renders the Body <textarea> — remove the surrounding conditional expression (e.g. `{method === 'POST' && ...}` or similar) so the textarea renders unconditionally. Make no other edits.",
-    "notes": "Empty patch twice (minimax, claude-sonnet). Trying kimi-k2; prompt now describes JSX blocks by their visible content anchors (auth select, Headers label, Body textarea) rather than abstract names."
+    "prompt": "Edit ONLY: src/components/workflow/StepConfigPanel.tsx. Inside the HttpRequestConfig component function, make exactly two JSX reordering changes. Change 1 — move Auth block before Headers block: find the JSX div or section that contains an <select> for auth type AND an <input> for credentials (this is the Auth block); cut the entire Auth block and paste it so it appears immediately before the JSX div or section whose label or heading text contains the word 'Headers'. Change 2 — unconditional Body textarea: find the JSX that renders a <textarea> for the request body; if that textarea is wrapped in a conditional expression such as `{method === 'POST' && (...)}` or `{['POST','PUT'].includes(method) && (...)}`, remove only the outer conditional wrapper so the textarea (and its surrounding label/wrapper div) renders unconditionally. Do not add, remove, or reorder any other JSX. Do not edit any other file.",
+    "notes": "kimi-k2 produced only a blank line addition. Switching to claude-sonnet; rewritten to describe each change as a cut-and-paste or wrapper-removal operation with precise structural anchors."
   },
   "D4": {
-    "model": "openrouter/moonshotai/kimi-k2",
+    "model": "openrouter/anthropic/claude-sonnet-4.6",
     "temperature": 0.2,
-    "prompt": "Edit ONLY: src/components/workflow/FlowCanvas.tsx. Inside the TriggerNode component: (1) Add `import { Zap } from 'lucide-react'` if not already imported. (2) Locate the element that renders the trigger label text and prepend a `<Zap className='h-3 w-3 inline mr-1' />` icon directly before that text. (3) Find where the node displays the webhook URL (or its placeholder) and change the rendered string to: if the `webhookUrl` prop is a non-empty string render it, otherwise render the literal string '/webhooks/{id} — save to activate'. Do not edit any other component or file.",
-    "notes": "Empty patch with gemini-2.5-pro. Switching to kimi-k2; anchoring each change to specific component name (TriggerNode) and exact placeholder string to avoid ambiguity."
+    "prompt": "Edit ONLY: src/components/workflow/FlowCanvas.tsx. Inside the TriggerNode component function only, make exactly two changes: (1) In the import section at the top of the file, add `Zap` to the existing `lucide-react` import (e.g. change `import { X } from 'lucide-react'` to `import { X, Zap } from 'lucide-react'`); if lucide-react is not yet imported add `import { Zap } from 'lucide-react'`. Then, in the TriggerNode JSX, find the element that renders the trigger's label text and insert `<Zap className='h-3 w-3 inline mr-1' />` as a sibling immediately before that text node or text-rendering element. (2) In TriggerNode's JSX, find where the webhook URL is displayed (look for a string like '/webhooks/' or a prop named webhookUrl). Replace that rendered value with the expression: `{webhookUrl ? webhookUrl : '/webhooks/{id} — save to activate'}`. Do not touch any other component, hook, or file.",
+    "notes": "Empty patch with both gemini and kimi-k2. Switching to claude-sonnet; each edit now specifies exact import mutation syntax and a concrete ternary expression to insert."
   },
   "D5": {
-    "model": "openrouter/moonshotai/kimi-k2",
+    "model": "openrouter/google/gemini-2.5-pro",
     "temperature": 0.2,
-    "prompt": "Edit ONLY: src/components/workflow/StepConfigPanel.tsx. Inside StepConfigPanel: (1) Add a `const [testResult, setTestResult] = React.useState<unknown>(null)` state variable. (2) Below the closing tag of the config form JSX block, insert: a <button> with text 'Test Step' and an onClick handler that calls `api.testStep(tenantId, appId, step).then(setTestResult)`; and below that button, `{testResult && <pre className='text-xs overflow-auto'>{JSON.stringify(testResult, null, 2)}</pre>}`. Edit ONLY: src/components/workflow/FlowCanvas.tsx. Inside the WorkflowNode component: (1) Ensure the outermost wrapper div has `className` including `relative`. (2) Add `{data.hasValidationError && <span className='absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500 animate-pulse' />}` as the last child of that wrapper div. Do not modify any other files.",
-    "notes": "Empty patch with kimi-k2 and claude-sonnet. Trying kimi-k2 with prompt restructured to give per-file sections with line-level insertion instructions rather than prose descriptions."
+    "prompt": "Edit ONLY: src/components/workflow/StepConfigPanel.tsx AND src/components/workflow/FlowCanvas.tsx. FILE 1 — StepConfigPanel.tsx: Inside the StepConfigPanel component, (a) add `const [testResult, setTestResult] = React.useState<unknown>(null);` alongside the other useState declarations near the top of the component body. (b) After the closing tag of the config form (the last </div> or </form> that wraps the per-step config fields), insert this JSX block verbatim: `<button type='button' className='mt-2 px-3 py-1 text-xs rounded bg-blue-600 text-white' onClick={() => api.testStep(tenantId, appId, step).then(setTestResult)}>Test Step</button>{testResult && <pre className='text-xs overflow-auto mt-2'>{JSON.stringify(testResult, null, 2)}</pre>}`. FILE 2 — FlowCanvas.tsx: Inside the WorkflowNode component, (a) ensure the outermost wrapper div's className includes the word `relative` — if it already does, leave it; if not, append `relative` to the className string. (b) Add `{data.hasValidationError && <span className='absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500 animate-pulse' />}` as the very last child inside that outermost wrapper div. Do not edit any other file.",
+    "notes": "Empty patch with kimi-k2 twice. Switching to gemini-2.5-pro; rewrote with verbatim JSX snippets for each insertion point and explicit file-by-file structure."
   },
   "D6": {
-    "model": "openrouter/moonshotai/kimi-k2",
+    "model": "openrouter/anthropic/claude-sonnet-4.6",
     "temperature": 0.2,
-    "prompt": "Edit ONLY: src/pages/AppBuilder.tsx. Two changes: (1) Add `const [helpOpen, setHelpOpen] = React.useState(false)` state. In the canvas CardHeader JSX, add a `<button onClick={() => setHelpOpen(h => !h)}><HelpCircle className='h-4 w-4' /></button>` element; import HelpCircle from lucide-react if not present. Below the CardHeader (still inside the canvas card), add `{helpOpen && <div className='absolute inset-0 z-10 bg-white/90 p-4'><p>Settings panel: configure selected step.</p><p>Canvas panel: visual workflow.</p><p>Catalog panel: add new steps.</p></div>}` — ensure the canvas card wrapper has `relative` in its className. (2) Find the empty-state overlay div (the one rendered when steps.length === 0) and confirm its condition is exactly `{steps.length === 0 && ...}` — do not change this condition. Do not edit any other file.",
-    "notes": "Empty patch with gemini-2.5-pro. Switching to kimi-k2; split the two changes into numbered paragraphs with exact JSX snippets and import instructions."
+    "prompt": "Edit ONLY: src/pages/AppBuilder.tsx. Make exactly two changes: (1) Near the top of the AppBuilder component body (alongside other useState calls), add: `const [helpOpen, setHelpOpen] = React.useState(false);`. Add `HelpCircle` to the existing lucide-react import line. In the canvas card's CardHeader JSX, insert `<button type='button' onClick={() => setHelpOpen(h => !h)}><HelpCircle className='h-4 w-4' /></button>` as the last child inside CardHeader. On the canvas card's outermost wrapper div, add the class `relative` if it is not already present. Immediately after the CardHeader closing tag (but still inside the canvas card div), insert: `{helpOpen && <div className='absolute inset-0 z-10 bg-white/90 p-4'><p>Settings panel: configure selected step.</p><p>Canvas panel: visual workflow.</p><p>Catalog panel: add new steps.</p></div>}`. (2) Find the empty-state overlay (rendered when steps.length === 0) — do not change its condition or markup. Do not edit any other file.",
+    "notes": "Empty patch with gemini and kimi-k2. Switching to claude-sonnet; each JSX insertion is now written as a literal string to copy in, with explicit sibling/child placement anchors."
   },
   "D7": {
     "model": "openrouter/anthropic/claude-sonnet-4.6",
@@ -47,21 +47,21 @@
     "notes": "Previous patch removed the ⌘S span (partially correct) but score stayed at 4. Score goal is improvement on font-semibold and gap changes. Keeping claude-sonnet; removing the already-done Save change and narrowing to only the two remaining changes."
   },
   "D8": {
-    "model": "openrouter/moonshotai/kimi-k2",
-    "temperature": 0.2,
-    "prompt": "Edit ONLY: src/pages/AppBuilder.tsx. Find the single outer grid container div — it has a className containing both 'grid-cols-1' and 'lg:grid-cols-12'. Make these exact string replacements inside that className: replace 'lg:grid-cols-12' with 'md:grid-cols-12'. Then find the three child panel divs: the Settings panel div (className containing 'lg:col-span-3' or similar), the Canvas panel div ('lg:col-span-5' or similar), and the Catalog panel div ('lg:col-span-4' or similar). Replace their lg: column-span classes with 'md:col-span-3', 'md:col-span-5', and 'md:col-span-4' respectively. Change only these four class strings — do not alter any other markup, logic, or file.",
-    "notes": "Empty patch with claude-sonnet. Switching to kimi-k2; prompt now names exact before-strings ('lg:grid-cols-12', 'lg:col-span-3' etc.) so the model can locate them by literal text search."
-  },
-  "D9": {
     "model": "openrouter/google/gemini-2.5-pro",
     "temperature": 0.2,
-    "prompt": "Edit ONLY: src/pages/AppBuilder.tsx. In the Secrets card: (1) Remove any condition that hides the Add Secret form (key input + password input + Add button) based on requiredSecrets.length — always render the form. (2) Render each already-saved secret as a <span className='bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full'> badge. Do not modify any other file.",
-    "notes": "Previous patch modified only the CI workflow — wrong file. Switching to gemini-2.5-pro; added strict single-file constraint and badge className."
+    "prompt": "Edit ONLY: src/pages/AppBuilder.tsx. Perform these exact className string replacements and nothing else: (1) In the outer grid container div, change the substring `lg:grid-cols-12` to `md:grid-cols-12`. (2) In the Settings panel child div, change `lg:col-span-3` to `md:col-span-3`. (3) In the Canvas panel child div, change `lg:col-span-5` to `md:col-span-5`. (4) In the Catalog panel child div, change `lg:col-span-4` to `md:col-span-4`. These are purely textual substitutions of Tailwind class names — do not alter any logic, event handlers, or other markup. Do not edit any other file.",
+    "notes": "Empty patch with claude-sonnet and kimi-k2. Switching to gemini-2.5-pro; prompt reduced to bare minimum — four exact before→after string replacements only."
+  },
+  "D9": {
+    "model": "openrouter/moonshotai/kimi-k2",
+    "temperature": 0.2,
+    "prompt": "Edit ONLY: src/pages/AppBuilder.tsx. Inside the Secrets card section of AppBuilder, make exactly two changes: (1) Find the conditional that gates rendering of the Add Secret form (the group containing a key text input, a password input, and an Add button) — this condition likely checks `requiredSecrets.length` or similar. Remove only that outer conditional wrapper so the Add Secret form always renders regardless of requiredSecrets length. (2) Find where saved secrets are listed (likely a `.map()` over a secrets array) and change the rendered element for each secret from whatever it currently is to `<span key={secret.key} className='bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full'>{secret.key}</span>`. Do not modify any other section of this file or any other file.",
+    "notes": "Empty patch with gemini-2.5-pro. Switching to kimi-k2; added explicit badge className and described the conditional-removal as 'remove only that outer conditional wrapper'."
   },
   "D10": {
-    "model": "openrouter/anthropic/claude-sonnet-4.6",
+    "model": "openrouter/google/gemini-2.5-pro",
     "temperature": 0.2,
-    "prompt": "Edit ONLY: src/pages/AppBuilder.tsx. (1) When currentAppId is truthy, render a <span className='text-xs text-green-600 font-medium'>Autosave on</span> badge adjacent to the Save button. (2) Add a undoStack useRef<Workflow[]>([]) capped at 10 entries; push a copy of the current workflow to it on every workflow state change using useEffect. (3) Add an Undo button with the Undo2 icon from lucide-react in the header; clicking it pops the stack and restores that workflow; disable the button when undoStack.current.length === 0. Wrap stable callbacks in useCallback. Do not modify any other file.",
-    "notes": "Empty patch with kimi-k2 — switching to claude-sonnet; undo implementation details made fully explicit to leave no ambiguity."
+    "prompt": "Edit ONLY: src/pages/AppBuilder.tsx. Make exactly three additions to the AppBuilder component: (1) Autosave badge — find the Save button JSX; immediately adjacent to it (before or after, on the same line or as a sibling), insert `{currentAppId && <span className='text-xs text-green-600 font-medium'>Autosave on</span>}`. (2) Undo stack — in the component body add: `const undoStack = React.useRef<any[]>([]);` and a `React.useEffect(() => { undoStack.current = [JSON.parse(JSON.stringify(workflow)), ...undoStack.current].slice(0, 10); }, [workflow]);`. (3) Undo button — add `Undo2` to the lucide-react import. In the header JSX, insert `<button type='button' disabled={undoStack.current.length === 0} onClick={() => { const prev = undoStack.current.shift(); if (prev) setWorkflow(prev); }}><Undo2 className='h-4 w-4' /></button>`. Do not modify any other file.",
+    "notes": "Empty patch with kimi-k2. Switching to gemini-2.5-pro; each of the three additions is now a self-contained literal code snippet to insert, leaving nothing to inference."
   }
 }

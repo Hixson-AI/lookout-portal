@@ -449,6 +449,24 @@
         "composite": null
       },
       "notes": "auto-logged from rubric run"
+    },
+    {
+      "round": 26,
+      "date": "2026-04-19",
+      "scores": {
+        "D1": 6,
+        "D2": 9,
+        "D3": 4,
+        "D4": 6,
+        "D5": 5,
+        "D6": 6,
+        "D7": 6,
+        "D8": 3,
+        "D9": 4,
+        "D10": 6,
+        "composite": null
+      },
+      "notes": "auto-logged from rubric run"
     }
   ]
 }

@@ -195,6 +195,7 @@ function HttpRequestConfig({ config, onChange }: { config: any; onChange: (c: an
         </div>
       </div>
 
+
       {/* Auth — shown first, most impactful */}
       <div className="space-y-3 p-3 rounded-lg border bg-gray-50" style={{ borderColor: 'var(--border)' }}>
         <Field label="Authentication">
