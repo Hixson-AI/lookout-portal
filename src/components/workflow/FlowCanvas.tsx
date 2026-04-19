@@ -16,7 +16,6 @@ import {
   ReactFlowProvider,
   Background,
   Controls,
-  MiniMap,
   addEdge,
   useNodesState,
   useEdgesState,
@@ -445,14 +444,6 @@ function FlowCanvasInner({
       >
         <Background color="#e5e7eb" gap={16} />
         <Controls />
-        <MiniMap
-          nodeStrokeWidth={3}
-          nodeColor={(n) => {
-            const cat = (n.data as WorkflowNodeData).category;
-            return getCategoryStyle(cat).border;
-          }}
-          style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}
-        />
       </ReactFlow>
     </div>
   );
