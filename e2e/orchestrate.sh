@@ -43,6 +43,7 @@ ln -sfn "$RUN_DIR" "$PORTAL_DIR/e2e/.agent-logs"
 set +u
 # shellcheck disable=SC1091
 source "$(dirname "$0")/../.env.e2e" 2>/dev/null || true
+export OPENROUTER_E2E_KEY="${OPENROUTER_E2E_KEY:-}"
 export OPENROUTER_API_KEY="${OPENROUTER_E2E_KEY:-${OPENROUTER_API_KEY:-}}"
 set -u
 
