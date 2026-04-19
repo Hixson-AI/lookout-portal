@@ -3,7 +3,7 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Trash2, Zap, Settings2, Play, Loader2 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Button } from '../ui/button';
@@ -627,6 +627,13 @@ export function StepConfigPanel({ step, allSteps = [], onChange, tenantId, appId
   const [tab, setTab] = useState<'config' | 'mapping'>('config');
   const [testResult, setTestResult] = useState<any>(null);
   const [isTesting, setIsTesting] = useState(false);
+
+  // Sync local meta state when the selected step changes
+  useEffect(() => {
+    setStepName(step.name);
+    setStepId(step.id);
+    setTestResult(null);
+  }, [step.id]);
 
   const commitMeta = () => onChange({ ...step, name: stepName, id: stepId });
   const mappableFields = MAPPABLE_FIELDS[step.stepId] ?? [];
