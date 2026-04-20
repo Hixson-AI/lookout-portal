@@ -24,7 +24,13 @@ async function goToBuilder(page: import('@playwright/test').Page) {
   });
 }
 
-async function interceptChat(page: import('@playwright/test').Page, toolCall: object | null, text: string | null = null) {
+interface ToolCall {
+  id: string;
+  tool: string;
+  props: Record<string, unknown>;
+}
+
+async function interceptChat(page: import('@playwright/test').Page, toolCall: ToolCall | null, text: string | null = null) {
   await page.route('**/v1/tenants/*/agents/chat', route =>
     route.fulfill({
       status: 200,
@@ -36,7 +42,7 @@ async function interceptChat(page: import('@playwright/test').Page, toolCall: ob
           rawToolCalls: toolCall ? [{
             id: 'tc1',
             type: 'function',
-            function: { name: (toolCall as any).tool, arguments: JSON.stringify((toolCall as any).props) },
+            function: { name: toolCall.tool, arguments: JSON.stringify(toolCall.props) },
           }] : null,
         },
       }),
