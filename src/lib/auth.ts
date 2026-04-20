@@ -71,24 +71,24 @@ export function getUser(): JwtPayload | null {
 export function login(): void {
   const hostname = window.location.hostname;
   const parts = hostname.split('.');
-  
+
   // Always use main portal domain as OAuth redirect_uri (Google doesn't support wildcards)
   // Expected structure: portal.dev.client.domain or tenant.portal.dev.client.domain
-  let oauthRedirectUri = window.location.origin;
+  let oauthRedirectUri = `${window.location.origin}/auth/google`;
   let tenantSubdomain: string | null = null;
-  
+
   // If we're on a tenant subdomain (e.g., hixson-ai.portal.dev.client.domain),
   // remove the tenant prefix to get the base portal domain
   if (parts.length >= 4 && parts[1] === 'portal') {
     tenantSubdomain = parts[0];
     // Remove first subdomain (tenant) to get portal.dev.client.domain
     parts.shift();
-    oauthRedirectUri = `${window.location.protocol}//${parts.join('.')}`;
+    oauthRedirectUri = `${window.location.protocol}//${parts.join('.')}/auth/google`;
   }
 
   // Pass tenant subdomain as state for redirect after OAuth
   const state = tenantSubdomain || window.location.href;
-  
+
   const controlPlaneUrl = import.meta.env.VITE_CONTROL_PLANE_URL;
   const authUrl = `${controlPlaneUrl}/auth/google?redirect_uri=${encodeURIComponent(oauthRedirectUri)}&state=${encodeURIComponent(state)}`;
   window.location.href = authUrl;
