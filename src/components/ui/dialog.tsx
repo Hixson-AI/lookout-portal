@@ -1,7 +1,7 @@
 import * as React from "react"
 import { cn } from "../../lib/utils"
 
-const Dialog = ({ open, onOpenChange, children }: { open: boolean; onOpenChange: (open: boolean) => void; children: React.ReactNode }) => {
+const Dialog = ({ open, onOpenChange, children, className }: { open: boolean; onOpenChange: (open: boolean) => void; children: React.ReactNode; className?: string }) => {
   // Clone children to pass onOpenChange to DialogTrigger
   const childrenWithProps = React.Children.map(children, (child) => {
     if (React.isValidElement(child) && child.type === DialogTrigger) {
@@ -24,7 +24,7 @@ const Dialog = ({ open, onOpenChange, children }: { open: boolean; onOpenChange:
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-black/50" onClick={() => onOpenChange(false)} />
-      <div className="relative z-50 card-elevated rounded-lg p-6 max-w-md w-full mx-4 fade-in" style={{ backgroundColor: 'var(--bg-card)' }}>
+      <div className={cn("relative z-50 card-elevated rounded-lg p-6 max-w-md w-full mx-4 fade-in", className)} style={{ backgroundColor: 'var(--bg-card)' }}>
         {childrenWithProps}
       </div>
     </div>

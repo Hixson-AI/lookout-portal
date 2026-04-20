@@ -34,9 +34,15 @@ export interface StepTest {
   createdAt: string;
 }
 
-// Get all steps
+// Get all steps (admin)
 export async function getSteps(): Promise<AgentStep[]> {
   return apiRequest<AgentStep[]>('/v1/agent-steps');
+}
+
+// Get the public step catalog (any authenticated operator, for builder UI)
+export async function getCatalog(category?: string): Promise<AgentStep[]> {
+  const qs = category ? `?category=${category}` : '';
+  return apiRequest<AgentStep[]>(`/v1/catalog/steps${qs}`);
 }
 
 // Get steps by category

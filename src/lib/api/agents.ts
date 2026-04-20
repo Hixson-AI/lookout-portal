@@ -86,6 +86,63 @@ export interface DebugResult {
   };
 }
 
+// ── Builder Chat ──────────────────────────────────────────────────────────
+
+export interface RawToolCall {
+  id: string;
+  type: 'function';
+  function: { name: string; arguments: string };
+}
+
+export interface ChatApiMessage {
+  role: 'user' | 'assistant' | 'tool' | 'system';
+  content: string | null;
+  toolCallId?: string;
+  toolCalls?: RawToolCall[];
+}
+
+export interface ToolCallProps {
+  // step_picker
+  title?: string;
+  steps?: Array<{ id: string; name: string; category: string; description: string }>;
+  multi?: boolean;
+  // field_input / choice_select
+  label?: string;
+  placeholder?: string;
+  hint?: string;
+  fieldId?: string;
+  options?: Array<{ value: string; label: string }>;
+  // confirm_add_steps
+  summary?: string;
+  trigger?: { type: string; schedule?: string };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+}
+
+export interface ChatToolCall {
+  id: string;
+  tool: string;
+  props: ToolCallProps;
+}
+
+export interface ChatResult {
+  text: string | null;
+  toolCall: ChatToolCall | null;
+  rawToolCalls: RawToolCall[] | null;
+  usage?: { inputTokens: number; outputTokens: number };
+}
+
+export async function chat(
+  tenantId: string,
+  messages: ChatApiMessage[],
+  workflow: unknown,
+): Promise<ChatResult> {
+  return apiRequest<ChatResult>(`/v1/tenants/${tenantId}/agents/chat`, {
+    method: 'POST',
+    body: JSON.stringify({ messages, workflow }),
+  });
+}
+
 // Build workflow from description
 export async function buildWorkflow(tenantId: string, description: string): Promise<WorkflowBuilderResult> {
   return apiRequest<WorkflowBuilderResult>(`/v1/tenants/${tenantId}/agents/build-workflow`, {

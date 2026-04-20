@@ -11,16 +11,20 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Save, Undo2, Zap, Globe, HelpCircle, Lock, Plus, Trash2,
-  CheckCircle, Loader2, ShieldCheck, Sparkles, KeyRound, Terminal,
+  CheckCircle, Loader2, ShieldCheck, KeyRound, Terminal, X,
 } from 'lucide-react';
 import { FlowCanvas } from '../components/workflow/FlowCanvas';
 import { StepConfigPanel } from '../components/workflow/StepConfigPanel';
 import { DataMappingPanel } from '../components/workflow/DataMappingPanel';
+import { BuilderChat } from '../components/workflow/BuilderChat';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
+import { Dialog, DialogHeader, DialogTitle, DialogContent } from '../components/ui/dialog';
 import { api } from '../lib/api';
+import { getCatalog } from '../lib/api/steps';
 import type { WorkflowStep } from '../lib/types';
+import type { AgentStep } from '../lib/api/steps';
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -40,21 +44,35 @@ interface SecretEntry {
   created_at: string;
 }
 
-// ── Catalog definition ────────────────────────────────────────────────
+// ── Catalog helpers ──────────────────────────────────────────────────
 
-const CATALOG = [
-  { id: 'step:http-request',  name: 'HTTP Request',    category: 'integration', icon: '🌐', desc: 'Call any REST API' },
-  { id: 'step:ai-processing', name: 'AI Processing',   category: 'ai',          icon: '🤖', desc: 'Run an LLM prompt' },
-  { id: 'step:data-transform',name: 'Data Transform',  category: 'data',        icon: '🔄', desc: 'Reshape or filter data' },
-  { id: 'step:condition',     name: 'Condition/Branch',category: 'logic',       icon: '🔀', desc: 'True/false branching' },
-  { id: 'step:delay',         name: 'Delay',           category: 'logic',       icon: '⏱️', desc: 'Wait N milliseconds' },
-  { id: 'step:email-send',    name: 'Email Send',      category: 'communication',icon: '📧', desc: 'Send transactional email' },
-  { id: 'step:twilio-sms',    name: 'Twilio SMS',      category: 'communication',icon: '💬', desc: 'Send SMS via Twilio' },
-];
+const CATEGORY_ICON: Record<string, string> = {
+  integration:   '🌐',
+  ai:            '🤖',
+  data:          '🔄',
+  logic:         '🔀',
+  communication: '�',
+};
 
-const CATALOG_CATEGORIES: Record<string, string> = Object.fromEntries(
-  CATALOG.map(c => [c.id, c.category])
-);
+interface CatalogItem {
+  id: string;
+  name: string;
+  category: string;
+  icon: string;
+  desc: string;
+  configSchema?: Record<string, unknown> | null;
+}
+
+function apiStepToCatalogItem(s: AgentStep): CatalogItem {
+  return {
+    id: s.id,
+    name: s.name,
+    category: s.category,
+    desc: s.description,
+    icon: CATEGORY_ICON[s.category] ?? '⚡',
+    configSchema: s.configSchema as Record<string, unknown> | null,
+  };
+}
 
 const MAPPABLE_FIELDS: Record<string, Array<{ key: string; label: string; placeholder?: string }>> = {
   'step:http-request':  [{ key: 'url', label: 'URL' }, { key: 'body', label: 'Body' }],
@@ -91,11 +109,20 @@ export default function AppBuilder() {
   const [showHelp, setShowHelp] = useState(false);
   const [catalogSearch, setCatalogSearch] = useState('');
   const [configTab, setConfigTab] = useState<'config' | 'mapping'>('config');
+  const [catalog, setCatalog] = useState<CatalogItem[]>([]);
+  const [chatCollapsed, setChatCollapsed] = useState(true);
   const [validating, setValidating] = useState(false);
   const [validateResult, setValidateResult] = useState<'pass' | 'fail' | null>(null);
   const [executionLog, setExecutionLog] = useState<string[]>([]);
   const [showLog, setShowLog] = useState(false);
   const executionLogRef = useRef<HTMLPreElement>(null);
+
+  // Load step catalog from API
+  useEffect(() => {
+    getCatalog()
+      .then((steps: AgentStep[]) => setCatalog(steps.map(apiStepToCatalogItem)))
+      .catch(() => {}); // silent — catalog stays empty until loaded
+  }, []);
 
   // Auto-scroll execution log to bottom
   useEffect(() => {
@@ -137,17 +164,7 @@ export default function AppBuilder() {
     setValidating(false);
   }, [workflow.steps]);
 
-  // ── AI Assist ────────────────────────────────────────────────────────
-  const handleAiAssist = useCallback(() => {
-    if (workflow.steps.length === 0) {
-      const suggestedSteps: WorkflowStep[] = [
-        { id: 'step-ai-1', stepId: 'step:http-request', name: 'Fetch Data', config: { method: 'GET', url: 'https://api.example.com/data' } },
-        { id: 'step-ai-2', stepId: 'step:ai-processing', name: 'AI Analysis', config: { model: 'gpt-4o-mini', prompt: 'Analyze the following data: {{step-ai-1.body}}' } },
-        { id: 'step-ai-3', stepId: 'step:condition', name: 'Check Result', config: { condition: '{{step-ai-2.output}} contains "positive"' } },
-      ];
-      setWorkflow(w => ({ ...w, name: w.name || 'AI-Generated Workflow', steps: suggestedSteps }));
-    }
-  }, [workflow.steps.length]);
+  // ── AI Assist (defined after updateWorkflow) ──────────────────────────
 
   // ── Undo stack ──────────────────────────────────────────────────────
   const undoStack = useRef<Workflow[]>([]);
@@ -176,6 +193,30 @@ export default function AppBuilder() {
   const updateWorkflow = useCallback((next: Workflow) => {
     setWorkflow(next);
   }, []);
+
+  const handleApplySteps = useCallback((
+    steps: Array<{ stepId: string; name: string; config?: Record<string, unknown> }>,
+    trigger: { type: string; schedule?: string },
+    workflowName: string,
+  ) => {
+    const newSteps: WorkflowStep[] = steps.map((s, i) => ({
+      id: `step_ai_${Date.now()}_${i}`,
+      stepId: s.stepId,
+      name: s.name,
+      config: s.config ?? {},
+    }));
+    updateWorkflow({
+      ...workflow,
+      name: workflow.name || workflowName,
+      triggerConfig: {
+        ...workflow.triggerConfig,
+        type: trigger.type as any,
+        ...(trigger.schedule ? { schedule: trigger.schedule } : {}),
+      },
+      steps: [...workflow.steps, ...newSteps],
+    });
+    setChatCollapsed(true);
+  }, [workflow, updateWorkflow]);
 
   // ── Autosave ────────────────────────────────────────────────────────
 
@@ -367,9 +408,17 @@ export default function AppBuilder() {
     ? (workflow.triggerConfig.webhookUrl || (currentAppId ? `/webhooks/${currentAppId}` : '/webhooks/{id} — save to activate'))
     : null;
 
+  const catalogCategories = useMemo(
+    () => Object.fromEntries(catalog.map(c => [c.id, c.category])),
+    [catalog]
+  );
+
   const filteredCatalog = useMemo(
-    () => CATALOG.filter(c => c.name.toLowerCase().includes(catalogSearch.toLowerCase()) || c.desc.toLowerCase().includes(catalogSearch.toLowerCase())),
-    [catalogSearch]
+    () => catalog.filter(c =>
+      c.name.toLowerCase().includes(catalogSearch.toLowerCase()) ||
+      c.desc.toLowerCase().includes(catalogSearch.toLowerCase())
+    ),
+    [catalog, catalogSearch]
   );
 
   const undoDisabled = undoStack.current.length === 0 && undoCount >= 0; // reactive dependency
@@ -601,44 +650,14 @@ export default function AppBuilder() {
                 </div>
               )}
               {workflow.steps.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full min-h-[320px] gap-4 p-6">
-                  <div className="text-center pointer-events-none select-none">
-                    <Zap className="h-10 w-10 mb-3 opacity-20 mx-auto text-indigo-400" />
-                    <p className="text-sm font-medium text-gray-500">Drop steps here to build your workflow</p>
-                    <p className="text-xs mt-1 text-gray-400">Click a step in the catalog or drag it onto the canvas</p>
-                  </div>
-                  <div className="flex gap-2 pointer-events-auto">
-                    <button
-                      onClick={handleAiAssist}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700 transition-colors shadow-sm"
-                    >
-                      <Sparkles className="h-3.5 w-3.5" /> AI Assist
-                    </button>
-                    <button
-                      onClick={() => {
-                        ['step:http-request', 'step:ai-processing', 'step:condition'].forEach((id) => {
-                          const item = CATALOG.find(c => c.id === id)!;
-                          handleDropStep(item.id, item.name);
-                        });
-                        setWorkflow(w => ({ ...w, name: w.name || 'HTTP → AI → Branch' }));
-                      }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-gray-700 text-xs font-medium hover:border-indigo-400 hover:bg-indigo-50 transition-colors"
-                    >
-                      🌐 API + AI template
-                    </button>
-                    <button
-                      onClick={() => {
-                        ['step:http-request', 'step:email-send'].forEach((id) => {
-                          const item = CATALOG.find(c => c.id === id)!;
-                          handleDropStep(item.id, item.name);
-                        });
-                        setWorkflow(w => ({ ...w, name: w.name || 'Fetch + Email Notify' }));
-                      }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-gray-700 text-xs font-medium hover:border-indigo-400 hover:bg-indigo-50 transition-colors"
-                    >
-                      📧 Notify template
-                    </button>
-                  </div>
+                <div className="h-full min-h-[360px]">
+                  <BuilderChat
+                    tenantId={tid}
+                    workflow={workflow}
+                    collapsed={false}
+                    onApplySteps={handleApplySteps}
+                    onToggle={() => setChatCollapsed(true)}
+                  />
                 </div>
               ) : (
                 <div style={{ height: '100%', minHeight: 320 }}>
@@ -646,7 +665,7 @@ export default function AppBuilder() {
                     steps={workflow.steps}
                     triggerType={workflow.triggerConfig.type}
                     selectedStepId={selectedStepId}
-                    catalogCategories={CATALOG_CATEGORIES}
+                    catalogCategories={catalogCategories}
                     webhookUrl={webhookUrl}
                     errorStepIds={errorStepIds}
                     onSelectStep={handleSelectStep}
@@ -696,7 +715,10 @@ export default function AppBuilder() {
                   </div>
                 </button>
               ))}
-              {filteredCatalog.length === 0 && (
+              {catalog.length === 0 && (
+                <p className="text-xs text-gray-400 text-center py-4">Loading catalog…</p>
+              )}
+              {catalog.length > 0 && filteredCatalog.length === 0 && (
                 <p className="text-xs text-gray-400 text-center py-4">No steps match "{catalogSearch}"</p>
               )}
             </CardContent>
@@ -705,66 +727,98 @@ export default function AppBuilder() {
 
       </div>
 
-      {/* ── Step config panel (outside grid to avoid ReactFlow z-index) ── */}
-      {selectedStep && (
-        <Card className="shadow-sm flex-shrink-0 mx-0">
-          <CardHeader className="py-2 px-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-semibold">Configure: {selectedStep.name}</CardTitle>
-              <div className="flex items-center gap-1">
-                <button
-                  className={`px-2 py-0.5 text-xs rounded ${configTab === 'config' ? 'bg-indigo-100 text-indigo-700 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
-                  onClick={() => setConfigTab('config')}
-                >Config</button>
-                <button
-                  className={`px-2 py-0.5 text-xs rounded ${configTab === 'mapping' ? 'bg-indigo-100 text-indigo-700 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
-                  onClick={() => setConfigTab('mapping')}
-                >Data Mapping</button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="px-4 pb-4">
-            {configTab === 'config' ? (
-              <div className="space-y-3">
-                <StepConfigPanel
-                  step={selectedStep}
-                  allSteps={workflow.steps}
-                  onChange={handleStepChange}
-                  tenantId={tid}
-                  appId={currentAppId ?? undefined}
-                />
-                <div className="pt-2 border-t border-gray-100">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleTestStep(selectedStep)}
-                    disabled={testingStep === selectedStep.id}
-                    className="w-full text-xs border-indigo-300 text-indigo-700 hover:bg-indigo-50"
-                  >
-                    {testingStep === selectedStep.id
-                      ? <><Loader2 className="h-3 w-3 animate-spin mr-1" />Testing…</>
-                      : <><Zap className="h-3 w-3 mr-1" />Test Step</>}
-                  </Button>
-                  {validationErrors[selectedStep.id] && (
-                    <p className="text-xs text-red-600 mt-1">{validationErrors[selectedStep.id]}</p>
-                  )}
-                  {testResults[selectedStep.id] && (
-                    <pre className="mt-2 text-xs bg-gray-50 border border-gray-200 rounded p-2 overflow-auto max-h-32 font-mono">
-                      {testResults[selectedStep.id]}
-                    </pre>
-                  )}
+      {/* ── Step config dialog (avoids layout squish) ────────────────── */}
+      <Dialog
+        open={!!selectedStep}
+        onOpenChange={open => !open && setSelectedStepId(null)}
+        className="max-w-2xl max-h-[80vh] overflow-y-auto"
+      >
+        {selectedStep && (
+          <>
+            <DialogHeader>
+              <div className="flex items-center justify-between">
+                <DialogTitle className="text-base">Configure: {selectedStep.name}</DialogTitle>
+                <div className="flex items-center gap-1">
+                  <button
+                    className={`px-2 py-0.5 text-xs rounded ${configTab === 'config' ? 'bg-indigo-100 text-indigo-700 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
+                    onClick={() => setConfigTab('config')}
+                  >Config</button>
+                  <button
+                    className={`px-2 py-0.5 text-xs rounded ${configTab === 'mapping' ? 'bg-indigo-100 text-indigo-700 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
+                    onClick={() => setConfigTab('mapping')}
+                  >Data Mapping</button>
+                  <button className="ml-2 text-gray-400 hover:text-gray-600" onClick={() => setSelectedStepId(null)}>
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
-            ) : (
-              <DataMappingPanel
-                currentStep={selectedStep}
-                allSteps={workflow.steps}
-                mappableFields={mappableFields}
-                onChange={updates => handleStepChange({ ...selectedStep, config: { ...selectedStep.config, ...updates } })}
-              />
-            )}
-          </CardContent>
-        </Card>
+            </DialogHeader>
+            <DialogContent>
+              {configTab === 'config' ? (
+                <div className="space-y-3">
+                  <StepConfigPanel
+                    step={selectedStep}
+                    allSteps={workflow.steps}
+                    onChange={handleStepChange}
+                    tenantId={tid}
+                    appId={currentAppId ?? undefined}
+                  />
+                  <div className="pt-2 border-t border-gray-100">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleTestStep(selectedStep)}
+                      disabled={testingStep === selectedStep.id}
+                      className="w-full text-xs border-indigo-300 text-indigo-700 hover:bg-indigo-50"
+                    >
+                      {testingStep === selectedStep.id
+                        ? <><Loader2 className="h-3 w-3 animate-spin mr-1" />Testing…</>
+                        : <><Zap className="h-3 w-3 mr-1" />Test Step</>}
+                    </Button>
+                    {validationErrors[selectedStep.id] && (
+                      <p className="text-xs text-red-600 mt-1">{validationErrors[selectedStep.id]}</p>
+                    )}
+                    {testResults[selectedStep.id] && (
+                      <pre className="mt-2 text-xs bg-gray-50 border border-gray-200 rounded p-2 overflow-auto max-h-32 font-mono">
+                        {testResults[selectedStep.id]}
+                      </pre>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <DataMappingPanel
+                  currentStep={selectedStep}
+                  allSteps={workflow.steps}
+                  mappableFields={mappableFields}
+                  onChange={updates => handleStepChange({ ...selectedStep, config: { ...selectedStep.config, ...updates } })}
+                />
+              )}
+            </DialogContent>
+          </>
+        )}
+      </Dialog>
+
+      {/* ── Floating AI chat button (visible when canvas has steps) ─────── */}
+      {workflow.steps.length > 0 && (
+        chatCollapsed ? (
+          <button
+            onClick={() => setChatCollapsed(false)}
+            className="fixed bottom-6 right-6 z-50 h-12 w-12 rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 transition-colors flex items-center justify-center"
+            title="Open AI Builder"
+          >
+            <Zap className="h-5 w-5" />
+          </button>
+        ) : (
+          <div className="fixed right-0 top-16 bottom-0 w-96 z-40 bg-white border-l border-gray-200 shadow-xl">
+            <BuilderChat
+              tenantId={tid}
+              workflow={workflow}
+              collapsed={false}
+              onApplySteps={handleApplySteps}
+              onToggle={() => setChatCollapsed(true)}
+            />
+          </div>
+        )
       )}
 
       {/* ── Execution Log (D5) ────────────────────────────────────────── */}
