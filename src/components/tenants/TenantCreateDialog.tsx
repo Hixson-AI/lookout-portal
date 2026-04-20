@@ -80,7 +80,7 @@ export function TenantCreateDialog({ open, onOpenChange, onCreate, isPending }: 
                 placeholder="acme-corp"
                 value={slug}
                 onChange={(e) => handleSlugChange(e.target.value)}
-                pattern="[a-z0-9-]+"
+                pattern="[a-z0-9\-]+"
                 title="Lowercase letters, numbers, and hyphens only"
                 required
               />

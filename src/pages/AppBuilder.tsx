@@ -124,6 +124,8 @@ export default function AppBuilder() {
   const [catalogSearch, setCatalogSearch] = useState('');
   const [catalogDialogOpen, setCatalogDialogOpen] = useState(false);
   const [rawCatalog, setRawCatalog] = useState<AgentAction[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
   const [n8nImportOpen, setN8nImportOpen] = useState(false);
   const [n8nImportText, setN8nImportText] = useState('');
   const [n8nImporting, setN8nImporting] = useState(false);
@@ -139,12 +141,17 @@ export default function AppBuilder() {
 
   // Load action library from API
   useEffect(() => {
+    setCatalogLoading(true);
+    setCatalogError(null);
     getCatalog()
       .then((steps: AgentAction[]) => {
         setRawCatalog(steps);
         setCatalog(steps.map(apiStepToCatalogItem));
       })
-      .catch(() => {}); // silent — catalog stays empty until loaded
+      .catch((err: unknown) => {
+        setCatalogError((err as Error).message ?? 'Failed to load actions');
+      })
+      .finally(() => setCatalogLoading(false));
   }, []);
 
   // Auto-scroll execution log to bottom
@@ -764,10 +771,16 @@ export default function AppBuilder() {
                   </div>
                 </button>
               ))}
-              {catalog.length === 0 && (
+              {catalogLoading && (
                 <p className="text-xs text-gray-400 text-center py-4">Loading actions…</p>
               )}
-              {catalog.length > 0 && filteredCatalog.length === 0 && (
+              {!catalogLoading && catalogError && (
+                <p className="text-xs text-red-500 text-center py-4" title={catalogError}>Failed to load — check connection</p>
+              )}
+              {!catalogLoading && !catalogError && catalog.length === 0 && (
+                <p className="text-xs text-gray-400 text-center py-4">No actions in catalog yet</p>
+              )}
+              {!catalogLoading && !catalogError && catalog.length > 0 && filteredCatalog.length === 0 && (
                 <p className="text-xs text-gray-400 text-center py-4">No actions match "{catalogSearch}"</p>
               )}
             </CardContent>
