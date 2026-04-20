@@ -42,6 +42,20 @@ const CATEGORY_STYLE: Record<string, { border: string; bg: string; badge: string
   logic:       { border: '#f59e0b', bg: '#fffbeb', badge: 'bg-yellow-100 text-yellow-800' },
   communication: { border: '#ec4899', bg: '#fdf2f8', badge: 'bg-pink-100 text-pink-800' },
   trigger:     { border: '#6366f1', bg: '#eef2ff', badge: 'bg-indigo-100 text-indigo-800' },
+  // Google integrations → integration blue
+  'google-calendar': { border: '#3b82f6', bg: '#eff6ff', badge: 'bg-blue-100 text-blue-800' },
+  'google-gmail':    { border: '#3b82f6', bg: '#eff6ff', badge: 'bg-blue-100 text-blue-800' },
+  'google-chat':     { border: '#3b82f6', bg: '#eff6ff', badge: 'bg-blue-100 text-blue-800' },
+  'google-drive':    { border: '#3b82f6', bg: '#eff6ff', badge: 'bg-blue-100 text-blue-800' },
+  // QuickBooks → orange / amber
+  quickbooks:        { border: '#f59e0b', bg: '#fffbeb', badge: 'bg-amber-100 text-amber-800' },
+  // Twilio → communication pink
+  twilio:            { border: '#ec4899', bg: '#fdf2f8', badge: 'bg-pink-100 text-pink-800' },
+  // Email providers → green
+  resend:            { border: '#10b981', bg: '#ecfdf5', badge: 'bg-green-100 text-green-800' },
+  sendgrid:          { border: '#10b981', bg: '#ecfdf5', badge: 'bg-green-100 text-green-800' },
+  mailgun:           { border: '#10b981', bg: '#ecfdf5', badge: 'bg-green-100 text-green-800' },
+  postmark:          { border: '#10b981', bg: '#ecfdf5', badge: 'bg-green-100 text-green-800' },
 };
 const DEFAULT_STYLE = { border: '#6b7280', bg: '#f9fafb', badge: 'bg-gray-100 text-gray-700' };
 
@@ -69,6 +83,49 @@ function stepSummary(data: WorkflowNodeData): string {
       return cfg?.to ? `To: ${cfg.to}` : '—';
     case 'step:twilio-sms':
       return cfg?.to ? `SMS → ${cfg.to}` : '—';
+    // Google Calendar
+    case 'step:google-calendar-create-event':
+      return cfg?.summary ? cfg.summary.slice(0, 28) : '—';
+    case 'step:google-calendar-list-events':
+      return cfg?.timeMin ? cfg.timeMin.slice(0, 10) : '—';
+    // Gmail
+    case 'step:google-gmail-send':
+      return cfg?.to ? `To: ${cfg.to}` : '—';
+    case 'step:google-gmail-search':
+      return cfg?.query ? cfg.query.slice(0, 28) : '—';
+    // Google Chat
+    case 'step:google-chat-send-message':
+      return cfg?.text ? cfg.text.slice(0, 28) : '—';
+    case 'step:google-chat-send-card':
+      return cfg?.title ? cfg.title.slice(0, 28) : '—';
+    // Google Drive
+    case 'step:google-drive-upload':
+      return cfg?.fileName ? cfg.fileName.slice(0, 28) : '—';
+    case 'step:google-drive-list-files':
+      return cfg?.folderId ? `Folder: ${String(cfg.folderId).slice(0, 20)}` : 'My Drive';
+    // QuickBooks
+    case 'step:quickbooks-create-invoice':
+      return cfg?.customerId ? `Cust: ${cfg.customerId}` : '—';
+    case 'step:quickbooks-send-invoice':
+      return cfg?.invoiceId ? `Inv: ${cfg.invoiceId}` : '—';
+    case 'step:quickbooks-create-customer':
+      return cfg?.displayName ? cfg.displayName.slice(0, 28) : '—';
+    // Twilio
+    case 'step:twilio-send-whatsapp':
+      return cfg?.to ? `WA → ${cfg.to}` : '—';
+    case 'step:twilio-voice-call':
+      return cfg?.to ? `Call → ${cfg.to}` : '—';
+    case 'step:twilio-lookup':
+      return cfg?.phoneNumber ? cfg.phoneNumber : '—';
+    // Email providers
+    case 'step:resend-send':
+    case 'step:sendgrid-send':
+    case 'step:mailgun-send':
+    case 'step:postmark-send':
+      return cfg?.to ? `To: ${cfg.to}` : '—';
+    case 'step:sendgrid-send-template':
+    case 'step:postmark-send-template':
+      return cfg?.to ? `Tmpl → ${cfg.to}` : '—';
     default:
       return '';
   }

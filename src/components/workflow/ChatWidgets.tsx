@@ -14,11 +14,25 @@ import { VALIDATORS, HTML_TYPE, TEXTAREA_TYPES } from '../../lib/field-validator
 import type { FieldType } from '../../lib/field-validators';
 
 const CATEGORY_COLORS: Record<string, string> = {
-  integration:   'bg-blue-100 text-blue-800',
-  ai:            'bg-purple-100 text-purple-800',
-  data:          'bg-green-100 text-green-800',
-  logic:         'bg-yellow-100 text-yellow-800',
-  communication: 'bg-pink-100 text-pink-800',
+  integration:      'bg-blue-100 text-blue-800',
+  ai:               'bg-purple-100 text-purple-800',
+  data:             'bg-green-100 text-green-800',
+  logic:            'bg-yellow-100 text-yellow-800',
+  communication:    'bg-pink-100 text-pink-800',
+  // Google integrations → blue
+  'google-calendar': 'bg-blue-100 text-blue-800',
+  'google-gmail':    'bg-blue-100 text-blue-800',
+  'google-chat':     'bg-blue-100 text-blue-800',
+  'google-drive':    'bg-blue-100 text-blue-800',
+  // QuickBooks → amber
+  quickbooks:        'bg-amber-100 text-amber-800',
+  // Twilio → pink
+  twilio:            'bg-pink-100 text-pink-800',
+  // Email providers → green
+  resend:            'bg-green-100 text-green-800',
+  sendgrid:          'bg-green-100 text-green-800',
+  mailgun:           'bg-green-100 text-green-800',
+  postmark:          'bg-green-100 text-green-800',
 };
 
 // ── StepPickerWidget ───────────────────────────────────────────────────────
