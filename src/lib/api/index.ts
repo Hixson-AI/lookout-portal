@@ -6,7 +6,7 @@ import * as aiKeys from './ai-keys';
 import * as usage from './usage';
 import * as apps from './apps';
 import * as appSecrets from './app-secrets';
-import * as steps from './steps';
+import * as actions from './actions';
 import * as agents from './agents';
 
 const CONTROL_PLANE_URL = import.meta.env.VITE_CONTROL_PLANE_URL;
@@ -56,7 +56,7 @@ export const api = {
   ...usage,
   ...apps,
   ...appSecrets,
-  ...steps,
+  ...actions,
   ...agents,
 };
 
@@ -66,5 +66,5 @@ export * from './ai-keys';
 export * from './usage';
 export * from './apps';
 export * from './app-secrets';
-export * from './steps';
+export * from './actions';
 export * from './agents';

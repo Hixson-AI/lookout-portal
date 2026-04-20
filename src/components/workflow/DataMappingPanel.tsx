@@ -51,7 +51,7 @@ function inferOutputFields(step: WorkflowStep): OutputField[] {
   });
 
   switch (step.stepId) {
-    case 'step:http-request':
+    case 'action:http-request':
       return [
         base('body', '{ "id": 1, "name": "..." }'),
         base('status', '200'),
@@ -59,24 +59,24 @@ function inferOutputFields(step: WorkflowStep): OutputField[] {
         base('body.data', '[ ... ]'),
         base('body.data[0]', '{ ... }'),
       ];
-    case 'step:ai-processing':
+    case 'action:ai-processing':
       return [
         base('output', 'AI generated text'),
         base('model', 'openai/gpt-4o-mini'),
         base('usage.total_tokens', '342'),
       ];
-    case 'step:data-transform':
+    case 'action:data-transform':
       return [
         base('result', '{ ... }'),
         base('result.items', '[ ... ]'),
       ];
-    case 'step:condition':
+    case 'action:condition':
       return [
         base('matched', 'true'),
         base('branch', '"true" | "false"'),
       ];
-    case 'step:twilio-sms':
-    case 'step:email-send':
+    case 'action:twilio-sms':
+    case 'action:email-send':
       return [
         base('messageId', 'sm_xxxxx'),
         base('status', '"sent"'),

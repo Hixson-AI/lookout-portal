@@ -68,63 +68,63 @@ function getCategoryStyle(cat: string) {
 function stepSummary(data: WorkflowNodeData): string {
   const cfg = data.config as any;
   switch (data.stepId) {
-    case 'step:http-request': {
+    case 'action:http-request': {
       const method = cfg?.method || 'GET';
       const url = cfg?.url ? cfg.url.replace(/^https?:\/\//, '').slice(0, 30) : '—';
       return `${method} ${url}`;
     }
-    case 'step:ai-processing':
+    case 'action:ai-processing':
       return cfg?.model ? cfg.model.split('/')[1] || cfg.model : 'No model selected';
-    case 'step:delay':
+    case 'action:delay':
       return cfg?.duration ? `${cfg.duration}${cfg.unit || 'ms'}` : '—';
-    case 'step:condition':
+    case 'action:condition':
       return cfg?.expression ? cfg.expression.slice(0, 28) : 'No condition';
-    case 'step:email-send':
+    case 'action:email-send':
       return cfg?.to ? `To: ${cfg.to}` : '—';
-    case 'step:twilio-sms':
+    case 'action:twilio-sms':
       return cfg?.to ? `SMS → ${cfg.to}` : '—';
     // Google Calendar
-    case 'step:google-calendar-create-event':
+    case 'action:google-calendar-create-event':
       return cfg?.summary ? cfg.summary.slice(0, 28) : '—';
-    case 'step:google-calendar-list-events':
+    case 'action:google-calendar-list-events':
       return cfg?.timeMin ? cfg.timeMin.slice(0, 10) : '—';
     // Gmail
-    case 'step:google-gmail-send':
+    case 'action:google-gmail-send':
       return cfg?.to ? `To: ${cfg.to}` : '—';
-    case 'step:google-gmail-search':
+    case 'action:google-gmail-search':
       return cfg?.query ? cfg.query.slice(0, 28) : '—';
     // Google Chat
-    case 'step:google-chat-send-message':
+    case 'action:google-chat-send-message':
       return cfg?.text ? cfg.text.slice(0, 28) : '—';
-    case 'step:google-chat-send-card':
+    case 'action:google-chat-send-card':
       return cfg?.title ? cfg.title.slice(0, 28) : '—';
     // Google Drive
-    case 'step:google-drive-upload':
+    case 'action:google-drive-upload':
       return cfg?.fileName ? cfg.fileName.slice(0, 28) : '—';
-    case 'step:google-drive-list-files':
+    case 'action:google-drive-list-files':
       return cfg?.folderId ? `Folder: ${String(cfg.folderId).slice(0, 20)}` : 'My Drive';
     // QuickBooks
-    case 'step:quickbooks-create-invoice':
+    case 'action:quickbooks-create-invoice':
       return cfg?.customerId ? `Cust: ${cfg.customerId}` : '—';
-    case 'step:quickbooks-send-invoice':
+    case 'action:quickbooks-send-invoice':
       return cfg?.invoiceId ? `Inv: ${cfg.invoiceId}` : '—';
-    case 'step:quickbooks-create-customer':
+    case 'action:quickbooks-create-customer':
       return cfg?.displayName ? cfg.displayName.slice(0, 28) : '—';
     // Twilio
-    case 'step:twilio-send-whatsapp':
+    case 'action:twilio-send-whatsapp':
       return cfg?.to ? `WA → ${cfg.to}` : '—';
-    case 'step:twilio-voice-call':
+    case 'action:twilio-voice-call':
       return cfg?.to ? `Call → ${cfg.to}` : '—';
-    case 'step:twilio-lookup':
+    case 'action:twilio-lookup':
       return cfg?.phoneNumber ? cfg.phoneNumber : '—';
     // Email providers
-    case 'step:resend-send':
-    case 'step:sendgrid-send':
-    case 'step:mailgun-send':
-    case 'step:postmark-send':
+    case 'action:resend-send':
+    case 'action:sendgrid-send':
+    case 'action:mailgun-send':
+    case 'action:postmark-send':
       return cfg?.to ? `To: ${cfg.to}` : '—';
-    case 'step:sendgrid-send-template':
-    case 'step:postmark-send-template':
+    case 'action:sendgrid-send-template':
+    case 'action:postmark-send-template':
       return cfg?.to ? `Tmpl → ${cfg.to}` : '—';
     default:
       return '';
@@ -209,7 +209,7 @@ function WorkflowNode({ id, data }: { id: string; data: WorkflowNodeData }) {
       </div>
 
       {/* Bottom handle — condition gets two */}
-      {data.stepId === 'step:condition' ? (
+      {data.stepId === 'action:condition' ? (
         <>
           <Handle
             type="source"
@@ -346,7 +346,7 @@ function stepsToEdges(steps: WorkflowStep[]): Edge[] {
     const src = allIds[i];
     const tgt = allIds[i + 1];
     const srcStep = src === '__trigger__' ? null : steps.find(s => s.id === src);
-    const isCondition = srcStep?.stepId === 'step:condition';
+    const isCondition = srcStep?.stepId === 'action:condition';
 
     if (isCondition) {
       edges.push({

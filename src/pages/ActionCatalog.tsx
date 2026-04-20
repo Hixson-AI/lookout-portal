@@ -5,7 +5,7 @@
 
 import { useState } from 'react';
 
-interface Step {
+interface Action {
   id: string;
   name: string;
   description: string;
@@ -16,18 +16,18 @@ interface Step {
   outputSchema: Record<string, unknown>;
 }
 
-export default function StepCatalog() {
-  const [steps, setSteps] = useState<Step[]>([]);
+export default function ActionCatalog() {
+  const [actions, setActions] = useState<Action[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   const categories = ['all', 'integration', 'ai', 'data', 'logic', 'communication'];
 
-  // TODO: Fetch steps from API
+  // TODO: Fetch actions from API
   useState(() => {
-    setSteps([
+    setActions([
       {
-        id: 'step:http-request',
+        id: 'action:http-request',
         name: 'HTTP Request',
         description: 'Make HTTP requests to external APIs',
         category: 'integration',
@@ -37,7 +37,7 @@ export default function StepCatalog() {
         outputSchema: {},
       },
       {
-        id: 'step:ai-processing',
+        id: 'action:ai-processing',
         name: 'AI Processing',
         description: 'Call AI providers for text generation',
         category: 'ai',
@@ -50,9 +50,9 @@ export default function StepCatalog() {
         outputSchema: {},
       },
       {
-        id: 'step:data-transform',
+        id: 'action:data-transform',
         name: 'Data Transform',
-        description: 'Map and transform data between steps',
+        description: 'Map and transform data between actions',
         category: 'data',
         isSystem: true,
         secretSchema: [],
@@ -60,7 +60,7 @@ export default function StepCatalog() {
         outputSchema: {},
       },
       {
-        id: 'step:condition',
+        id: 'action:condition',
         name: 'Condition/Branch',
         description: 'Route execution based on conditions',
         category: 'logic',
@@ -70,7 +70,7 @@ export default function StepCatalog() {
         outputSchema: {},
       },
       {
-        id: 'step:delay',
+        id: 'action:delay',
         name: 'Delay',
         description: 'Pause execution for a duration',
         category: 'logic',
@@ -80,7 +80,7 @@ export default function StepCatalog() {
         outputSchema: {},
       },
       {
-        id: 'step:email-send',
+        id: 'action:email-send',
         name: 'Email Send',
         description: 'Send emails via SendGrid',
         category: 'communication',
@@ -93,7 +93,7 @@ export default function StepCatalog() {
         outputSchema: {},
       },
       {
-        id: 'step:twilio-sms',
+        id: 'action:twilio-sms',
         name: 'Twilio SMS',
         description: 'Send SMS messages via Twilio',
         category: 'communication',
@@ -109,7 +109,7 @@ export default function StepCatalog() {
     ]);
   });
 
-  const filteredSteps = steps.filter((step) => {
+  const filteredSteps = actions.filter((step) => {
     const matchesCategory = selectedCategory === 'all' || step.category === selectedCategory;
     const matchesSearch = step.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          step.description.toLowerCase().includes(searchQuery.toLowerCase());

@@ -16,114 +16,115 @@ interface StepConfigPanelProps {
   onChange: (step: WorkflowStep) => void;
   tenantId?: string;
   appId?: string;
+  inputSchema?: Record<string, unknown> | null;
 }
 
 // mappable fields per step type — used by DataMappingPanel
 const MAPPABLE_FIELDS: Record<string, Array<{ key: string; label: string; placeholder?: string }>> = {
-  'step:http-request': [
+  'action:http-request': [
     { key: 'url', label: 'URL', placeholder: 'https://api.example.com/{{trigger.id}}' },
     { key: 'body', label: 'Request Body', placeholder: '{"id": "{{trigger.id}}"}' },
   ],
-  'step:ai-processing': [
+  'action:ai-processing': [
     { key: 'prompt', label: 'User Prompt', placeholder: 'Classify: {{trigger.message}}' },
     { key: 'systemPrompt', label: 'System Prompt' },
   ],
-  'step:data-transform': [
+  'action:data-transform': [
     { key: 'template', label: 'Output Template', placeholder: '{"name": "{{trigger.name}}"}' },
     { key: 'jq', label: 'jq Expression', placeholder: '.data | {id, name}' },
     { key: 'inputFrom', label: 'Input Source Step ID' },
   ],
-  'step:condition': [
+  'action:condition': [
     { key: 'condition', label: 'Condition', placeholder: '{{classify.category}} === "billing"' },
   ],
-  'step:email-send': [
+  'action:email-send': [
     { key: 'to', label: 'To Address', placeholder: '{{trigger.email}}' },
     { key: 'subject', label: 'Subject', placeholder: 'Re: {{trigger.subject}}' },
     { key: 'body', label: 'Body HTML', placeholder: '<p>Hello {{trigger.name}}</p>' },
   ],
-  'step:twilio-sms': [
+  'action:twilio-sms': [
     { key: 'to', label: 'To Number', placeholder: '{{trigger.phone}}' },
     { key: 'body', label: 'Message', placeholder: 'Hi {{trigger.name}}, your ticket is {{classify.id}}' },
   ],
   // Google Calendar
-  'step:google-calendar-create-event': [
+  'action:google-calendar-create-event': [
     { key: 'summary', label: 'Title', placeholder: 'Meeting: {{trigger.subject}}' },
     { key: 'start', label: 'Start (ISO)', placeholder: '{{trigger.startTime}}' },
     { key: 'end', label: 'End (ISO)', placeholder: '{{trigger.endTime}}' },
     { key: 'attendees', label: 'Attendees (comma-sep)', placeholder: '{{trigger.email}}' },
   ],
-  'step:google-calendar-list-events': [
+  'action:google-calendar-list-events': [
     { key: 'timeMin', label: 'From (ISO)', placeholder: '{{trigger.startTime}}' },
     { key: 'timeMax', label: 'To (ISO)', placeholder: '{{trigger.endTime}}' },
   ],
   // Gmail
-  'step:google-gmail-send': [
+  'action:google-gmail-send': [
     { key: 'to', label: 'To', placeholder: '{{trigger.email}}' },
     { key: 'subject', label: 'Subject', placeholder: 'Re: {{trigger.subject}}' },
     { key: 'body', label: 'Body (HTML)', placeholder: '<p>Hello {{trigger.name}}</p>' },
   ],
-  'step:google-gmail-search': [
+  'action:google-gmail-search': [
     { key: 'query', label: 'Search Query', placeholder: 'from:{{trigger.email}} is:unread' },
   ],
   // Google Chat
-  'step:google-chat-send-message': [
+  'action:google-chat-send-message': [
     { key: 'text', label: 'Message Text', placeholder: '{{trigger.summary}} — {{classify.result}}' },
   ],
-  'step:google-chat-send-card': [
+  'action:google-chat-send-card': [
     { key: 'title', label: 'Card Title', placeholder: '{{trigger.subject}}' },
     { key: 'subtitle', label: 'Subtitle', placeholder: '{{trigger.name}}' },
   ],
   // Google Drive
-  'step:google-drive-upload': [
+  'action:google-drive-upload': [
     { key: 'fileName', label: 'File Name', placeholder: '{{trigger.filename}}' },
     { key: 'content', label: 'File Content', placeholder: '{{transform.result}}' },
   ],
   // QuickBooks
-  'step:quickbooks-create-invoice': [
+  'action:quickbooks-create-invoice': [
     { key: 'customerId', label: 'Customer ID', placeholder: '{{trigger.customerId}}' },
   ],
-  'step:quickbooks-send-invoice': [
+  'action:quickbooks-send-invoice': [
     { key: 'invoiceId', label: 'Invoice ID', placeholder: '{{createInvoice.invoiceId}}' },
     { key: 'emailAddress', label: 'Override Email', placeholder: '{{trigger.email}}' },
   ],
-  'step:quickbooks-create-customer': [
+  'action:quickbooks-create-customer': [
     { key: 'displayName', label: 'Display Name', placeholder: '{{trigger.name}}' },
     { key: 'email', label: 'Email', placeholder: '{{trigger.email}}' },
   ],
   // Twilio
-  'step:twilio-send-whatsapp': [
+  'action:twilio-send-whatsapp': [
     { key: 'to', label: 'To (whatsapp:+1...)', placeholder: '{{trigger.phone}}' },
     { key: 'body', label: 'Message', placeholder: 'Hi {{trigger.name}}' },
   ],
-  'step:twilio-voice-call': [
+  'action:twilio-voice-call': [
     { key: 'to', label: 'To Number', placeholder: '{{trigger.phone}}' },
   ],
   // Email providers
-  'step:resend-send': [
+  'action:resend-send': [
     { key: 'to', label: 'To', placeholder: '{{trigger.email}}' },
     { key: 'subject', label: 'Subject', placeholder: 'Re: {{trigger.subject}}' },
     { key: 'html', label: 'HTML Body', placeholder: '<p>Hello {{trigger.name}}</p>' },
   ],
-  'step:sendgrid-send': [
+  'action:sendgrid-send': [
     { key: 'to', label: 'To', placeholder: '{{trigger.email}}' },
     { key: 'subject', label: 'Subject', placeholder: '{{trigger.subject}}' },
     { key: 'html', label: 'HTML Body', placeholder: '<p>{{trigger.body}}</p>' },
   ],
-  'step:sendgrid-send-template': [
+  'action:sendgrid-send-template': [
     { key: 'to', label: 'To', placeholder: '{{trigger.email}}' },
     { key: 'templateId', label: 'Template ID', placeholder: 'd-...' },
   ],
-  'step:mailgun-send': [
+  'action:mailgun-send': [
     { key: 'to', label: 'To', placeholder: '{{trigger.email}}' },
     { key: 'subject', label: 'Subject', placeholder: '{{trigger.subject}}' },
     { key: 'html', label: 'HTML Body', placeholder: '<p>{{trigger.body}}</p>' },
   ],
-  'step:postmark-send': [
+  'action:postmark-send': [
     { key: 'to', label: 'To', placeholder: '{{trigger.email}}' },
     { key: 'subject', label: 'Subject', placeholder: '{{trigger.subject}}' },
     { key: 'htmlBody', label: 'HTML Body', placeholder: '<p>Hello {{trigger.name}}</p>' },
   ],
-  'step:postmark-send-template': [
+  'action:postmark-send-template': [
     { key: 'to', label: 'To', placeholder: '{{trigger.email}}' },
     { key: 'templateId', label: 'Template ID or Alias' },
   ],
@@ -254,297 +255,7 @@ function KVEditor({ label, value, onChange, keyPlaceholder = 'Key', valuePlaceho
   );
 }
 
-// ── Generic Integration Config ───────────────────────────────────────
-//
-// Schema-driven form for all new integration step types.
-// Each entry defines the fields shown; falls back to RawJsonConfig if not listed.
 
-type FieldDef = { key: string; label: string; placeholder?: string; type?: 'text' | 'textarea' | 'select'; options?: { value: string; label: string }[]; hint?: string };
-
-const INTEGRATION_FIELD_SPECS: Record<string, FieldDef[]> = {
-  // ── Google Calendar ──────────────────────────────────────────────────
-  'step:google-calendar-create-event': [
-    { key: 'summary', label: 'Title', placeholder: 'Team standup' },
-    { key: 'start', label: 'Start (ISO 8601)', placeholder: '2024-01-15T09:00:00Z' },
-    { key: 'end', label: 'End (ISO 8601)', placeholder: '2024-01-15T09:30:00Z' },
-    { key: 'description', label: 'Description', type: 'textarea', placeholder: 'Agenda...' },
-    { key: 'location', label: 'Location', placeholder: 'Zoom / Room 3A' },
-    { key: 'attendees', label: 'Attendees (comma-separated emails)', placeholder: 'alice@example.com, bob@example.com' },
-    { key: 'calendarId', label: 'Calendar ID', placeholder: 'primary' },
-  ],
-  'step:google-calendar-list-events': [
-    { key: 'timeMin', label: 'From (ISO 8601)', placeholder: '2024-01-15T00:00:00Z' },
-    { key: 'timeMax', label: 'To (ISO 8601)', placeholder: '2024-01-22T00:00:00Z' },
-    { key: 'query', label: 'Search Query', placeholder: 'standup' },
-    { key: 'maxResults', label: 'Max Results', placeholder: '25' },
-    { key: 'calendarId', label: 'Calendar ID', placeholder: 'primary' },
-  ],
-  'step:google-calendar-update-event': [
-    { key: 'eventId', label: 'Event ID', placeholder: 'abc123xyz' },
-    { key: 'summary', label: 'New Title', placeholder: 'Updated title' },
-    { key: 'start', label: 'New Start (ISO)', placeholder: '2024-01-15T10:00:00Z' },
-    { key: 'end', label: 'New End (ISO)', placeholder: '2024-01-15T10:30:00Z' },
-    { key: 'calendarId', label: 'Calendar ID', placeholder: 'primary' },
-  ],
-  'step:google-calendar-delete-event': [
-    { key: 'eventId', label: 'Event ID', placeholder: 'abc123xyz' },
-    { key: 'calendarId', label: 'Calendar ID', placeholder: 'primary' },
-  ],
-  'step:google-calendar-find-free-slots': [
-    { key: 'timeMin', label: 'From (ISO 8601)', placeholder: '2024-01-15T08:00:00Z' },
-    { key: 'timeMax', label: 'To (ISO 8601)', placeholder: '2024-01-15T18:00:00Z' },
-    { key: 'durationMinutes', label: 'Slot Duration (minutes)', placeholder: '30' },
-    { key: 'calendars', label: 'Calendar IDs (comma-sep)', placeholder: 'primary, team@example.com' },
-  ],
-  // ── Gmail ────────────────────────────────────────────────────────────
-  'step:google-gmail-send': [
-    { key: 'to', label: 'To', placeholder: '{{trigger.email}}' },
-    { key: 'subject', label: 'Subject', placeholder: 'Re: your inquiry' },
-    { key: 'body', label: 'Body', type: 'textarea', placeholder: '<p>Hello {{trigger.name}}</p>' },
-    { key: 'from', label: 'From (override)', placeholder: 'me' },
-    { key: 'replyTo', label: 'Reply-To', placeholder: 'support@example.com' },
-  ],
-  'step:google-gmail-search': [
-    { key: 'query', label: 'Gmail Query', placeholder: 'from:customer@example.com subject:invoice is:unread' },
-    { key: 'maxResults', label: 'Max Results', placeholder: '10' },
-  ],
-  'step:google-gmail-read': [
-    { key: 'messageId', label: 'Message ID', placeholder: '{{search.messages[0].id}}' },
-    { key: 'format', label: 'Format', type: 'select', options: [{ value: 'full', label: 'Full' }, { value: 'minimal', label: 'Minimal' }, { value: 'raw', label: 'Raw' }] },
-  ],
-  'step:google-gmail-create-draft': [
-    { key: 'to', label: 'To', placeholder: '{{trigger.email}}' },
-    { key: 'subject', label: 'Subject', placeholder: 'Draft: ...' },
-    { key: 'body', label: 'Body', type: 'textarea', placeholder: '<p>Draft content</p>' },
-  ],
-  'step:google-gmail-archive': [
-    { key: 'messageId', label: 'Message ID', placeholder: '{{search.messages[0].id}}' },
-  ],
-  // ── Google Chat ──────────────────────────────────────────────────────
-  'step:google-chat-send-message': [
-    { key: 'text', label: 'Message Text', type: 'textarea', placeholder: 'Hello team! {{trigger.summary}}' },
-    { key: 'spaceName', label: 'Space Name', placeholder: 'spaces/ABCDEF (omit for webhook)', hint: 'Leave blank to use GOOGLE_CHAT_WEBHOOK_URL secret' },
-    { key: 'threadKey', label: 'Thread Key (optional)', placeholder: 'ticket-{{trigger.id}}' },
-  ],
-  'step:google-chat-send-card': [
-    { key: 'title', label: 'Card Title', placeholder: 'Alert: {{trigger.name}}' },
-    { key: 'subtitle', label: 'Subtitle', placeholder: '{{trigger.summary}}' },
-    { key: 'spaceName', label: 'Space Name', placeholder: 'spaces/ABCDEF' },
-  ],
-  'step:google-chat-list-messages': [
-    { key: 'spaceName', label: 'Space Name', placeholder: 'spaces/ABCDEF' },
-    { key: 'pageSize', label: 'Page Size', placeholder: '25' },
-    { key: 'filter', label: 'Filter (optional)', placeholder: 'createTime > "2024-01-01T00:00:00Z"' },
-  ],
-  // ── Google Drive ─────────────────────────────────────────────────────
-  'step:google-drive-upload': [
-    { key: 'fileName', label: 'File Name', placeholder: 'report-{{trigger.date}}.pdf' },
-    { key: 'content', label: 'File Content (text or base64)', type: 'textarea', placeholder: '{{transform.output}}' },
-    { key: 'mimeType', label: 'MIME Type', placeholder: 'text/plain', hint: 'e.g. application/pdf, text/csv' },
-    { key: 'folderId', label: 'Parent Folder ID (optional)', placeholder: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs' },
-  ],
-  'step:google-drive-download': [
-    { key: 'fileId', label: 'File ID', placeholder: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs' },
-    { key: 'exportMimeType', label: 'Export As (Google Docs only)', placeholder: 'application/pdf', hint: 'Only needed for Google Docs/Sheets/Slides' },
-  ],
-  'step:google-drive-list-files': [
-    { key: 'folderId', label: 'Folder ID (optional)', placeholder: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs' },
-    { key: 'query', label: 'Query Filter', placeholder: "name contains 'report'" },
-    { key: 'pageSize', label: 'Max Results', placeholder: '25' },
-  ],
-  'step:google-drive-share': [
-    { key: 'fileId', label: 'File ID', placeholder: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs' },
-    { key: 'emailAddress', label: 'Share With (email)', placeholder: '{{trigger.email}}' },
-    { key: 'role', label: 'Permission', type: 'select', options: [{ value: 'reader', label: 'Reader' }, { value: 'commenter', label: 'Commenter' }, { value: 'writer', label: 'Writer' }] },
-    { key: 'type', label: 'Grant To', type: 'select', options: [{ value: 'user', label: 'Specific User' }, { value: 'anyone', label: 'Anyone with Link' }] },
-  ],
-  'step:google-drive-create-folder': [
-    { key: 'name', label: 'Folder Name', placeholder: 'Client — {{trigger.name}}' },
-    { key: 'parentFolderId', label: 'Parent Folder ID (optional)', placeholder: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs' },
-  ],
-  // ── QuickBooks ───────────────────────────────────────────────────────
-  'step:quickbooks-create-invoice': [
-    { key: 'customerId', label: 'Customer ID', placeholder: '{{trigger.customerId}}' },
-    { key: 'dueDate', label: 'Due Date (YYYY-MM-DD)', placeholder: '2024-02-15' },
-    { key: 'memo', label: 'Memo (optional)', placeholder: 'Thank you for your business' },
-  ],
-  'step:quickbooks-list-invoices': [
-    { key: 'status', label: 'Status Filter', type: 'select', options: [{ value: '', label: 'Any' }, { value: 'draft', label: 'Draft' }, { value: 'pending', label: 'Pending' }, { value: 'paid', label: 'Paid' }, { value: 'overdue', label: 'Overdue' }] },
-    { key: 'customerId', label: 'Customer ID (optional)', placeholder: '{{trigger.customerId}}' },
-    { key: 'startDate', label: 'Start Date', placeholder: '2024-01-01' },
-    { key: 'endDate', label: 'End Date', placeholder: '2024-12-31' },
-    { key: 'maxResults', label: 'Max Results', placeholder: '25' },
-  ],
-  'step:quickbooks-send-invoice': [
-    { key: 'invoiceId', label: 'Invoice ID', placeholder: '{{createInvoice.invoiceId}}' },
-    { key: 'emailAddress', label: 'Override Email (optional)', placeholder: '{{trigger.email}}' },
-  ],
-  'step:quickbooks-create-customer': [
-    { key: 'displayName', label: 'Display Name', placeholder: '{{trigger.name}}' },
-    { key: 'email', label: 'Email', placeholder: '{{trigger.email}}' },
-    { key: 'phone', label: 'Phone', placeholder: '{{trigger.phone}}' },
-    { key: 'companyName', label: 'Company', placeholder: '{{trigger.company}}' },
-  ],
-  'step:quickbooks-get-customer': [
-    { key: 'customerId', label: 'Customer ID (or use display name)', placeholder: '{{trigger.customerId}}' },
-    { key: 'displayName', label: 'Display Name (alternative lookup)', placeholder: 'Acme Corp' },
-  ],
-  'step:quickbooks-record-payment': [
-    { key: 'customerId', label: 'Customer ID', placeholder: '{{trigger.customerId}}' },
-    { key: 'amount', label: 'Amount', placeholder: '{{trigger.amount}}' },
-    { key: 'paymentDate', label: 'Payment Date (YYYY-MM-DD)', placeholder: '2024-01-15' },
-    { key: 'paymentMethod', label: 'Method', type: 'select', options: [{ value: 'cash', label: 'Cash' }, { value: 'check', label: 'Check' }, { value: 'credit_card', label: 'Credit Card' }, { value: 'ach', label: 'ACH' }, { value: 'other', label: 'Other' }] },
-    { key: 'invoiceId', label: 'Apply to Invoice ID (optional)', placeholder: '{{createInvoice.invoiceId}}' },
-  ],
-  // ── Twilio ───────────────────────────────────────────────────────────
-  'step:twilio-send-whatsapp': [
-    { key: 'to', label: 'To (whatsapp:+E.164)', placeholder: 'whatsapp:+15005550006' },
-    { key: 'body', label: 'Message Body', type: 'textarea', placeholder: 'Hi {{trigger.name}}, your appointment is confirmed.' },
-    { key: 'mediaUrl', label: 'Media URL (optional)', placeholder: 'https://example.com/image.png' },
-  ],
-  'step:twilio-voice-call': [
-    { key: 'to', label: 'To (E.164)', placeholder: '+15005550006' },
-    { key: 'from', label: 'From (override)', placeholder: '+15005550001' },
-    { key: 'twiml', label: 'TwiML', type: 'textarea', placeholder: '<Response><Say>Hello, this is an automated call.</Say></Response>' },
-    { key: 'url', label: 'TwiML URL (alternative)', placeholder: 'https://example.com/twiml', hint: 'Provide either TwiML or URL, not both' },
-  ],
-  'step:twilio-lookup': [
-    { key: 'phoneNumber', label: 'Phone Number (E.164)', placeholder: '+15005550006' },
-  ],
-  'step:twilio-message-status': [
-    { key: 'messageSid', label: 'Message SID', placeholder: 'SM...' },
-  ],
-  // ── Resend ───────────────────────────────────────────────────────────
-  'step:resend-send': [
-    { key: 'to', label: 'To', placeholder: '{{trigger.email}}' },
-    { key: 'from', label: 'From (override)', placeholder: 'noreply@example.com', hint: 'Uses RESEND_FROM_ADDRESS secret by default' },
-    { key: 'subject', label: 'Subject', placeholder: 'Your order is confirmed' },
-    { key: 'html', label: 'HTML Body', type: 'textarea', placeholder: '<p>Hello {{trigger.name}}</p>' },
-    { key: 'text', label: 'Plain Text Body (fallback)', type: 'textarea', placeholder: 'Hello {{trigger.name}}' },
-    { key: 'replyTo', label: 'Reply-To', placeholder: 'support@example.com' },
-    { key: 'scheduledAt', label: 'Schedule At (ISO)', placeholder: '2024-01-20T10:00:00Z', hint: 'Leave blank to send immediately' },
-  ],
-  'step:resend-get-status': [
-    { key: 'emailId', label: 'Email ID', placeholder: '{{sendEmail.id}}' },
-  ],
-  'step:resend-cancel': [
-    { key: 'emailId', label: 'Email ID', placeholder: '{{sendEmail.id}}' },
-  ],
-  // ── SendGrid ─────────────────────────────────────────────────────────
-  'step:sendgrid-send': [
-    { key: 'to', label: 'To', placeholder: '{{trigger.email}}' },
-    { key: 'from', label: 'From (override)', placeholder: 'noreply@example.com' },
-    { key: 'subject', label: 'Subject', placeholder: 'Your order is confirmed' },
-    { key: 'html', label: 'HTML Body', type: 'textarea', placeholder: '<p>Hello {{trigger.name}}</p>' },
-    { key: 'text', label: 'Plain Text Fallback', type: 'textarea', placeholder: 'Hello {{trigger.name}}' },
-  ],
-  'step:sendgrid-send-template': [
-    { key: 'to', label: 'To', placeholder: '{{trigger.email}}' },
-    { key: 'from', label: 'From (override)', placeholder: 'noreply@example.com' },
-    { key: 'templateId', label: 'Dynamic Template ID', placeholder: 'd-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' },
-    { key: 'dynamicTemplateData', label: 'Template Data (JSON)', type: 'textarea', placeholder: '{"name": "{{trigger.name}}", "orderId": "{{trigger.id}}"}' },
-  ],
-  'step:sendgrid-add-contact': [
-    { key: 'email', label: 'Email', placeholder: '{{trigger.email}}' },
-    { key: 'firstName', label: 'First Name', placeholder: '{{trigger.firstName}}' },
-    { key: 'lastName', label: 'Last Name', placeholder: '{{trigger.lastName}}' },
-    { key: 'listIds', label: 'List IDs (comma-sep)', placeholder: 'listid1, listid2' },
-  ],
-  // ── Mailgun ──────────────────────────────────────────────────────────
-  'step:mailgun-send': [
-    { key: 'to', label: 'To', placeholder: '{{trigger.email}}' },
-    { key: 'from', label: 'From (override)', placeholder: 'noreply@mg.example.com' },
-    { key: 'subject', label: 'Subject', placeholder: 'Your account update' },
-    { key: 'html', label: 'HTML Body', type: 'textarea', placeholder: '<p>Hello {{trigger.name}}</p>' },
-    { key: 'text', label: 'Plain Text Fallback', type: 'textarea', placeholder: 'Hello {{trigger.name}}' },
-    { key: 'tags', label: 'Tags (comma-sep)', placeholder: 'transactional, billing' },
-  ],
-  'step:mailgun-validate-email': [
-    { key: 'address', label: 'Email Address', placeholder: '{{trigger.email}}' },
-  ],
-  'step:mailgun-get-status': [
-    { key: 'messageId', label: 'Message ID', placeholder: '{{sendEmail.id}}' },
-  ],
-  // ── Postmark ─────────────────────────────────────────────────────────
-  'step:postmark-send': [
-    { key: 'to', label: 'To', placeholder: '{{trigger.email}}' },
-    { key: 'from', label: 'From (override)', placeholder: 'noreply@example.com' },
-    { key: 'subject', label: 'Subject', placeholder: 'Your receipt' },
-    { key: 'htmlBody', label: 'HTML Body', type: 'textarea', placeholder: '<p>Hello {{trigger.name}}</p>' },
-    { key: 'textBody', label: 'Text Body', type: 'textarea', placeholder: 'Hello {{trigger.name}}' },
-    { key: 'replyTo', label: 'Reply-To', placeholder: 'support@example.com' },
-    { key: 'tag', label: 'Tag', placeholder: 'welcome-email' },
-  ],
-  'step:postmark-send-template': [
-    { key: 'to', label: 'To', placeholder: '{{trigger.email}}' },
-    { key: 'from', label: 'From (override)', placeholder: 'noreply@example.com' },
-    { key: 'templateId', label: 'Template ID or Alias', placeholder: 'welcome-email' },
-    { key: 'templateModel', label: 'Template Model (JSON)', type: 'textarea', placeholder: '{"name": "{{trigger.name}}", "product_url": "{{trigger.url}}"}' },
-  ],
-  'step:postmark-get-details': [
-    { key: 'messageId', label: 'Message ID', placeholder: '{{sendEmail.messageId}}' },
-  ],
-};
-
-function GenericIntegrationConfig({ stepId, config, onChange }: { stepId: string; config: any; onChange: (c: any) => void }) {
-  const set = (key: string, val: any) => onChange({ ...config, [key]: val });
-  const fields = INTEGRATION_FIELD_SPECS[stepId];
-  if (!fields) return <RawJsonConfig config={config} onChange={onChange} />;
-
-  return (
-    <div className="space-y-4">
-      {fields.map(f => (
-        <Field key={f.key} label={f.label} hint={f.hint}>
-          {f.type === 'textarea' ? (
-            <TextareaInput
-              value={typeof config[f.key] === 'object' ? JSON.stringify(config[f.key], null, 2) : (config[f.key] || '')}
-              onChange={v => {
-                try { set(f.key, JSON.parse(v)); } catch { set(f.key, v); }
-              }}
-              rows={4}
-              monospace
-              placeholder={f.placeholder}
-            />
-          ) : f.type === 'select' && f.options ? (
-            <SelectInput value={config[f.key] || ''} onChange={v => set(f.key, v)} options={[{ value: '', label: '— select —' }, ...f.options]} />
-          ) : (
-            <TextInput value={config[f.key] || ''} onChange={v => set(f.key, v)} placeholder={f.placeholder} monospace={!!(f.placeholder?.startsWith('{{'))} />
-          )}
-        </Field>
-      ))}
-    </div>
-  );
-}
-
-// ── Raw JSON fallback ─────────────────────────────────────────────────
-
-function RawJsonConfig({ config, onChange }: { config: any; onChange: (c: any) => void }) {
-  const [raw, setRaw] = useState(JSON.stringify(config, null, 2));
-  const [err, setErr] = useState('');
-
-  const apply = () => {
-    try {
-      onChange(JSON.parse(raw));
-      setErr('');
-    } catch {
-      setErr('Invalid JSON');
-    }
-  };
-
-  return (
-    <div className="space-y-2">
-      <TextareaInput value={raw} onChange={v => { setRaw(v); setErr(''); }} rows={10} monospace />
-      {err && <p className="text-xs text-red-500">{err}</p>}
-      <button
-        onClick={apply}
-        className="px-3 py-1.5 text-xs rounded border bg-gray-50 hover:bg-gray-100 font-medium"
-        style={{ borderColor: 'var(--border)' }}
-      >
-        Apply JSON
-      </button>
-    </div>
-  );
-}
 
 // ── HTTP Request ──────────────────────────────────────────────────────
 
@@ -968,8 +679,24 @@ function TwilioSmsConfig({ config, onChange }: { config: any; onChange: (c: any)
 
 // ── Fallback: raw JSON editor ─────────────────────────────────────────
 
-function RawJsonConfig({ config, onChange }: { config: any; onChange: (c: any) => void }) {
-  const [raw, setRaw] = useState(JSON.stringify(config, null, 2));
+function scaffoldFromInputSchema(schema: any): Record<string, unknown> {
+  const props = schema?.properties ?? {};
+  const result: Record<string, unknown> = {};
+  for (const [key, def] of Object.entries(props) as [string, any][]) {
+    if ('default' in def) result[key] = def.default;
+    else if (def.type === 'string')  result[key] = '';
+    else if (def.type === 'number')  result[key] = 0;
+    else if (def.type === 'boolean') result[key] = false;
+    else if (def.type === 'array')   result[key] = [];
+    else if (def.type === 'object')  result[key] = {};
+  }
+  return result;
+}
+
+function RawJsonConfig({ config, onChange, inputSchema }: { config: any; onChange: (c: any) => void; inputSchema?: Record<string, unknown> | null }) {
+  const isEmpty = Object.keys(config).length === 0;
+  const initial = isEmpty && inputSchema ? scaffoldFromInputSchema(inputSchema) : config;
+  const [raw, setRaw] = useState(JSON.stringify(initial, null, 2));
   const [parseError, setParseError] = useState(false);
 
   const handleChange = (val: string) => {
@@ -993,7 +720,7 @@ function RawJsonConfig({ config, onChange }: { config: any; onChange: (c: any) =
 
 // ── Main dispatcher ───────────────────────────────────────────────────
 
-export function StepConfigPanel({ step, allSteps = [], onChange, tenantId, appId }: StepConfigPanelProps) {
+export function ActionConfigPanel({ step, allSteps = [], onChange, tenantId, appId, inputSchema }: StepConfigPanelProps) {
   const config = step.config || {};
   const update = (newConfig: any) => onChange({ ...step, config: newConfig });
 
@@ -1071,15 +798,15 @@ export function StepConfigPanel({ step, allSteps = [], onChange, tenantId, appId
       {/* Tab content */}
       {tab === 'config' && (
         <div className="space-y-4">
-          {step.stepId === 'step:http-request' && <HttpRequestConfig config={config} onChange={update} />}
-          {step.stepId === 'step:ai-processing' && <AiProcessingConfig config={config} onChange={update} />}
-          {step.stepId === 'step:data-transform' && <DataTransformConfig config={config} onChange={update} />}
-          {step.stepId === 'step:condition' && <ConditionConfig config={config} onChange={update} />}
-          {step.stepId === 'step:delay' && <DelayConfig config={config} onChange={update} />}
-          {step.stepId === 'step:email-send' && <EmailSendConfig config={config} onChange={update} />}
-          {step.stepId === 'step:twilio-sms' && <TwilioSmsConfig config={config} onChange={update} />}
-          {!['step:http-request','step:ai-processing','step:data-transform','step:condition','step:delay','step:email-send','step:twilio-sms'].includes(step.stepId) && (
-            <GenericIntegrationConfig stepId={step.stepId} config={config} onChange={update} />
+          {step.stepId === 'action:http-request' && <HttpRequestConfig config={config} onChange={update} />}
+          {step.stepId === 'action:ai-processing' && <AiProcessingConfig config={config} onChange={update} />}
+          {step.stepId === 'action:data-transform' && <DataTransformConfig config={config} onChange={update} />}
+          {step.stepId === 'action:condition' && <ConditionConfig config={config} onChange={update} />}
+          {step.stepId === 'action:delay' && <DelayConfig config={config} onChange={update} />}
+          {step.stepId === 'action:email-send' && <EmailSendConfig config={config} onChange={update} />}
+          {step.stepId === 'action:twilio-sms' && <TwilioSmsConfig config={config} onChange={update} />}
+          {!['action:http-request','action:ai-processing','action:data-transform','action:condition','action:delay','action:email-send','action:twilio-sms'].includes(step.stepId) && (
+            <RawJsonConfig config={config} onChange={update} inputSchema={inputSchema} />
           )}
           
           {/* Test button after config form */}

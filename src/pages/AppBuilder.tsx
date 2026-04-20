@@ -2,7 +2,7 @@
  * App Builder Page — visual workflow composer.
  *
  * Panels: Settings (left) · Flow Canvas (center) · Action Library (right)
- * Sub-panels: StepConfigPanel · DataMappingPanel · Secrets
+ * Sub-panels: ActionConfigPanel · DataMappingPanel · Secrets
  * Features: autosave badge, undo stack, test-step, validation error dots
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -14,7 +14,7 @@ import {
   CheckCircle, Loader2, ShieldCheck, KeyRound, Terminal, X,
 } from 'lucide-react';
 import { FlowCanvas } from '../components/workflow/FlowCanvas';
-import { StepConfigPanel } from '../components/workflow/StepConfigPanel';
+import { ActionConfigPanel } from '../components/workflow/ActionConfigPanel';
 import { DataMappingPanel } from '../components/workflow/DataMappingPanel';
 import { BuilderChat } from '../components/workflow/BuilderChat';
 import { Button } from '../components/ui/button';
@@ -22,9 +22,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge';
 import { Dialog, DialogHeader, DialogTitle, DialogContent } from '../components/ui/dialog';
 import { api } from '../lib/api';
-import { getCatalog } from '../lib/api/steps';
+import { getCatalog } from '../lib/api/actions';
 import type { WorkflowStep } from '../lib/types';
-import type { AgentStep } from '../lib/api/steps';
+import type { AgentAction } from '../lib/api/actions';
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -47,7 +47,17 @@ interface SecretEntry {
 // ── Catalog helpers ──────────────────────────────────────────────────
 
 const CATEGORY_ICON: Record<string, string> = {
-  integration:   '🌐',
+  integration:       '🌐',
+  'google-calendar': '📅',
+  'google-gmail':    '✉️',
+  'google-chat':     '💬',
+  'google-drive':    '📁',
+  quickbooks:        '💰',
+  twilio:            '📱',
+  resend:            '📧',
+  sendgrid:          '📧',
+  mailgun:           '📧',
+  postmark:          '📧',
   ai:            '🤖',
   data:          '🔄',
   logic:         '🔀',
@@ -61,16 +71,18 @@ interface CatalogItem {
   icon: string;
   desc: string;
   configSchema?: Record<string, unknown> | null;
+  inputSchema?: Record<string, unknown> | null;
 }
 
-function apiStepToCatalogItem(s: AgentStep): CatalogItem {
+function apiStepToCatalogItem(s: AgentAction): CatalogItem {
   return {
-    id: s.id,
+    id: s.actionType ?? s.id,
     name: s.name,
     category: s.category,
     desc: s.description,
     icon: CATEGORY_ICON[s.category] ?? '⚡',
     configSchema: s.configSchema as Record<string, unknown> | null,
+    inputSchema: s.inputSchema as Record<string, unknown> | null,
   };
 }
 
@@ -120,7 +132,7 @@ export default function AppBuilder() {
   // Load action library from API
   useEffect(() => {
     getCatalog()
-      .then((steps: AgentStep[]) => setCatalog(steps.map(apiStepToCatalogItem)))
+      .then((steps: AgentAction[]) => setCatalog(steps.map(apiStepToCatalogItem)))
       .catch(() => {}); // silent — catalog stays empty until loaded
   }, []);
 
@@ -756,12 +768,13 @@ export default function AppBuilder() {
             <DialogContent>
               {configTab === 'config' ? (
                 <div className="space-y-3">
-                  <StepConfigPanel
+                  <ActionConfigPanel
                     step={selectedStep}
                     allSteps={workflow.steps}
                     onChange={handleStepChange}
                     tenantId={tid}
                     appId={currentAppId ?? undefined}
+                    inputSchema={catalog.find(c => c.id === selectedStep.stepId)?.inputSchema}
                   />
                   <div className="pt-2 border-t border-gray-100">
                     <Button
