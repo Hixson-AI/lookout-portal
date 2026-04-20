@@ -110,6 +110,7 @@ export interface ToolCallProps {
   label?: string;
   placeholder?: string;
   hint?: string;
+  default_value?: string;
   fieldId?: string;
   options?: Array<{ value: string; label: string }>;
   // confirm_add_steps

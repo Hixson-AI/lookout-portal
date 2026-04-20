@@ -110,8 +110,10 @@ interface FieldInputWidgetProps {
 }
 
 export function FieldInputWidget({ props, onSubmit, disabled }: FieldInputWidgetProps) {
-  const { label = 'Enter value', placeholder = '', hint } = props;
-  const [value, setValue] = useState('');
+  const { label = 'Enter value', placeholder = '', hint, default_value = '' } = props;
+  const hasDefault = default_value.trim().length > 0;
+  const [editing, setEditing] = useState(!hasDefault);
+  const [value, setValue] = useState(default_value);
 
   const handleSubmit = () => {
     if (!value.trim()) return;
@@ -121,15 +123,34 @@ export function FieldInputWidget({ props, onSubmit, disabled }: FieldInputWidget
   return (
     <div className="mt-2 rounded-xl border border-indigo-100 bg-indigo-50 p-3 space-y-2">
       <label className="block text-xs font-semibold text-indigo-700">{label}</label>
-      <input
-        type="text"
-        value={value}
-        onChange={e => setValue(e.target.value)}
-        onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-        placeholder={placeholder}
-        disabled={disabled}
-        className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:opacity-50"
-      />
+
+      {!editing ? (
+        /* ── Suggested value: one-click confirm ── */
+        <div className="flex items-center justify-between gap-2 px-3 py-2 bg-white border border-indigo-200 rounded-lg">
+          <span className="text-sm font-mono text-indigo-800 truncate">{value}</span>
+          {!disabled && (
+            <button
+              onClick={() => setEditing(true)}
+              className="text-xs text-gray-400 hover:text-gray-600 flex-shrink-0 underline"
+            >
+              Edit
+            </button>
+          )}
+        </div>
+      ) : (
+        /* ── Editable input ── */
+        <input
+          type="text"
+          value={value}
+          onChange={e => setValue(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+          placeholder={placeholder}
+          disabled={disabled}
+          autoFocus
+          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:opacity-50"
+        />
+      )}
+
       {hint && <p className="text-xs text-gray-500">{hint}</p>}
       <Button
         size="sm"
