@@ -109,14 +109,36 @@ interface FieldInputWidgetProps {
   disabled: boolean;
 }
 
+type FieldType = 'text' | 'email' | 'phone' | 'number' | 'url' | 'cron' | 'date';
+
+const VALIDATORS: Record<FieldType, (v: string) => string | null> = {
+  text:   () => null,
+  number: v => /^-?\d+(\.\d+)?$/.test(v.trim()) ? null : 'Must be a valid number',
+  email:  v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) ? null : 'Must be a valid email address',
+  phone:  v => /^\+?[\d\s\-().]{7,}$/.test(v.trim()) ? null : 'Must be a valid phone number',
+  url:    v => { try { new URL(v.trim()); return null; } catch { return 'Must be a valid URL (include https://)'; } },
+  cron:   v => /^(\S+\s){4}\S+$/.test(v.trim()) ? null : 'Must be a valid cron expression (5 fields)',
+  date:   v => isNaN(Date.parse(v.trim())) ? 'Must be a valid date' : null,
+};
+
+const HTML_TYPE: Record<FieldType, string> = {
+  text: 'text', email: 'email', phone: 'tel', number: 'number', url: 'url', cron: 'text', date: 'date',
+};
+
 export function FieldInputWidget({ props, onSubmit, disabled }: FieldInputWidgetProps) {
-  const { label = 'Enter value', placeholder = '', hint, default_value = '' } = props;
+  const { label = 'Enter value', placeholder = '', hint, default_value = '', field_type = 'text' } = props;
   const hasDefault = default_value.trim().length > 0;
   const [editing, setEditing] = useState(!hasDefault);
   const [value, setValue] = useState(default_value);
+  const [touched, setTouched] = useState(false);
+
+  const validate = VALIDATORS[field_type as FieldType] ?? VALIDATORS.text;
+  const error = touched ? validate(value) : null;
+  const isValid = !validate(value);
 
   const handleSubmit = () => {
-    if (!value.trim()) return;
+    setTouched(true);
+    if (!value.trim() || !isValid) return;
     onSubmit(value.trim());
   };
 
@@ -130,7 +152,7 @@ export function FieldInputWidget({ props, onSubmit, disabled }: FieldInputWidget
           <span className="text-sm font-mono text-indigo-800 truncate">{value}</span>
           {!disabled && (
             <button
-              onClick={() => setEditing(true)}
+              onClick={() => { setEditing(true); setTouched(false); }}
               className="text-xs text-gray-400 hover:text-gray-600 flex-shrink-0 underline"
             >
               Edit
@@ -139,24 +161,32 @@ export function FieldInputWidget({ props, onSubmit, disabled }: FieldInputWidget
         </div>
       ) : (
         /* ── Editable input ── */
-        <input
-          type="text"
-          value={value}
-          onChange={e => setValue(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-          placeholder={placeholder}
-          disabled={disabled}
-          autoFocus
-          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:opacity-50"
-        />
+        <div className="space-y-1">
+          <input
+            type={HTML_TYPE[field_type as FieldType] ?? 'text'}
+            value={value}
+            onChange={e => { setValue(e.target.value); setTouched(true); }}
+            onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+            onBlur={() => setTouched(true)}
+            placeholder={placeholder}
+            disabled={disabled}
+            autoFocus
+            className={`w-full px-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 disabled:opacity-50 ${
+              error
+                ? 'border-red-300 focus:ring-red-300'
+                : 'border-gray-300 focus:ring-indigo-400'
+            }`}
+          />
+          {error && <p className="text-xs text-red-500">{error}</p>}
+        </div>
       )}
 
       {hint && <p className="text-xs text-gray-500">{hint}</p>}
       <Button
         size="sm"
-        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs"
+        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs disabled:opacity-40"
         onClick={handleSubmit}
-        disabled={disabled || !value.trim()}
+        disabled={disabled || !value.trim() || (editing && !isValid)}
       >
         <ChevronRight className="h-3.5 w-3.5 mr-1" /> Confirm
       </Button>

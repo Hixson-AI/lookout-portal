@@ -111,6 +111,7 @@ export interface ToolCallProps {
   placeholder?: string;
   hint?: string;
   default_value?: string;
+  field_type?: 'text' | 'email' | 'phone' | 'number' | 'url' | 'cron' | 'date';
   fieldId?: string;
   options?: Array<{ value: string; label: string }>;
   // confirm_add_steps
