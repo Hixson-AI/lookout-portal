@@ -4,11 +4,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Zap, Settings2, Play, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Zap, Settings2, Play, Loader2, ShieldCheck, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Button } from '../ui/button';
 import type { WorkflowStep } from '../../lib/types';
 import { DataMappingPanel } from './DataMappingPanel';
+
+interface SecretEntry {
+  key: string;
+  type: string;
+  required: boolean;
+  description: string;
+}
 
 interface StepConfigPanelProps {
   step: WorkflowStep;
@@ -17,6 +24,7 @@ interface StepConfigPanelProps {
   tenantId?: string;
   appId?: string;
   inputSchema?: Record<string, unknown> | null;
+  secretSchema?: SecretEntry[] | null;
 }
 
 // mappable fields per step type — used by DataMappingPanel
@@ -144,12 +152,12 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
   );
 }
 
-function TextInput({ value, onChange, placeholder, monospace }: {
-  value: string; onChange: (v: string) => void; placeholder?: string; monospace?: boolean;
+function TextInput({ value, onChange, placeholder, monospace, type = 'text' }: {
+  value: string; onChange: (v: string) => void; placeholder?: string; monospace?: boolean; type?: string;
 }) {
   return (
     <input
-      type="text"
+      type={type}
       value={value}
       onChange={e => onChange(e.target.value)}
       placeholder={placeholder}
@@ -677,6 +685,137 @@ function TwilioSmsConfig({ config, onChange }: { config: any; onChange: (c: any)
   );
 }
 
+// ── Dynamic schema-driven form ───────────────────────────────────────
+
+function formatLabel(key: string): string {
+  return key
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/_/g, ' ')
+    .replace(/^./, s => s.toUpperCase())
+    .trim();
+}
+
+function DynamicSchemaForm({
+  config, onChange, inputSchema, secretSchema,
+}: {
+  config: any;
+  onChange: (c: any) => void;
+  inputSchema?: Record<string, unknown> | null;
+  secretSchema?: SecretEntry[] | null;
+}) {
+  const [showSecrets, setShowSecrets] = useState(false);
+  const [revealedFields, setRevealedFields] = useState<Set<string>>(new Set());
+
+  const schema = inputSchema as any;
+  const properties: Record<string, any> = schema?.properties ?? {};
+  const required: string[] = schema?.required ?? [];
+
+  const toggleReveal = (key: string) =>
+    setRevealedFields(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+
+  if (Object.keys(properties).length === 0) {
+    return <RawJsonConfig config={config} onChange={onChange} inputSchema={inputSchema} />;
+  }
+
+  const isSensitiveKey = (key: string) => /password|secret|token|api[_-]?key|credential|auth/i.test(key);
+  const isLongText = (key: string, def: any) =>
+    def.type === 'string' && (/body|content|template|message|html|prompt|description|text/i.test(key) || (def.description?.length ?? 0) > 60);
+
+  return (
+    <div className="space-y-4">
+      {/* Secret requirements banner */}
+      {secretSchema && secretSchema.length > 0 && (
+        <div className="rounded-lg border bg-amber-50 border-amber-200 overflow-hidden">
+          <button
+            onClick={() => setShowSecrets(v => !v)}
+            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-amber-800 font-medium hover:bg-amber-100 transition-colors"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+            <span className="flex-1 text-left">
+              Requires {secretSchema.filter(s => s.required).length} credential{secretSchema.filter(s => s.required).length !== 1 ? 's' : ''} — configure in Tenant Secrets
+            </span>
+            {showSecrets ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+          {showSecrets && (
+            <div className="px-3 pb-2 space-y-1">
+              {secretSchema.map(s => (
+                <div key={s.key} className="flex items-start gap-2 text-xs text-amber-900">
+                  <code className="bg-amber-100 px-1.5 py-0.5 rounded font-mono text-amber-800 shrink-0">{s.key}</code>
+                  <span className="text-amber-700">{s.description}{!s.required && ' (optional)'}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Generated fields */}
+      {Object.entries(properties).map(([key, def]: [string, any]) => {
+        const isReq = required.includes(key);
+        const sensitive = isSensitiveKey(key);
+        const longText = isLongText(key, def);
+        const isEnum = Array.isArray(def.enum) && def.enum.length > 0;
+        const isBool = def.type === 'boolean';
+        const currentVal = config[key] ?? def.default ?? (isBool ? false : '');
+        const set = (v: unknown) => onChange({ ...config, [key]: v });
+        const label = `${formatLabel(key)}${isReq ? ' *' : ''}`;
+
+        return (
+          <Field key={key} label={label} hint={def.description}>
+            {isBool ? (
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!!currentVal}
+                  onChange={e => set(e.target.checked)}
+                  className="rounded"
+                />
+                <span style={{ color: 'var(--text-secondary)' }}>{def.description ?? label}</span>
+              </label>
+            ) : isEnum ? (
+              <SelectInput
+                value={String(currentVal)}
+                onChange={set}
+                options={(def.enum as string[]).map((v: string) => ({ value: v, label: v }))}
+              />
+            ) : longText ? (
+              <TextareaInput
+                value={String(currentVal)}
+                onChange={set}
+                rows={4}
+                placeholder={`{{trigger.${key}}}`}
+              />
+            ) : (
+              <div className="relative">
+                <TextInput
+                  type={sensitive && !revealedFields.has(key) ? 'password' : 'text'}
+                  value={String(currentVal)}
+                  onChange={set}
+                  placeholder={sensitive ? `{{${key.replace(/([a-z])([A-Z])/g, '$1_$2').toUpperCase()}}}` : `{{trigger.${key}}}`}
+                  monospace={sensitive}
+                />
+                {sensitive && (
+                  <button
+                    type="button"
+                    onClick={() => toggleReveal(key)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {revealedFields.has(key) ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                )}
+              </div>
+            )}
+          </Field>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── Fallback: raw JSON editor ─────────────────────────────────────────
 
 function scaffoldFromInputSchema(schema: any): Record<string, unknown> {
@@ -720,7 +859,7 @@ function RawJsonConfig({ config, onChange, inputSchema }: { config: any; onChang
 
 // ── Main dispatcher ───────────────────────────────────────────────────
 
-export function ActionConfigPanel({ step, allSteps = [], onChange, tenantId, appId, inputSchema }: StepConfigPanelProps) {
+export function ActionConfigPanel({ step, allSteps = [], onChange, tenantId, appId, inputSchema, secretSchema }: StepConfigPanelProps) {
   const config = step.config || {};
   const update = (newConfig: any) => onChange({ ...step, config: newConfig });
 
@@ -806,7 +945,7 @@ export function ActionConfigPanel({ step, allSteps = [], onChange, tenantId, app
           {step.stepId === 'action:email-send' && <EmailSendConfig config={config} onChange={update} />}
           {step.stepId === 'action:twilio-sms' && <TwilioSmsConfig config={config} onChange={update} />}
           {!['action:http-request','action:ai-processing','action:data-transform','action:condition','action:delay','action:email-send','action:twilio-sms'].includes(step.stepId) && (
-            <RawJsonConfig config={config} onChange={update} inputSchema={inputSchema} />
+            <DynamicSchemaForm config={config} onChange={update} inputSchema={inputSchema} secretSchema={secretSchema} />
           )}
           
           {/* Test button after config form */}

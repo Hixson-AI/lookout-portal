@@ -74,6 +74,7 @@ interface CatalogItem {
   desc: string;
   configSchema?: Record<string, unknown> | null;
   inputSchema?: Record<string, unknown> | null;
+  secretSchema?: AgentAction['secretSchema'] | null;
 }
 
 function apiStepToCatalogItem(s: AgentAction): CatalogItem {
@@ -85,7 +86,17 @@ function apiStepToCatalogItem(s: AgentAction): CatalogItem {
     icon: CATEGORY_ICON[s.category] ?? '⚡',
     configSchema: s.configSchema as Record<string, unknown> | null,
     inputSchema: s.inputSchema as Record<string, unknown> | null,
+    secretSchema: s.secretSchema,
   };
+}
+
+function schemaToMappableFields(inputSchema: Record<string, unknown> | null | undefined): Array<{ key: string; label: string; placeholder?: string }> {
+  const props = (inputSchema as any)?.properties ?? {};
+  return Object.entries(props).map(([key]: [string, any]) => ({
+    key,
+    label: key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').replace(/^./, s => s.toUpperCase()).trim(),
+    placeholder: `{{trigger.${key}}}`,
+  }));
 }
 
 const MAPPABLE_FIELDS: Record<string, Array<{ key: string; label: string; placeholder?: string }>> = {
@@ -424,10 +435,12 @@ export default function AppBuilder() {
     [workflow.steps, selectedStepId]
   );
 
-  const mappableFields = useMemo(
-    () => (selectedStep ? MAPPABLE_FIELDS[selectedStep.stepId] ?? [] : []),
-    [selectedStep]
-  );
+  const mappableFields = useMemo(() => {
+    if (!selectedStep) return [];
+    if (MAPPABLE_FIELDS[selectedStep.stepId]) return MAPPABLE_FIELDS[selectedStep.stepId];
+    const item = catalog.find(c => c.id === selectedStep.stepId);
+    return item?.inputSchema ? schemaToMappableFields(item.inputSchema) : [];
+  }, [selectedStep, catalog]);
 
   const errorStepIds = useMemo(
     () => new Set(Object.keys(validationErrors)),
@@ -825,6 +838,7 @@ export default function AppBuilder() {
                     tenantId={tid}
                     appId={currentAppId ?? undefined}
                     inputSchema={catalog.find(c => c.id === selectedStep.stepId)?.inputSchema}
+                    secretSchema={catalog.find(c => c.id === selectedStep.stepId)?.secretSchema}
                   />
                   <div className="pt-2 border-t border-gray-100">
                     <Button
