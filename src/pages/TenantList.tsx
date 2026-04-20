@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router-dom';
-import { useTenants } from '../hooks/useTenants';
+import { useAuth } from '../hooks/useAuth';
+import { useTenants, useCreateTenant } from '../hooks/useTenants';
 import { Layout } from '../components/layout/Layout';
 import { TenantCard } from '../components/tenants/TenantCard';
+import { TenantCreateDialog } from '../components/tenants/TenantCreateDialog';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Search, Plus } from 'lucide-react';
@@ -9,8 +11,11 @@ import { useState } from 'react';
 
 export function TenantList() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { data: tenants, isLoading, error } = useTenants();
+  const createTenant = useCreateTenant();
   const [searchQuery, setSearchQuery] = useState('');
+  const [createOpen, setCreateOpen] = useState(false);
 
   const filteredTenants = tenants?.filter(
     (tenant) =>
@@ -44,10 +49,12 @@ export function TenantList() {
             <h1 className="text-3xl font-bold text-gradient">Tenants</h1>
             <p style={{ color: 'var(--text-secondary)' }}>Manage your platform tenants</p>
           </div>
-          <Button className="btn-gradient">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Tenant
-          </Button>
+          {user?.isSystemAdmin && (
+            <Button className="btn-gradient" onClick={() => setCreateOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Tenant
+            </Button>
+          )}
         </div>
 
         <div className="relative">
@@ -76,6 +83,14 @@ export function TenantList() {
           </div>
         )}
       </div>
+      <TenantCreateDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        isPending={createTenant.isPending}
+        onCreate={(data) =>
+          createTenant.mutate(data, { onSuccess: () => setCreateOpen(false) })
+        }
+      />
     </Layout>
   );
 }
