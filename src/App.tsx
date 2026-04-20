@@ -5,6 +5,7 @@ import { Home } from './pages/Home';
 import { TenantList } from './pages/TenantList';
 import { TenantDetail } from './pages/TenantDetail';
 import AppBuilder from './pages/AppBuilder';
+import { PlatformAdmin } from './pages/PlatformAdmin';
 
 function App() {
   const { user, loading } = useAuth();
@@ -22,6 +23,7 @@ function App() {
       <Routes>
         <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
         <Route path="/" element={user ? <Home /> : <Navigate to="/login" />} />
+        <Route path="/platform" element={user?.isSystemAdmin ? <PlatformAdmin /> : <Navigate to="/" />} />
         <Route
           path="/tenants"
           element={user ? <TenantList /> : <Navigate to="/login" />}

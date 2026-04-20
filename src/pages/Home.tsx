@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Layout } from '../components/layout/Layout';
+import { Cpu } from 'lucide-react';
 
 export function Home() {
   const navigate = useNavigate();
@@ -55,6 +56,21 @@ export function Home() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Monitor platform performance and usage</p>
+                </CardContent>
+              </Card>
+
+              <Card className="card-hover cursor-pointer" onClick={() => navigate('/platform')}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Cpu className="w-5 h-5" />
+                    Platform Admin
+                  </CardTitle>
+                  <CardDescription>
+                    Action catalog, embeddings &amp; AI settings
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Manage the action library, sync n8n catalog, configure OpenAI key</p>
                 </CardContent>
               </Card>
 
