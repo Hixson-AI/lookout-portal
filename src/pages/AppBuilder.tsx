@@ -11,12 +11,13 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Save, Undo2, Zap, Globe, HelpCircle, Lock, Plus, Trash2,
-  CheckCircle, Loader2, ShieldCheck, KeyRound, Terminal, X,
+  CheckCircle, Loader2, ShieldCheck, KeyRound, Terminal, X, LayoutGrid,
 } from 'lucide-react';
 import { FlowCanvas } from '../components/workflow/FlowCanvas';
 import { ActionConfigPanel } from '../components/workflow/ActionConfigPanel';
 import { DataMappingPanel } from '../components/workflow/DataMappingPanel';
 import { BuilderChat } from '../components/workflow/BuilderChat';
+import { ActionCatalogDialog } from '../components/workflow/ActionCatalogDialog';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -120,6 +121,8 @@ export default function AppBuilder() {
   const [savingSecret, setSavingSecret] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [catalogSearch, setCatalogSearch] = useState('');
+  const [catalogDialogOpen, setCatalogDialogOpen] = useState(false);
+  const [rawCatalog, setRawCatalog] = useState<AgentAction[]>([]);
   const [configTab, setConfigTab] = useState<'config' | 'mapping'>('config');
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
   const [chatCollapsed, setChatCollapsed] = useState(true);
@@ -132,7 +135,10 @@ export default function AppBuilder() {
   // Load action library from API
   useEffect(() => {
     getCatalog()
-      .then((steps: AgentAction[]) => setCatalog(steps.map(apiStepToCatalogItem)))
+      .then((steps: AgentAction[]) => {
+        setRawCatalog(steps);
+        setCatalog(steps.map(apiStepToCatalogItem));
+      })
       .catch(() => {}); // silent — catalog stays empty until loaded
   }, []);
 
@@ -696,7 +702,16 @@ export default function AppBuilder() {
         <div className="md:col-span-4 overflow-y-auto">
           <Card className="shadow-sm h-full">
             <CardHeader className="py-3 px-4">
-              <CardTitle className="text-sm font-semibold">Action Library</CardTitle>
+              <CardTitle className="text-sm font-semibold flex items-center justify-between">
+                <span>Action Library</span>
+                <button
+                  onClick={() => setCatalogDialogOpen(true)}
+                  className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-indigo-600 transition-colors"
+                  title="Browse all actions"
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+              </CardTitle>
               <input
                 type="text"
                 value={catalogSearch}
@@ -858,6 +873,14 @@ export default function AppBuilder() {
           </CardContent>
         </Card>
       )}
+
+      {/* ── Action Catalog Dialog ────────────────────────────────────── */}
+      <ActionCatalogDialog
+        open={catalogDialogOpen}
+        onClose={() => setCatalogDialogOpen(false)}
+        onAdd={(actionId, name) => { handleDropStep(actionId, name); setCatalogDialogOpen(false); }}
+        catalog={rawCatalog}
+      />
 
       </div>
     </div>

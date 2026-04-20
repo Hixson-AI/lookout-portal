@@ -3,118 +3,52 @@
  * Browse and discover available workflow actions
  */
 
-import { useState } from 'react';
-
-interface Action {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  isSystem: boolean;
-  secretSchema: Array<{ key: string; type: string; required: boolean }>;
-  inputSchema: Record<string, unknown>;
-  outputSchema: Record<string, unknown>;
-}
+import { useState, useEffect, useMemo } from 'react';
+import { Sparkles, Search } from 'lucide-react';
+import { getCatalog, searchCatalog } from '../lib/api/actions';
+import type { AgentAction } from '../lib/api/actions';
 
 export default function ActionCatalog() {
-  const [actions, setActions] = useState<Action[]>([]);
+  const [actions, setActions] = useState<AgentAction[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [aiMode, setAiMode] = useState(false);
+  const [aiResults, setAiResults] = useState<AgentAction[]>([]);
+  const [aiLoading, setAiLoading] = useState(false);
 
-  const categories = ['all', 'integration', 'ai', 'data', 'logic', 'communication'];
+  useEffect(() => {
+    getCatalog()
+      .then(setActions)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
-  // TODO: Fetch actions from API
-  useState(() => {
-    setActions([
-      {
-        id: 'action:http-request',
-        name: 'HTTP Request',
-        description: 'Make HTTP requests to external APIs',
-        category: 'integration',
-        isSystem: true,
-        secretSchema: [],
-        inputSchema: {},
-        outputSchema: {},
-      },
-      {
-        id: 'action:ai-processing',
-        name: 'AI Processing',
-        description: 'Call AI providers for text generation',
-        category: 'ai',
-        isSystem: true,
-        secretSchema: [
-          { key: 'OPENROUTER_API_KEY', type: 'string', required: true },
-          { key: 'ANTHROPIC_API_KEY', type: 'string', required: false },
-        ],
-        inputSchema: {},
-        outputSchema: {},
-      },
-      {
-        id: 'action:data-transform',
-        name: 'Data Transform',
-        description: 'Map and transform data between actions',
-        category: 'data',
-        isSystem: true,
-        secretSchema: [],
-        inputSchema: {},
-        outputSchema: {},
-      },
-      {
-        id: 'action:condition',
-        name: 'Condition/Branch',
-        description: 'Route execution based on conditions',
-        category: 'logic',
-        isSystem: true,
-        secretSchema: [],
-        inputSchema: {},
-        outputSchema: {},
-      },
-      {
-        id: 'action:delay',
-        name: 'Delay',
-        description: 'Pause execution for a duration',
-        category: 'logic',
-        isSystem: true,
-        secretSchema: [],
-        inputSchema: {},
-        outputSchema: {},
-      },
-      {
-        id: 'action:email-send',
-        name: 'Email Send',
-        description: 'Send emails via SendGrid',
-        category: 'communication',
-        isSystem: true,
-        secretSchema: [
-          { key: 'SENDGRID_API_KEY', type: 'string', required: true },
-          { key: 'EMAIL_FROM', type: 'string', required: true },
-        ],
-        inputSchema: {},
-        outputSchema: {},
-      },
-      {
-        id: 'action:twilio-sms',
-        name: 'Twilio SMS',
-        description: 'Send SMS messages via Twilio',
-        category: 'communication',
-        isSystem: true,
-        secretSchema: [
-          { key: 'TWILIO_ACCOUNT_SID', type: 'string', required: true },
-          { key: 'TWILIO_AUTH_TOKEN', type: 'string', required: true },
-          { key: 'TWILIO_PHONE_NUMBER', type: 'string', required: true },
-        ],
-        inputSchema: {},
-        outputSchema: {},
-      },
-    ]);
-  });
+  const categories = useMemo(() => {
+    const cats = Array.from(new Set(actions.map(a => a.category))).sort();
+    return ['all', ...cats];
+  }, [actions]);
 
-  const filteredSteps = actions.filter((step) => {
-    const matchesCategory = selectedCategory === 'all' || step.category === selectedCategory;
-    const matchesSearch = step.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         step.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  useEffect(() => {
+    if (!aiMode || !searchQuery.trim()) { setAiResults([]); return; }
+    const t = setTimeout(async () => {
+      setAiLoading(true);
+      try { setAiResults(await searchCatalog(searchQuery, 30)); }
+      catch { setAiResults([]); }
+      finally { setAiLoading(false); }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [aiMode, searchQuery]);
+
+  const filteredSteps = useMemo<AgentAction[]>(() => {
+    if (aiMode && searchQuery.trim()) return aiResults;
+    return actions.filter((step) => {
+      const matchesCategory = selectedCategory === 'all' || step.category === selectedCategory;
+      const matchesSearch = step.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           step.description.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    });
+  }, [actions, aiMode, aiResults, searchQuery, selectedCategory]);
 
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
@@ -134,63 +68,86 @@ export default function ActionCatalog() {
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg"
-                placeholder="Search actions..."
+                className="w-full pl-10 pr-3 py-2 border rounded-lg"
+                placeholder="Search actions…"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg"
-              >
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <button
+              onClick={() => setAiMode(m => !m)}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                aiMode ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-300 hover:border-indigo-400'
+              }`}
+            >
+              <Sparkles className="w-4 h-4" />
+              AI Search
+            </button>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="px-3 py-2 border rounded-lg text-sm"
+            >
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat === 'all' ? 'All categories' : cat.charAt(0).toUpperCase() + cat.slice(1)}
+                </option>
+              ))}
+            </select>
           </div>
+          {aiMode && (
+            <p className="text-xs text-indigo-500 mt-2 flex items-center gap-1">
+              <Sparkles className="w-3 h-3" />
+              {aiLoading ? 'Searching…' : 'AI semantic search active'}
+            </p>
+          )}
         </div>
 
         {/* Step Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredSteps.map((step) => (
-            <div key={step.id} className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
-              <div className="flex justify-between items-start mb-3">
-                <h3 className="text-lg font-semibold">{step.name}</h3>
-                {step.isSystem && (
-                  <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">System</span>
-                )}
-              </div>
-              <p className="text-gray-600 text-sm mb-4">{step.description}</p>
-              <div className="flex items-center justify-between">
-                <span className={`text-xs px-2 py-1 rounded-full ${getCategoryColor(step.category)}`}>
-                  {step.category}
-                </span>
-                {step.secretSchema.length > 0 && (
-                  <span className="text-xs text-gray-500">
-                    {step.secretSchema.length} secret{step.secretSchema.length > 1 ? 's' : ''} required
-                  </span>
-                )}
-              </div>
+        {loading ? (
+          <div className="text-center py-12 text-gray-400">Loading actions…</div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredSteps.map((step) => (
+                <div key={step.id} className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="text-lg font-semibold">{step.name}</h3>
+                    <div className="flex items-center gap-1.5">
+                      {step.executionMode === 'n8n' && (
+                        <span className="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 rounded font-medium">n8n</span>
+                      )}
+                      {step.isSystem && (
+                        <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">System</span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-gray-600 text-sm mb-4">{step.description}</p>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-xs px-2 py-1 rounded-full ${getCategoryColor(step.category)}`}>
+                      {step.category}
+                    </span>
+                    {Array.isArray(step.secretSchema) && step.secretSchema.length > 0 && (
+                      <span className="text-xs text-gray-500">
+                        {step.secretSchema.length} secret{step.secretSchema.length > 1 ? 's' : ''} required
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-
-        {filteredSteps.length === 0 && (
-          <div className="text-center py-12 text-gray-500">
-            No actions match your search criteria
-          </div>
+            {filteredSteps.length === 0 && (
+              <div className="text-center py-12 text-gray-500">
+                No actions match your search criteria
+              </div>
+            )}
+            <p className="text-xs text-gray-400 mt-4 text-right">{filteredSteps.length} action{filteredSteps.length !== 1 ? 's' : ''}</p>
+          </>
         )}
       </div>
     </div>

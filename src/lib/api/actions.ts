@@ -21,6 +21,7 @@ export interface AgentAction {
   outputSchema: Record<string, unknown>;
   configSchema: Record<string, unknown> | null;
   isSystem: boolean;
+  executionMode?: 'native' | 'n8n';
   isReusable: boolean;
   createdAt: string;
   updatedAt: string;
@@ -44,6 +45,11 @@ export async function getActions(): Promise<AgentAction[]> {
 export async function getCatalog(category?: string): Promise<AgentAction[]> {
   const qs = category ? `?category=${category}` : '';
   return apiRequest<AgentAction[]>(`/v1/catalog/actions${qs}`);
+}
+
+// Semantic search over action catalog via RAG
+export async function searchCatalog(query: string, limit = 20): Promise<AgentAction[]> {
+  return apiRequest<AgentAction[]>(`/v1/catalog/actions/search?q=${encodeURIComponent(query)}&limit=${limit}`);
 }
 
 // Get actions by category
