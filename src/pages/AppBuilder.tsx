@@ -11,7 +11,7 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Save, Undo2, Zap, Globe, HelpCircle, Lock, Plus, Trash2,
-  CheckCircle, Loader2, ShieldCheck, KeyRound, Terminal, X, LayoutGrid,
+  CheckCircle, Loader2, ShieldCheck, KeyRound, Terminal, X, LayoutGrid, Upload, Download,
 } from 'lucide-react';
 import { FlowCanvas } from '../components/workflow/FlowCanvas';
 import { ActionConfigPanel } from '../components/workflow/ActionConfigPanel';
@@ -24,6 +24,7 @@ import { Badge } from '../components/ui/badge';
 import { Dialog, DialogHeader, DialogTitle, DialogContent } from '../components/ui/dialog';
 import { api } from '../lib/api';
 import { getCatalog } from '../lib/api/actions';
+import { importN8nWorkflow, exportN8nWorkflow } from '../lib/api/n8n';
 import type { WorkflowStep } from '../lib/types';
 import type { AgentAction } from '../lib/api/actions';
 
@@ -123,6 +124,10 @@ export default function AppBuilder() {
   const [catalogSearch, setCatalogSearch] = useState('');
   const [catalogDialogOpen, setCatalogDialogOpen] = useState(false);
   const [rawCatalog, setRawCatalog] = useState<AgentAction[]>([]);
+  const [n8nImportOpen, setN8nImportOpen] = useState(false);
+  const [n8nImportText, setN8nImportText] = useState('');
+  const [n8nImporting, setN8nImporting] = useState(false);
+  const [n8nImportError, setN8nImportError] = useState<string | null>(null);
   const [configTab, setConfigTab] = useState<'config' | 'mapping'>('config');
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
   const [chatCollapsed, setChatCollapsed] = useState(true);
@@ -468,6 +473,23 @@ export default function AppBuilder() {
             <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${validateResult === 'pass' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
               {validateResult === 'pass' ? '✓ Valid' : `✗ ${Object.keys(validationErrors).length} error${Object.keys(validationErrors).length !== 1 ? 's' : ''}`}
             </span>
+          )}
+          <Button variant="ghost" size="sm" onClick={() => setN8nImportOpen(true)} title="Import n8n workflow">
+            <Upload className="h-4 w-4" />
+          </Button>
+          {currentAppId && (
+            <Button variant="ghost" size="sm" onClick={async () => {
+              try {
+                const { n8nJson } = await exportN8nWorkflow(currentAppId);
+                const blob = new Blob([JSON.stringify(n8nJson, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = `${workflow.name || 'workflow'}.n8n.json`; a.click();
+                URL.revokeObjectURL(url);
+              } catch { /* silent */ }
+            }} title="Export as n8n workflow">
+              <Download className="h-4 w-4" />
+            </Button>
           )}
           <Button variant="ghost" size="sm" onClick={() => setShowHelp(h => !h)} title="Help">
             <HelpCircle className="h-4 w-4" />
@@ -873,6 +895,47 @@ export default function AppBuilder() {
           </CardContent>
         </Card>
       )}
+
+      {/* ── n8n Import Dialog ─────────────────────────────────────────── */}
+      <Dialog open={n8nImportOpen} onOpenChange={v => { if (!v) { setN8nImportOpen(false); setN8nImportError(null); setN8nImportText(''); } }}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader><DialogTitle>Import n8n Workflow</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-gray-500">Paste your n8n workflow JSON below. Steps will be mapped to the Lookout action catalog (AI-assisted for unrecognized nodes).</p>
+            <textarea
+              className="w-full h-48 px-3 py-2 border border-gray-300 rounded-lg text-xs font-mono resize-none focus:outline-none focus:ring-1 focus:ring-indigo-400"
+              placeholder='{ "name": "My Workflow", "nodes": [...], "connections": {...} }'
+              value={n8nImportText}
+              onChange={e => setN8nImportText(e.target.value)}
+            />
+            {n8nImportError && <p className="text-xs text-red-600">{n8nImportError}</p>}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={() => { setN8nImportOpen(false); setN8nImportError(null); setN8nImportText(''); }}>Cancel</Button>
+              <Button size="sm" disabled={n8nImporting || !n8nImportText.trim()} onClick={async () => {
+                setN8nImporting(true); setN8nImportError(null);
+                try {
+                  const json = JSON.parse(n8nImportText);
+                  const { workflow: imported, unresolved } = await importN8nWorkflow(json);
+                  const imp = imported as any;
+                  updateWorkflow({
+                    name: (imp.name as string) || workflow.name,
+                    description: (imp.description as string) || workflow.description,
+                    triggerConfig: { type: (imp.trigger?.type ?? 'webhook') as 'webhook' | 'cron' | 'api' | 'manual' } as typeof workflow.triggerConfig,
+                    steps: ((imp.steps ?? []) as any[]).map((s: any) => ({ id: s.id, stepId: s.stepId, name: s.name, config: s.config ?? {}, dataMapping: {} })),
+                  });
+                  if (unresolved.length > 0) setN8nImportError(`Imported with ${unresolved.length} unresolved node(s): ${unresolved.join(', ')}`);
+                  else { setN8nImportOpen(false); setN8nImportText(''); }
+                } catch (err) {
+                  setN8nImportError((err as Error).message || 'Import failed');
+                } finally { setN8nImporting(false); }
+              }}>
+                {n8nImporting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Upload className="h-4 w-4 mr-1" />}
+                Import
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* ── Action Catalog Dialog ────────────────────────────────────── */}
       <ActionCatalogDialog
