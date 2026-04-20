@@ -111,7 +111,11 @@ export interface ToolCallProps {
   placeholder?: string;
   hint?: string;
   default_value?: string;
-  field_type?: 'text' | 'email' | 'phone' | 'number' | 'url' | 'cron' | 'date';
+  field_type?: 'text' | 'email' | 'phone' | 'number' | 'url' | 'cron' | 'date'
+    | 'textarea' | 'password' | 'integer' | 'percentage' | 'port' | 'currency'
+    | 'time' | 'datetime' | 'timezone' | 'duration'
+    | 'uuid' | 'ip-address' | 'json' | 'slug' | 'regex' | 'template' | 'jwt'
+    | 'color' | 'csv-emails' | 'country-code';
   fieldId?: string;
   options?: Array<{ value: string; label: string }>;
   // confirm_add_steps

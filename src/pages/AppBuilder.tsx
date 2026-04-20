@@ -1,7 +1,7 @@
 /**
  * App Builder Page — visual workflow composer.
  *
- * Panels: Settings (left) · Flow Canvas (center) · Step Catalog (right)
+ * Panels: Settings (left) · Flow Canvas (center) · Action Library (right)
  * Sub-panels: StepConfigPanel · DataMappingPanel · Secrets
  * Features: autosave badge, undo stack, test-step, validation error dots
  */
@@ -117,7 +117,7 @@ export default function AppBuilder() {
   const [showLog, setShowLog] = useState(false);
   const executionLogRef = useRef<HTMLPreElement>(null);
 
-  // Load step catalog from API
+  // Load action library from API
   useEffect(() => {
     getCatalog()
       .then((steps: AgentStep[]) => setCatalog(steps.map(apiStepToCatalogItem)))
@@ -680,17 +680,17 @@ export default function AppBuilder() {
 
         </div>
 
-        {/* ── Right: Step Catalog ──────────────────────────────────── */}
+        {/* ── Right: Action Library ──────────────────────────────────── */}
         <div className="md:col-span-4 overflow-y-auto">
           <Card className="shadow-sm h-full">
             <CardHeader className="py-3 px-4">
-              <CardTitle className="text-sm font-semibold">Step Catalog</CardTitle>
+              <CardTitle className="text-sm font-semibold">Action Library</CardTitle>
               <input
                 type="text"
                 value={catalogSearch}
                 onChange={e => setCatalogSearch(e.target.value)}
                 className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs mt-2"
-                placeholder="Search steps…"
+                placeholder="Search actions…"
               />
             </CardHeader>
             <CardContent className="px-4 pb-4 space-y-1.5">
@@ -716,10 +716,10 @@ export default function AppBuilder() {
                 </button>
               ))}
               {catalog.length === 0 && (
-                <p className="text-xs text-gray-400 text-center py-4">Loading catalog…</p>
+                <p className="text-xs text-gray-400 text-center py-4">Loading actions…</p>
               )}
               {catalog.length > 0 && filteredCatalog.length === 0 && (
-                <p className="text-xs text-gray-400 text-center py-4">No steps match "{catalogSearch}"</p>
+                <p className="text-xs text-gray-400 text-center py-4">No actions match "{catalogSearch}"</p>
               )}
             </CardContent>
           </Card>

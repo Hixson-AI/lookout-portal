@@ -10,6 +10,8 @@ import { useState } from 'react';
 import { Button } from '../ui/button';
 import { CheckCircle, Plus, ChevronRight } from 'lucide-react';
 import type { ToolCallProps } from '../../lib/api/agents';
+import { VALIDATORS, HTML_TYPE, TEXTAREA_TYPES } from '../../lib/field-validators';
+import type { FieldType } from '../../lib/field-validators';
 
 const CATEGORY_COLORS: Record<string, string> = {
   integration:   'bg-blue-100 text-blue-800',
@@ -109,21 +111,6 @@ interface FieldInputWidgetProps {
   disabled: boolean;
 }
 
-type FieldType = 'text' | 'email' | 'phone' | 'number' | 'url' | 'cron' | 'date';
-
-const VALIDATORS: Record<FieldType, (v: string) => string | null> = {
-  text:   () => null,
-  number: v => /^-?\d+(\.\d+)?$/.test(v.trim()) ? null : 'Must be a valid number',
-  email:  v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) ? null : 'Must be a valid email address',
-  phone:  v => /^\+?[\d\s\-().]{7,}$/.test(v.trim()) ? null : 'Must be a valid phone number',
-  url:    v => { try { new URL(v.trim()); return null; } catch { return 'Must be a valid URL (include https://)'; } },
-  cron:   v => /^(\S+\s){4}\S+$/.test(v.trim()) ? null : 'Must be a valid cron expression (5 fields)',
-  date:   v => isNaN(Date.parse(v.trim())) ? 'Must be a valid date' : null,
-};
-
-const HTML_TYPE: Record<FieldType, string> = {
-  text: 'text', email: 'email', phone: 'tel', number: 'number', url: 'url', cron: 'text', date: 'date',
-};
 
 export function FieldInputWidget({ props, onSubmit, disabled }: FieldInputWidgetProps) {
   const { label = 'Enter value', placeholder = '', hint, default_value = '', field_type = 'text' } = props;
@@ -162,21 +149,55 @@ export function FieldInputWidget({ props, onSubmit, disabled }: FieldInputWidget
       ) : (
         /* ── Editable input ── */
         <div className="space-y-1">
-          <input
-            type={HTML_TYPE[field_type as FieldType] ?? 'text'}
-            value={value}
-            onChange={e => { setValue(e.target.value); setTouched(true); }}
-            onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-            onBlur={() => setTouched(true)}
-            placeholder={placeholder}
-            disabled={disabled}
-            autoFocus
-            className={`w-full px-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 disabled:opacity-50 ${
-              error
-                ? 'border-red-300 focus:ring-red-300'
-                : 'border-gray-300 focus:ring-indigo-400'
-            }`}
-          />
+          {TEXTAREA_TYPES.has(field_type as FieldType) ? (
+            <textarea
+              rows={field_type === 'json' ? 5 : 3}
+              value={value}
+              onChange={e => { setValue(e.target.value); setTouched(true); }}
+              onBlur={() => setTouched(true)}
+              placeholder={placeholder}
+              disabled={disabled}
+              autoFocus
+              className={`w-full px-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 disabled:opacity-50 font-mono resize-y ${
+                error ? 'border-red-300 focus:ring-red-300' : 'border-gray-300 focus:ring-indigo-400'
+              }`}
+            />
+          ) : field_type === 'color' ? (
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={value || '#6366f1'}
+                onChange={e => { setValue(e.target.value); setTouched(true); }}
+                disabled={disabled}
+                className="h-8 w-14 rounded border border-gray-300 cursor-pointer disabled:opacity-50"
+              />
+              <input
+                type="text"
+                value={value}
+                onChange={e => { setValue(e.target.value); setTouched(true); }}
+                onBlur={() => setTouched(true)}
+                placeholder="#RRGGBB"
+                disabled={disabled}
+                className={`flex-1 px-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 disabled:opacity-50 font-mono ${
+                  error ? 'border-red-300 focus:ring-red-300' : 'border-gray-300 focus:ring-indigo-400'
+                }`}
+              />
+            </div>
+          ) : (
+            <input
+              type={HTML_TYPE[field_type as FieldType] ?? 'text'}
+              value={value}
+              onChange={e => { setValue(e.target.value); setTouched(true); }}
+              onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+              onBlur={() => setTouched(true)}
+              placeholder={placeholder}
+              disabled={disabled}
+              autoFocus
+              className={`w-full px-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 disabled:opacity-50 ${
+                error ? 'border-red-300 focus:ring-red-300' : 'border-gray-300 focus:ring-indigo-400'
+              }`}
+            />
+          )}
           {error && <p className="text-xs text-red-500">{error}</p>}
         </div>
       )}

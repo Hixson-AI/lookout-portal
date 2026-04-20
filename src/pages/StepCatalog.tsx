@@ -1,6 +1,6 @@
 /**
- * Agent Step Catalog Page
- * Browse and discover available workflow steps
+ * Action Library Page
+ * Browse and discover available workflow actions
  */
 
 import { useState } from 'react';
@@ -130,7 +130,7 @@ export default function StepCatalog() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Step Catalog</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Action Library</h1>
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
@@ -142,7 +142,7 @@ export default function StepCatalog() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full px-3 py-2 border rounded-lg"
-                placeholder="Search steps..."
+                placeholder="Search actions..."
               />
             </div>
             <div>
@@ -189,7 +189,7 @@ export default function StepCatalog() {
 
         {filteredSteps.length === 0 && (
           <div className="text-center py-12 text-gray-500">
-            No steps match your search criteria
+            No actions match your search criteria
           </div>
         )}
       </div>
