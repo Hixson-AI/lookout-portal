@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState, useCallback } from 'react';
 import { Layout } from '../components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -26,6 +27,9 @@ import {
   Eye,
   EyeOff,
   Trash2,
+  X,
+  Sparkles,
+  ChevronRight,
 } from 'lucide-react';
 
 type Tab = 'actions' | 'settings';
@@ -43,6 +47,10 @@ export function PlatformAdmin() {
   const [modeFilter, setModeFilter] = useState<'all' | 'native' | 'n8n'>('all');
   const [syncing, setSyncing] = useState(false);
   const [reindexing, setReindexing] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [detailAction, setDetailAction] = useState<CatalogActionWithEmbedding | null>(null);
+  const [enrichingId, setEnrichingId] = useState<string | null>(null);
+  const [reindexingId, setReindexingId] = useState<string | null>(null);
 
   // ── Settings tab state ─────────────────────────────────────────────
   const [settings, setSettings] = useState<PlatformSetting[]>([]);
@@ -52,13 +60,15 @@ export function PlatformAdmin() {
   const [savingKey, setSavingKey] = useState(false);
 
   // ── Load actions ───────────────────────────────────────────────────
-  useEffect(() => {
+  const loadActions = useCallback(() => {
     setActionsLoading(true);
     getCatalog()
       .then(data => setActions(data as CatalogActionWithEmbedding[]))
       .catch(() => toast('Failed to load action catalog', 'error'))
       .finally(() => setActionsLoading(false));
   }, [toast]);
+
+  useEffect(() => { loadActions(); }, [loadActions]);
 
   // ── Load settings ──────────────────────────────────────────────────
   useEffect(() => {
@@ -76,7 +86,6 @@ export function PlatformAdmin() {
     try {
       const result = await triggerN8nSync();
       toast(result.message || 'n8n catalog synced', 'success');
-      // Reload actions
       const updated = await getCatalog();
       setActions(updated as CatalogActionWithEmbedding[]);
     } catch (err) {
@@ -87,17 +96,60 @@ export function PlatformAdmin() {
   };
 
   // ── Reindex embeddings ─────────────────────────────────────────────
-  const handleReindex = async () => {
+  const handleReindex = async (ids?: string[]) => {
     setReindexing(true);
     try {
-      const result = await triggerReindex();
-      toast(`Reindexed ${result.indexed} actions (${result.failed} failed)`, result.failed > 0 ? 'error' : 'success');
+      const result = await triggerReindex(ids);
+      const label = ids ? `${ids.length} action${ids.length !== 1 ? 's' : ''}` : 'all actions';
+      toast(`Reindexed ${label}: ${result.indexed} ok, ${result.failed} failed`, result.failed > 0 ? 'error' : 'success');
       const updated = await getCatalog();
       setActions(updated as CatalogActionWithEmbedding[]);
+      if (detailAction) {
+        const fresh = (updated as CatalogActionWithEmbedding[]).find(a => a.id === detailAction.id);
+        if (fresh) setDetailAction(fresh);
+      }
     } catch (err) {
       toast((err as Error).message || 'Reindex failed', 'error');
     } finally {
       setReindexing(false);
+    }
+  };
+
+  const handleReindexSelected = () => handleReindex([...selected]);
+
+  // ── Enrich single n8n action ───────────────────────────────────────
+  const handleEnrichOne = async (action: CatalogActionWithEmbedding) => {
+    const nodeName = action.actionType?.startsWith('n8n:') ? action.actionType.slice(4) : null;
+    if (!nodeName) return;
+    setEnrichingId(action.id);
+    try {
+      await triggerN8nSync(nodeName);
+      toast(`Enriched ${action.name}`, 'success');
+      const updated = await getCatalog();
+      setActions(updated as CatalogActionWithEmbedding[]);
+      const fresh = (updated as CatalogActionWithEmbedding[]).find(a => a.id === action.id);
+      if (fresh) setDetailAction(fresh);
+    } catch (err) {
+      toast((err as Error).message || 'Enrich failed', 'error');
+    } finally {
+      setEnrichingId(null);
+    }
+  };
+
+  // ── Reindex single action ──────────────────────────────────────────
+  const handleReindexOne = async (action: CatalogActionWithEmbedding) => {
+    setReindexingId(action.id);
+    try {
+      await triggerReindex([action.id]);
+      toast(`Reindexed ${action.name}`, 'success');
+      const updated = await getCatalog();
+      setActions(updated as CatalogActionWithEmbedding[]);
+      const fresh = (updated as CatalogActionWithEmbedding[]).find(a => a.id === action.id);
+      if (fresh) setDetailAction(fresh);
+    } catch (err) {
+      toast((err as Error).message || 'Reindex failed', 'error');
+    } finally {
+      setReindexingId(null);
     }
   };
 
@@ -130,6 +182,10 @@ export function PlatformAdmin() {
   };
 
   // ── Derived ────────────────────────────────────────────────────────
+  const allFilteredIds = (list: CatalogActionWithEmbedding[]) => list.map(a => a.id);
+  const toggleSelect = (id: string) => setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const toggleSelectAll = (ids: string[]) => setSelected(prev => ids.every(id => prev.has(id)) ? new Set() : new Set(ids));
+
   const filteredActions = actions.filter(a => {
     const matchesSearch = !search || a.name.toLowerCase().includes(search.toLowerCase()) || a.category.toLowerCase().includes(search.toLowerCase());
     const matchesMode = modeFilter === 'all' || (a.executionMode ?? 'native') === modeFilter;
@@ -184,7 +240,7 @@ export function PlatformAdmin() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={handleReindex}
+                onClick={() => handleReindex()}
                 disabled={reindexing || syncing}
               >
                 {reindexing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <RefreshCw className="w-4 h-4 mr-1" />}
@@ -223,6 +279,20 @@ export function PlatformAdmin() {
             </div>
           </div>
 
+          {/* Selection toolbar */}
+          {selected.size > 0 && (
+            <div className="flex items-center gap-3 px-3 py-2 bg-indigo-50 border border-indigo-200 rounded-lg text-sm">
+              <span className="text-indigo-700 font-medium">{selected.size} selected</span>
+              <Button size="sm" variant="outline" onClick={handleReindexSelected} disabled={reindexing} className="border-indigo-300 text-indigo-700 hover:bg-indigo-100">
+                {reindexing ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <RefreshCw className="w-3.5 h-3.5 mr-1" />}
+                Reindex Selected
+              </Button>
+              <button onClick={() => setSelected(new Set())} className="ml-auto text-indigo-400 hover:text-indigo-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
           {/* Table */}
           <Card>
             <CardContent className="p-0">
@@ -235,22 +305,40 @@ export function PlatformAdmin() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-100 bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
+                        <th className="px-3 py-3 w-8">
+                          <input
+                            type="checkbox"
+                            className="rounded"
+                            checked={filteredActions.length > 0 && filteredActions.every((a: CatalogActionWithEmbedding) => selected.has(a.id))}
+                            onChange={() => toggleSelectAll(allFilteredIds(filteredActions))}
+                          />
+                        </th>
                         <th className="text-left px-4 py-3 font-medium">Name</th>
                         <th className="text-left px-4 py-3 font-medium">Category</th>
                         <th className="text-left px-4 py-3 font-medium">Mode</th>
                         <th className="text-left px-4 py-3 font-medium">Embedded</th>
+                        <th className="w-6"></th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
-                      {filteredActions.map(a => (
-                        <tr key={a.id} className="hover:bg-gray-50 transition-colors">
+                      {filteredActions.map((a: CatalogActionWithEmbedding) => (
+                        <tr
+                          key={a.id}
+                          className="hover:bg-gray-50 transition-colors cursor-pointer"
+                          onClick={e => { if ((e.target as HTMLElement).tagName !== 'INPUT') setDetailAction(a); }}
+                        >
+                          <td className="px-3 py-2.5" onClick={e => e.stopPropagation()}>
+                            <input
+                              type="checkbox"
+                              className="rounded"
+                              checked={selected.has(a.id)}
+                              onChange={() => toggleSelect(a.id)}
+                            />
+                          </td>
                           <td className="px-4 py-2.5 font-medium text-gray-800">{a.name}</td>
                           <td className="px-4 py-2.5 text-gray-500">{a.category}</td>
                           <td className="px-4 py-2.5">
-                            <Badge
-                              variant={a.executionMode === 'n8n' ? 'outline' : 'secondary'}
-                              className="text-xs"
-                            >
+                            <Badge variant={a.executionMode === 'n8n' ? 'outline' : 'secondary'} className="text-xs">
                               {a.executionMode ?? 'native'}
                             </Badge>
                           </td>
@@ -260,11 +348,14 @@ export function PlatformAdmin() {
                               : <XCircle className="w-4 h-4 text-gray-300" />
                             }
                           </td>
+                          <td className="px-2 py-2.5 text-gray-300">
+                            <ChevronRight className="w-4 h-4" />
+                          </td>
                         </tr>
                       ))}
-                      {!actionsLoading && filteredActions.length === 0 && (
+                      {filteredActions.length === 0 && (
                         <tr>
-                          <td colSpan={4} className="px-4 py-10 text-center text-gray-400 text-xs">No actions match</td>
+                          <td colSpan={6} className="px-4 py-10 text-center text-gray-400 text-xs">No actions match</td>
                         </tr>
                       )}
                     </tbody>
@@ -273,6 +364,146 @@ export function PlatformAdmin() {
               )}
             </CardContent>
           </Card>
+
+          {/* Action detail drawer */}
+          {detailAction && (
+            <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setDetailAction(null)}>
+              <div
+                className="relative w-full max-w-lg h-full bg-white shadow-2xl overflow-y-auto flex flex-col"
+                onClick={e => e.stopPropagation()}
+              >
+                {/* Header */}
+                <div className="flex items-start justify-between gap-3 px-5 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
+                  <div>
+                    <h2 className="text-base font-semibold text-gray-900">{detailAction.name}</h2>
+                    <p className="text-xs text-gray-400 font-mono mt-0.5">{detailAction.actionType ?? detailAction.id}</p>
+                  </div>
+                  <button onClick={() => setDetailAction(null)} className="text-gray-400 hover:text-gray-600 mt-0.5">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Body */}
+                <div className="flex-1 px-5 py-4 space-y-5 text-sm">
+                  {/* Badges */}
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant={detailAction.executionMode === 'n8n' ? 'outline' : 'secondary'}>{detailAction.executionMode ?? 'native'}</Badge>
+                    <Badge variant="outline">{detailAction.category}</Badge>
+                    <Badge variant={detailAction.hasEmbedding ? 'default' : 'secondary'}>
+                      {detailAction.hasEmbedding ? '✓ embedded' : 'not embedded'}
+                    </Badge>
+                  </div>
+
+                  {/* Description */}
+                  {detailAction.description && (
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">Description</p>
+                      <p className="text-gray-700 leading-relaxed">{detailAction.description}</p>
+                    </div>
+                  )}
+
+                  {/* Secrets */}
+                  {detailAction.secretSchema && (detailAction.secretSchema as any[]).length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">Required Credentials</p>
+                      <div className="space-y-1">
+                        {(detailAction.secretSchema as any[]).map((s: any) => (
+                          <div key={s.key} className="flex items-start gap-2">
+                            <code className="bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded text-xs font-mono text-amber-800 shrink-0">{s.key}</code>
+                            <span className="text-xs text-gray-500">{s.description}{!s.required && <em> (optional)</em>}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Input Schema */}
+                  {(() => {
+                    const props = (detailAction.inputSchema as any)?.properties;
+                    const required: string[] = (detailAction.inputSchema as any)?.required ?? [];
+                    if (!props || Object.keys(props).length === 0) return null;
+                    return (
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">Input Parameters</p>
+                        <div className="space-y-2">
+                          {Object.entries(props).map(([key, def]: [string, any]) => (
+                            <div key={key} className="flex items-start gap-2">
+                              <div className="flex items-center gap-1 shrink-0">
+                                <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono text-gray-700">{key}</code>
+                                {required.includes(key) && <span className="text-red-400 text-xs">*</span>}
+                              </div>
+                              <span className="text-xs text-gray-500">
+                                <span className="text-indigo-500">{def.type ?? 'any'}</span>
+                                {def.description && ` — ${def.description}`}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Output Schema */}
+                  {(() => {
+                    const props = (detailAction.outputSchema as any)?.properties;
+                    if (!props || Object.keys(props).length === 0) return null;
+                    return (
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">Output Fields</p>
+                        <div className="space-y-2">
+                          {Object.entries(props).map(([key, def]: [string, any]) => (
+                            <div key={key} className="flex items-start gap-2">
+                              <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono text-gray-700 shrink-0">{key}</code>
+                              <span className="text-xs text-gray-500">
+                                <span className="text-green-600">{def.type ?? 'any'}</span>
+                                {def.description && ` — ${def.description}`}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Raw schemas if no properties */}
+                  {!(detailAction.inputSchema as any)?.properties && (
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">Input Schema</p>
+                      <pre className="text-xs bg-gray-50 rounded border border-gray-100 p-2 overflow-auto max-h-40">{JSON.stringify(detailAction.inputSchema, null, 2)}</pre>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer actions */}
+                <div className="flex gap-2 px-5 py-4 border-t border-gray-100 bg-gray-50 sticky bottom-0">
+                  {detailAction.executionMode === 'n8n' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEnrichOne(detailAction)}
+                      disabled={enrichingId === detailAction.id}
+                      className="flex-1"
+                    >
+                      {enrichingId === detailAction.id
+                        ? <><Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />Enriching…</>
+                        : <><Sparkles className="w-3.5 h-3.5 mr-1" />Re-enrich</>}
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleReindexOne(detailAction)}
+                    disabled={reindexingId === detailAction.id}
+                    className="flex-1"
+                  >
+                    {reindexingId === detailAction.id
+                      ? <><Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />Reindexing…</>
+                      : <><RefreshCw className="w-3.5 h-3.5 mr-1" />Reindex</>}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

@@ -54,6 +54,9 @@ export async function triggerN8nSync(node?: string): Promise<SyncResult> {
   });
 }
 
-export async function triggerReindex(): Promise<ReindexResult> {
-  return apiRequest<ReindexResult>('/v1/catalog/actions/reindex', { method: 'POST' });
+export async function triggerReindex(ids?: string[]): Promise<ReindexResult> {
+  return apiRequest<ReindexResult>('/v1/catalog/actions/reindex', {
+    method: 'POST',
+    body: ids ? JSON.stringify({ ids }) : undefined,
+  });
 }
