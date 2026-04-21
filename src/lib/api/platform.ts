@@ -47,10 +47,12 @@ export async function clearPlatformSetting(key: string): Promise<void> {
   return apiRequest<void>(`/v1/platform/settings/${key}`, { method: 'DELETE' });
 }
 
-export async function triggerN8nSync(node?: string): Promise<SyncResult> {
+export async function triggerN8nSync(node?: string, force = false): Promise<SyncResult> {
+  const body: Record<string, unknown> = { incremental: !force, force };
+  if (node) body.node = node;
   return apiRequest<SyncResult>('/v1/catalog/actions/sync-n8n', {
     method: 'POST',
-    body: node ? JSON.stringify({ node }) : undefined,
+    body: JSON.stringify(body),
   });
 }
 

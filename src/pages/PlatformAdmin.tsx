@@ -84,10 +84,10 @@ export function PlatformAdmin() {
   }, [tab, toast]);
 
   // ── Sync n8n ───────────────────────────────────────────────────────
-  const handleSync = async () => {
+  const handleSync = async (force = false) => {
     setSyncing(true);
     try {
-      const result = await triggerN8nSync();
+      const result = await triggerN8nSync(undefined, force);
       toast(result.message || 'n8n catalog synced', 'success');
       const updated = await getCatalog();
       setActions(updated as CatalogActionWithEmbedding[]);
@@ -198,6 +198,11 @@ export function PlatformAdmin() {
   const embeddedCount = actions.filter(a => (a as CatalogActionWithEmbedding).hasEmbedding).length;
   const n8nCount = actions.filter(a => a.executionMode === 'n8n').length;
   const nativeCount = actions.filter(a => !a.executionMode || a.executionMode === 'native').length;
+  const unenrichedN8n = actions.filter(a =>
+    a.executionMode === 'n8n' &&
+    (Object.keys((a.inputSchema as any)?.properties ?? {}).length === 0 || !a.tags?.length)
+  ).length;
+  const needsDiscovery = !actionsLoading && (n8nCount === 0 || unenrichedN8n > 0);
 
   const openAiSetting = settings.find(s => s.key === 'openai_api_key');
 
@@ -240,6 +245,33 @@ export function PlatformAdmin() {
 
           {/* ── Main content ─────────────────────────────────────── */}
           <div className="flex-1 min-w-0 space-y-4">
+          {/* ── JIT Discovery banner ──────────────────────────── */}
+          {needsDiscovery && (
+            <div className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <Sparkles className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-amber-900">
+                  {n8nCount === 0
+                    ? 'Action catalog is empty'
+                    : `${unenrichedN8n} n8n action${unenrichedN8n !== 1 ? 's' : ''} need enrichment`}
+                </p>
+                <p className="text-xs text-amber-700 mt-0.5">
+                  {n8nCount === 0
+                    ? 'Discover and enrich n8n nodes from the installed package with AI-generated schemas and tags.'
+                    : 'Run discovery to fill in schemas, tags, and credentials for unenriched nodes.'}
+                </p>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => handleSync()}
+                disabled={syncing}
+                className="shrink-0 bg-amber-600 hover:bg-amber-700 text-white"
+              >
+                {syncing ? <><Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />Discovering…</> : <><Sparkles className="w-3.5 h-3.5 mr-1" />Run Discovery</>}
+              </Button>
+            </div>
+          )}
+
           {/* Stats + controls */}
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex gap-2 flex-wrap">
@@ -263,8 +295,9 @@ export function PlatformAdmin() {
               <Button
                 size="sm"
                 className="btn-gradient"
-                onClick={handleSync}
+                onClick={() => handleSync(true)}
                 disabled={syncing || reindexing}
+                title="Force re-enrich all n8n nodes (ignores already-enriched)"
               >
                 {syncing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <RefreshCw className="w-4 h-4 mr-1" />}
                 Sync n8n Catalog
