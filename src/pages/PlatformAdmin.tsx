@@ -58,7 +58,7 @@ export function PlatformAdmin() {
       .then(data => setActions(data as CatalogActionWithEmbedding[]))
       .catch(() => toast('Failed to load action catalog', 'error'))
       .finally(() => setActionsLoading(false));
-  }, []);
+  }, [toast]);
 
   // ── Load settings ──────────────────────────────────────────────────
   useEffect(() => {
@@ -68,7 +68,7 @@ export function PlatformAdmin() {
       .then(setSettings)
       .catch(() => toast('Failed to load platform settings', 'error'))
       .finally(() => setSettingsLoading(false));
-  }, [tab]);
+  }, [tab, toast]);
 
   // ── Sync n8n ───────────────────────────────────────────────────────
   const handleSync = async () => {
