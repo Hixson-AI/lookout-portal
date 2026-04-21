@@ -216,7 +216,6 @@ test.describe('Execution Engine UI dims', () => {
 test('@grade Execution rubric composite', async () => {
   const values = Object.values(roundScores).filter((v): v is number => typeof v === 'number');
   const composite = values.length > 0 ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : null;
-  // eslint-disable-next-line no-console
   console.log('Execution rubric scores:', { ...roundScores, composite });
   expect(values.length, 'at least one dim scored').toBeGreaterThan(0);
 });
