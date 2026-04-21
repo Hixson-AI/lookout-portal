@@ -72,10 +72,31 @@ jobs:
             echo "App $APP_NAME already exists"
           fi
           
-          # Allocate IPs if needed (idempotent)
-          echo "Allocating IPs if needed..."
-          flyctl ips allocate-v4 --app "$APP_NAME" --yes 2>/dev/null || echo "IPv4 already allocated or unavailable"
-          flyctl ips allocate-v6 --app "$APP_NAME" 2>/dev/null || echo "IPv6 already allocated or unavailable"
+          # Allocate IPs only if missing. Parses JSON for robustness:
+          # the prior `grep -q v4` guard allocated NEW dedicated IPs ($2/mo each)
+          # whenever `flyctl ips list` returned empty/errored, leaking ~$74/mo.
+          echo "Checking existing Fly IP allocations..."
+          IPS_JSON=$(flyctl ips list --app "$APP_NAME" --json 2>/dev/null || echo '')
+          if [ -z "$IPS_JSON" ] || ! echo "$IPS_JSON" | jq empty 2>/dev/null; then
+            echo "ERROR: could not parse 'flyctl ips list' for $APP_NAME; refusing to allocate to avoid duplicate charges."
+            exit 1
+          fi
+          HAS_V4=$(echo "$IPS_JSON" | jq 'map(select(.Type == "v4" or .Type == "shared_v4")) | length')
+          HAS_V6=$(echo "$IPS_JSON" | jq 'map(select(.Type == "v6")) | length')
+
+          if [ "$HAS_V4" = "0" ]; then
+            echo "No IPv4 allocated, allocating dedicated IPv4..."
+            flyctl ips allocate-v4 --app "$APP_NAME" --yes
+          else
+            echo "IPv4 already allocated (count=$HAS_V4), skipping"
+          fi
+
+          if [ "$HAS_V6" = "0" ]; then
+            echo "No IPv6 allocated, allocating IPv6..."
+            flyctl ips allocate-v6 --app "$APP_NAME"
+          else
+            echo "IPv6 already allocated (count=$HAS_V6), skipping"
+          fi
           
           # Add custom domain for SSL certificates
           # Extract environment from app name (prod-lookout-portal → prod, dev-lookout-portal → dev)
