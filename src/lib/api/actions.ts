@@ -20,6 +20,7 @@ export interface AgentAction {
   inputSchema: Record<string, unknown>;
   outputSchema: Record<string, unknown>;
   configSchema: Record<string, unknown> | null;
+  tags: string[];
   isSystem: boolean;
   executionMode?: 'native' | 'n8n';
   isReusable: boolean;

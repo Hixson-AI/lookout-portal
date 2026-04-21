@@ -394,6 +394,17 @@ export function PlatformAdmin() {
                     </Badge>
                   </div>
 
+                  {/* Tags */}
+                  {detailAction.tags && detailAction.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {detailAction.tags.map(tag => (
+                        <span key={tag} className="px-2 py-0.5 text-xs rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 font-mono">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
                   {/* Description */}
                   {detailAction.description && (
                     <div>
