@@ -12,7 +12,9 @@ import { useParams } from 'react-router-dom';
 import {
   Save, Undo2, Zap, Globe, HelpCircle, Lock, Plus, Trash2,
   CheckCircle, Loader2, ShieldCheck, KeyRound, Terminal, X, LayoutGrid, Upload, Download,
+  ChevronDown, ChevronRight, Layers,
 } from 'lucide-react';
+import { groupActionsByProvider } from '../lib/catalog-taxonomy';
 import { FlowCanvas } from '../components/workflow/FlowCanvas';
 import { ActionConfigPanel } from '../components/workflow/ActionConfigPanel';
 import { DataMappingPanel } from '../components/workflow/DataMappingPanel';
@@ -135,6 +137,8 @@ export default function AppBuilder() {
   const [catalogSearch, setCatalogSearch] = useState('');
   const [catalogDialogOpen, setCatalogDialogOpen] = useState(false);
   const [rawCatalog, setRawCatalog] = useState<AgentAction[]>([]);
+  const [catalogGrouped, setCatalogGrouped] = useState(false);
+  const [expandedProviders, setExpandedProviders] = useState<Set<string>>(new Set());
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [n8nImportOpen, setN8nImportOpen] = useState(false);
@@ -466,6 +470,11 @@ export default function AppBuilder() {
     [catalog, catalogSearch]
   );
 
+  const groupedRawCatalog = useMemo(() => groupActionsByProvider(rawCatalog), [rawCatalog]);
+
+  const toggleProvider = (p: string) =>
+    setExpandedProviders(prev => { const n = new Set(prev); n.has(p) ? n.delete(p) : n.add(p); return n; });
+
   const undoDisabled = undoStack.current.length === 0 && undoCount >= 0; // reactive dependency
 
   // ── Render ───────────────────────────────────────────────────────────
@@ -748,13 +757,22 @@ export default function AppBuilder() {
             <CardHeader className="py-3 px-4">
               <CardTitle className="text-sm font-semibold flex items-center justify-between">
                 <span>Action Library</span>
-                <button
-                  onClick={() => setCatalogDialogOpen(true)}
-                  className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-indigo-600 transition-colors"
-                  title="Browse all actions"
-                >
-                  <LayoutGrid className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-0.5 ml-auto">
+                  <button
+                    onClick={() => setCatalogGrouped(g => !g)}
+                    className={`p-1 rounded transition-colors ${catalogGrouped ? 'bg-indigo-100 text-indigo-600' : 'hover:bg-gray-100 text-gray-400 hover:text-indigo-600'}`}
+                    title={catalogGrouped ? 'Show flat list' : 'Group by provider'}
+                  >
+                    <Layers className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setCatalogDialogOpen(true)}
+                    className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-indigo-600 transition-colors"
+                    title="Browse all actions"
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </button>
+                </div>
               </CardTitle>
               <input
                 type="text"
@@ -765,27 +783,63 @@ export default function AppBuilder() {
               />
             </CardHeader>
             <CardContent className="px-4 pb-4 space-y-1.5">
-              {filteredCatalog.map(item => (
-                <button
-                  key={item.id}
-                  draggable
-                  onDragStart={e => {
-                    e.dataTransfer.setData('application/workflow-step-id', item.id);
-                    e.dataTransfer.setData('application/workflow-step-name', item.name);
-                    e.dataTransfer.setData('application/workflow-step-category', item.category);
-                  }}
-                  onClick={() => handleDropStep(item.id, item.name)}
-                  className="w-full text-left p-2.5 border border-gray-200 rounded-lg hover:border-indigo-400 hover:bg-indigo-50 transition-colors cursor-grab active:cursor-grabbing"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-lg leading-none">{item.icon}</span>
-                    <div className="min-w-0">
-                      <div className="text-sm font-medium text-gray-800 truncate">{item.name}</div>
-                      <div className="text-xs text-gray-500 truncate">{item.desc}</div>
+              {/* ── Grouped view ── */}
+              {catalogGrouped && !catalogSearch ? (
+                groupedRawCatalog.map(({ provider, actions: provActions }) => {
+                  const expanded = expandedProviders.has(provider);
+                  return (
+                    <div key={provider}>
+                      <button
+                        onClick={() => toggleProvider(provider)}
+                        className="w-full flex items-center gap-1.5 px-1 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700"
+                      >
+                        {expanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                        <span className="capitalize">{provider}</span>
+                        <span className="ml-auto text-[10px] font-normal text-gray-400">{provActions.length}</span>
+                      </button>
+                      {expanded && provActions.map(action => (
+                        <button
+                          key={action.id}
+                          draggable
+                          onDragStart={e => {
+                            e.dataTransfer.setData('application/workflow-step-id', action.actionType ?? action.id);
+                            e.dataTransfer.setData('application/workflow-step-name', action.name);
+                            e.dataTransfer.setData('application/workflow-step-category', action.category);
+                          }}
+                          onClick={() => handleDropStep(action.actionType ?? action.id, action.name)}
+                          className="w-full text-left p-2 ml-3 border border-gray-200 rounded-lg hover:border-indigo-400 hover:bg-indigo-50 transition-colors cursor-grab active:cursor-grabbing mb-1"
+                        >
+                          <div className="text-xs font-medium text-gray-800 truncate">{action.name}</div>
+                          <div className="text-[11px] text-gray-500 truncate">{action.description}</div>
+                        </button>
+                      ))}
                     </div>
-                  </div>
-                </button>
-              ))}
+                  );
+                })
+              ) : (
+                /* ── Flat / search view ── */
+                filteredCatalog.map(item => (
+                  <button
+                    key={item.id}
+                    draggable
+                    onDragStart={e => {
+                      e.dataTransfer.setData('application/workflow-step-id', item.id);
+                      e.dataTransfer.setData('application/workflow-step-name', item.name);
+                      e.dataTransfer.setData('application/workflow-step-category', item.category);
+                    }}
+                    onClick={() => handleDropStep(item.id, item.name)}
+                    className="w-full text-left p-2.5 border border-gray-200 rounded-lg hover:border-indigo-400 hover:bg-indigo-50 transition-colors cursor-grab active:cursor-grabbing"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-lg leading-none">{item.icon}</span>
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium text-gray-800 truncate">{item.name}</div>
+                        <div className="text-xs text-gray-500 truncate">{item.desc}</div>
+                      </div>
+                    </div>
+                  </button>
+                ))
+              )}
               {catalogLoading && (
                 <p className="text-xs text-gray-400 text-center py-4">Loading actions…</p>
               )}
@@ -795,7 +849,7 @@ export default function AppBuilder() {
               {!catalogLoading && !catalogError && catalog.length === 0 && (
                 <p className="text-xs text-gray-400 text-center py-4">No actions in catalog yet</p>
               )}
-              {!catalogLoading && !catalogError && catalog.length > 0 && filteredCatalog.length === 0 && (
+              {!catalogLoading && !catalogError && catalog.length > 0 && !catalogGrouped && filteredCatalog.length === 0 && (
                 <p className="text-xs text-gray-400 text-center py-4">No actions match "{catalogSearch}"</p>
               )}
             </CardContent>

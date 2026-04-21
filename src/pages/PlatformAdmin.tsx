@@ -31,6 +31,8 @@ import {
   Sparkles,
   ChevronRight,
 } from 'lucide-react';
+import { CatalogGroupBrowser } from '../components/workflow/CatalogGroupBrowser';
+import { type GroupSelection, filterBySelection } from '../lib/catalog-taxonomy';
 
 type Tab = 'actions' | 'settings';
 
@@ -51,6 +53,7 @@ export function PlatformAdmin() {
   const [detailAction, setDetailAction] = useState<CatalogActionWithEmbedding | null>(null);
   const [enrichingId, setEnrichingId] = useState<string | null>(null);
   const [reindexingId, setReindexingId] = useState<string | null>(null);
+  const [groupSelection, setGroupSelection] = useState<GroupSelection>({ mode: 'all' });
 
   // ── Settings tab state ─────────────────────────────────────────────
   const [settings, setSettings] = useState<PlatformSetting[]>([]);
@@ -186,11 +189,11 @@ export function PlatformAdmin() {
   const toggleSelect = (id: string) => setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const toggleSelectAll = (ids: string[]) => setSelected(prev => ids.every(id => prev.has(id)) ? new Set() : new Set(ids));
 
-  const filteredActions = actions.filter(a => {
+  const filteredActions = filterBySelection(actions as any, groupSelection).filter((a: CatalogActionWithEmbedding) => {
     const matchesSearch = !search || a.name.toLowerCase().includes(search.toLowerCase()) || a.category.toLowerCase().includes(search.toLowerCase());
     const matchesMode = modeFilter === 'all' || (a.executionMode ?? 'native') === modeFilter;
     return matchesSearch && matchesMode;
-  });
+  }) as CatalogActionWithEmbedding[];
 
   const embeddedCount = actions.filter(a => (a as CatalogActionWithEmbedding).hasEmbedding).length;
   const n8nCount = actions.filter(a => a.executionMode === 'n8n').length;
@@ -225,7 +228,18 @@ export function PlatformAdmin() {
 
       {/* ── Actions tab ─────────────────────────────────────────── */}
       {tab === 'actions' && (
-        <div className="space-y-4">
+        <div className="flex gap-4">
+          {/* ── Group sidebar ─────────────────────────────────────── */}
+          <div className="w-52 shrink-0">
+            <CatalogGroupBrowser
+              actions={actions}
+              selection={groupSelection}
+              onSelect={s => { setGroupSelection(s); setSelected(new Set()); }}
+            />
+          </div>
+
+          {/* ── Main content ─────────────────────────────────────── */}
+          <div className="flex-1 min-w-0 space-y-4">
           {/* Stats + controls */}
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex gap-2 flex-wrap">
@@ -515,6 +529,7 @@ export function PlatformAdmin() {
               </div>
             </div>
           )}
+          </div>
         </div>
       )}
 
