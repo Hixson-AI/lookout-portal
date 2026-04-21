@@ -233,9 +233,9 @@ export function PlatformAdmin() {
 
       {/* ── Actions tab ─────────────────────────────────────────── */}
       {tab === 'actions' && (
-        <div className="flex gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row">
           {/* ── Group sidebar ─────────────────────────────────────── */}
-          <div className="w-52 shrink-0">
+          <div className="hidden sm:block w-52 shrink-0">
             <CatalogGroupBrowser
               actions={actions}
               selection={groupSelection}
@@ -273,7 +273,7 @@ export function PlatformAdmin() {
           )}
 
           {/* Stats + controls */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex gap-2 flex-wrap">
               <Badge variant="secondary">{actions.length} total</Badge>
               <Badge variant="outline">{nativeCount} native</Badge>
@@ -282,7 +282,7 @@ export function PlatformAdmin() {
                 {embeddedCount}/{actions.length} embedded
               </Badge>
             </div>
-            <div className="flex gap-2 ml-auto">
+            <div className="flex gap-2 sm:ml-auto flex-wrap">
               <Button
                 size="sm"
                 variant="outline"
@@ -290,7 +290,8 @@ export function PlatformAdmin() {
                 disabled={reindexing || syncing}
               >
                 {reindexing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <RefreshCw className="w-4 h-4 mr-1" />}
-                Reindex Embeddings
+                <span className="hidden sm:inline">Reindex Embeddings</span>
+                <span className="sm:hidden">Reindex</span>
               </Button>
               <Button
                 size="sm"
@@ -300,18 +301,19 @@ export function PlatformAdmin() {
                 title="Force re-enrich all n8n nodes (ignores already-enriched)"
               >
                 {syncing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <RefreshCw className="w-4 h-4 mr-1" />}
-                Sync n8n Catalog
+                <span className="hidden sm:inline">Sync n8n Catalog</span>
+                <span className="sm:hidden">Sync n8n</span>
               </Button>
             </div>
           </div>
 
           {/* Filters */}
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Input
               placeholder="Search by name or category…"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="max-w-xs text-sm"
+              className="w-full sm:max-w-xs text-sm"
             />
             <div className="flex gap-1">
               {(['all', 'native', 'n8n'] as const).map(m => (
@@ -361,9 +363,9 @@ export function PlatformAdmin() {
                           />
                         </th>
                         <th className="text-left px-4 py-3 font-medium">Name</th>
-                        <th className="text-left px-4 py-3 font-medium">Category</th>
-                        <th className="text-left px-4 py-3 font-medium">Mode</th>
-                        <th className="text-left px-4 py-3 font-medium">Embedded</th>
+                        <th className="text-left px-4 py-3 font-medium hidden sm:table-cell">Category</th>
+                        <th className="text-left px-4 py-3 font-medium hidden sm:table-cell">Mode</th>
+                        <th className="text-left px-4 py-3 font-medium">Status</th>
                         <th className="w-6"></th>
                       </tr>
                     </thead>
@@ -382,9 +384,17 @@ export function PlatformAdmin() {
                               onChange={() => toggleSelect(a.id)}
                             />
                           </td>
-                          <td className="px-4 py-2.5 font-medium text-gray-800">{a.name}</td>
-                          <td className="px-4 py-2.5 text-gray-500">{a.category}</td>
                           <td className="px-4 py-2.5">
+                            <p className="font-medium text-gray-800">{a.name}</p>
+                            <p className="text-xs text-gray-400 sm:hidden mt-0.5">
+                              {a.category}
+                              <Badge variant={a.executionMode === 'n8n' ? 'outline' : 'secondary'} className="text-xs ml-2">
+                                {a.executionMode ?? 'native'}
+                              </Badge>
+                            </p>
+                          </td>
+                          <td className="px-4 py-2.5 text-gray-500 hidden sm:table-cell">{a.category}</td>
+                          <td className="px-4 py-2.5 hidden sm:table-cell">
                             <Badge variant={a.executionMode === 'n8n' ? 'outline' : 'secondary'} className="text-xs">
                               {a.executionMode ?? 'native'}
                             </Badge>
@@ -414,11 +424,20 @@ export function PlatformAdmin() {
 
           {/* Action detail drawer */}
           {detailAction && (
-            <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setDetailAction(null)}>
+            <div
+              className="fixed inset-0 z-50 flex items-end sm:items-stretch sm:justify-end"
+              onClick={() => setDetailAction(null)}
+            >
+              {/* Backdrop */}
+              <div className="absolute inset-0 bg-black/40 sm:bg-black/20" />
               <div
-                className="relative w-full max-w-lg h-full bg-white shadow-2xl overflow-y-auto flex flex-col"
+                className="relative w-full sm:max-w-lg max-h-[90vh] sm:max-h-none sm:h-full bg-white shadow-2xl overflow-y-auto flex flex-col rounded-t-2xl sm:rounded-none"
                 onClick={e => e.stopPropagation()}
               >
+                {/* Mobile drag handle */}
+                <div className="sm:hidden flex justify-center pt-3 pb-1">
+                  <div className="w-10 h-1 rounded-full bg-gray-200" />
+                </div>
                 {/* Header */}
                 <div className="flex items-start justify-between gap-3 px-5 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
                   <div>
