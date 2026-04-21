@@ -151,7 +151,7 @@ export default function AppBuilder() {
   const executionLogRef = useRef<HTMLPreElement>(null);
 
   // Load action library from API
-  useEffect(() => {
+  const loadCatalog = useCallback(() => {
     setCatalogLoading(true);
     setCatalogError(null);
     getCatalog()
@@ -164,6 +164,8 @@ export default function AppBuilder() {
       })
       .finally(() => setCatalogLoading(false));
   }, []);
+
+  useEffect(() => { loadCatalog(); }, [loadCatalog]);
 
   // Auto-scroll execution log to bottom
   useEffect(() => {
@@ -839,6 +841,7 @@ export default function AppBuilder() {
                     appId={currentAppId ?? undefined}
                     inputSchema={catalog.find(c => c.id === selectedStep.stepId)?.inputSchema}
                     secretSchema={catalog.find(c => c.id === selectedStep.stepId)?.secretSchema}
+                    onEnriched={loadCatalog}
                   />
                   <div className="pt-2 border-t border-gray-100">
                     <Button

@@ -4,7 +4,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Zap, Settings2, Play, Loader2, ShieldCheck, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
+import { Plus, Trash2, Zap, Settings2, Play, Loader2, ShieldCheck, ChevronDown, ChevronUp, Eye, EyeOff, Sparkles } from 'lucide-react';
+import { triggerN8nSync } from '../../lib/api/platform';
 import { api } from '../../lib/api';
 import { Button } from '../ui/button';
 import type { WorkflowStep } from '../../lib/types';
@@ -25,6 +26,7 @@ interface StepConfigPanelProps {
   appId?: string;
   inputSchema?: Record<string, unknown> | null;
   secretSchema?: SecretEntry[] | null;
+  onEnriched?: () => void;
 }
 
 // mappable fields per step type — used by DataMappingPanel
@@ -695,13 +697,65 @@ function formatLabel(key: string): string {
     .trim();
 }
 
+function EnrichPrompt({ actionType, onEnriched }: { actionType?: string; onEnriched?: () => void }) {
+  const [enriching, setEnriching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const nodeName = actionType?.startsWith('n8n:') ? actionType.slice(4) : null;
+
+  const handleEnrich = async () => {
+    if (!nodeName) return;
+    setEnriching(true);
+    setError(null);
+    try {
+      await triggerN8nSync(nodeName);
+      onEnriched?.();
+    } catch (err) {
+      setError((err as Error).message || 'Enrichment failed');
+    } finally {
+      setEnriching(false);
+    }
+  };
+
+  if (!nodeName) {
+    return (
+      <p className="text-xs py-4 text-center" style={{ color: 'var(--text-secondary)' }}>
+        No configuration schema available for this action.
+      </p>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-3 py-6 px-4 text-center rounded-lg border border-dashed" style={{ borderColor: 'var(--border)' }}>
+      <Sparkles className="w-8 h-8 text-indigo-400" />
+      <div>
+        <p className="text-sm font-medium text-gray-700">Schema not generated yet</p>
+        <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
+          Generates description, input parameters, output shape, and credential requirements for <strong>{nodeName}</strong>.
+        </p>
+      </div>
+      <button
+        onClick={handleEnrich}
+        disabled={enriching}
+        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-lg transition-colors"
+      >
+        {enriching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+        {enriching ? 'Generating…' : 'Generate Form'}
+      </button>
+      {error && <p className="text-xs text-red-500">{error}</p>}
+    </div>
+  );
+}
+
 function DynamicSchemaForm({
-  config, onChange, inputSchema, secretSchema,
+  config, onChange, inputSchema, secretSchema, actionType, onEnriched,
 }: {
   config: any;
   onChange: (c: any) => void;
   inputSchema?: Record<string, unknown> | null;
   secretSchema?: SecretEntry[] | null;
+  actionType?: string;
+  onEnriched?: () => void;
 }) {
   const [showSecrets, setShowSecrets] = useState(false);
   const [revealedFields, setRevealedFields] = useState<Set<string>>(new Set());
@@ -718,7 +772,12 @@ function DynamicSchemaForm({
     });
 
   if (Object.keys(properties).length === 0) {
-    return <RawJsonConfig config={config} onChange={onChange} inputSchema={inputSchema} />;
+    return (
+      <EnrichPrompt
+        actionType={actionType}
+        onEnriched={onEnriched}
+      />
+    );
   }
 
   const isSensitiveKey = (key: string) => /password|secret|token|api[_-]?key|credential|auth/i.test(key);
@@ -816,50 +875,10 @@ function DynamicSchemaForm({
   );
 }
 
-// ── Fallback: raw JSON editor ─────────────────────────────────────────
-
-function scaffoldFromInputSchema(schema: any): Record<string, unknown> {
-  const props = schema?.properties ?? {};
-  const result: Record<string, unknown> = {};
-  for (const [key, def] of Object.entries(props) as [string, any][]) {
-    if ('default' in def) result[key] = def.default;
-    else if (def.type === 'string')  result[key] = '';
-    else if (def.type === 'number')  result[key] = 0;
-    else if (def.type === 'boolean') result[key] = false;
-    else if (def.type === 'array')   result[key] = [];
-    else if (def.type === 'object')  result[key] = {};
-  }
-  return result;
-}
-
-function RawJsonConfig({ config, onChange, inputSchema }: { config: any; onChange: (c: any) => void; inputSchema?: Record<string, unknown> | null }) {
-  const isEmpty = Object.keys(config).length === 0;
-  const initial = isEmpty && inputSchema ? scaffoldFromInputSchema(inputSchema) : config;
-  const [raw, setRaw] = useState(JSON.stringify(initial, null, 2));
-  const [parseError, setParseError] = useState(false);
-
-  const handleChange = (val: string) => {
-    setRaw(val);
-    try {
-      onChange(JSON.parse(val));
-      setParseError(false);
-    } catch {
-      setParseError(true);
-    }
-  };
-
-  return (
-    <div className="space-y-2">
-      <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>No dedicated form for this step type — edit config JSON directly.</p>
-      <TextareaInput value={raw} onChange={handleChange} rows={12} monospace />
-      {parseError && <p className="text-xs text-red-500">Invalid JSON</p>}
-    </div>
-  );
-}
 
 // ── Main dispatcher ───────────────────────────────────────────────────
 
-export function ActionConfigPanel({ step, allSteps = [], onChange, tenantId, appId, inputSchema, secretSchema }: StepConfigPanelProps) {
+export function ActionConfigPanel({ step, allSteps = [], onChange, tenantId, appId, inputSchema, secretSchema, onEnriched }: StepConfigPanelProps) {
   const config = step.config || {};
   const update = (newConfig: any) => onChange({ ...step, config: newConfig });
 
@@ -945,7 +964,14 @@ export function ActionConfigPanel({ step, allSteps = [], onChange, tenantId, app
           {step.stepId === 'action:email-send' && <EmailSendConfig config={config} onChange={update} />}
           {step.stepId === 'action:twilio-sms' && <TwilioSmsConfig config={config} onChange={update} />}
           {!['action:http-request','action:ai-processing','action:data-transform','action:condition','action:delay','action:email-send','action:twilio-sms'].includes(step.stepId) && (
-            <DynamicSchemaForm config={config} onChange={update} inputSchema={inputSchema} secretSchema={secretSchema} />
+            <DynamicSchemaForm
+              config={config}
+              onChange={update}
+              inputSchema={inputSchema}
+              secretSchema={secretSchema}
+              actionType={step.stepId}
+              onEnriched={onEnriched}
+            />
           )}
           
           {/* Test button after config form */}
