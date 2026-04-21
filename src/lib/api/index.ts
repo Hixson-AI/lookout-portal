@@ -9,6 +9,25 @@ import * as appSecrets from './app-secrets';
 import * as actions from './actions';
 import * as agents from './agents';
 
+/**
+ * Convert snake_case keys to camelCase — shallow only (does not recurse into
+ * nested objects, preserving user-defined schema property names).
+ */
+function shallowCamelize<T>(data: T): T {
+  if (Array.isArray(data)) {
+    return data.map(shallowCamelize) as T;
+  }
+  if (data !== null && typeof data === 'object' && !(data instanceof Date)) {
+    const result: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+      const camel = key.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
+      result[camel] = value;
+    }
+    return result as T;
+  }
+  return data;
+}
+
 const CONTROL_PLANE_URL = import.meta.env.VITE_CONTROL_PLANE_URL;
 
 let onAuthError: (() => void) | null = null;
@@ -43,10 +62,10 @@ export async function apiRequest<T>(
 
   const json = await response.json() as unknown;
   // Unwrap data property if present (backend pattern)
-  if (typeof json === 'object' && json !== null && 'data' in json) {
-    return (json as ApiResponse<T>).data;
-  }
-  return json as T;
+  const raw = (typeof json === 'object' && json !== null && 'data' in json)
+    ? (json as ApiResponse<T>).data
+    : json as T;
+  return shallowCamelize(raw);
 }
 
 export const api = {
