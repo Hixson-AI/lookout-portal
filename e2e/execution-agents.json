@@ -1,0 +1,62 @@
+{
+  "_meta": {
+    "version": 1,
+    "updated": "2026-04-21",
+    "note": "Execution rubric (Slice 6.x) — per-dim agent config. Backend dims (E1-E5) are graded only, no agent mutations. UI dims (E6-E10) use the same per-dim agent pattern as agents.json."
+  },
+  "E1": {
+    "_backend": true,
+    "description": "POST /v1/tenants/:tenantId/apps/:appId/execute creates AppExecution row with correct initial state (status=running, currentStepIndex=0, totalSteps, machineId populated)",
+    "scoring": "10 = correct response shape + DB state; 5 = correct HTTP status but wrong shape; 0 = wrong status or exception"
+  },
+  "E2": {
+    "_backend": true,
+    "description": "GET /v1/platform/apps/:appId/executions/:id returns currentStepIndex, totalSteps, currentStepName, lastHeartbeatAt, machineType, durationSeconds",
+    "scoring": "10 = all fields present + correct types; 5 = some fields missing; 0 = wrong shape"
+  },
+  "E3": {
+    "_backend": true,
+    "description": "Lifecycle webhooks fire at correct transitions (execution.started, step_completed, completed) with signed X-Lookout-Signature header",
+    "scoring": "10 = all events fired + HMAC valid; 5 = some events missing; 0 = no webhooks"
+  },
+  "E4": {
+    "_backend": true,
+    "description": "Concurrency policy enforced — second trigger on App with concurrencyPolicy=none returns 409 DISPATCH_REJECTED while first is running",
+    "scoring": "10 = rejection with correct error code; 5 = rejection with wrong shape; 0 = not rejected"
+  },
+  "E5": {
+    "_backend": true,
+    "description": "POST /v1/tenants/:tid/apps/:aid/cancel/:execId → execution marked cancelling, then cancelled after grace period; Fly machine destroyed",
+    "scoring": "10 = full flow + machine destroyed; 5 = status update but machine stays; 0 = no cancel"
+  },
+  "E6": {
+    "model": "openrouter/anthropic/claude-sonnet-4.6",
+    "temperature": 0.2,
+    "prompt": "Edit ONLY: src/components/platform/PlatformJobsTab.tsx. Improve the executions list rendering on the Jobs tab. (Placeholder — fill in after first grading round.)",
+    "notes": "Initial placeholder; reflect.mjs will populate after first run."
+  },
+  "E7": {
+    "model": "openrouter/anthropic/claude-sonnet-4.6",
+    "temperature": 0.2,
+    "prompt": "Edit ONLY: src/components/platform/PlatformJobsTab.tsx. Progress bar for running executions must show 'Step N of M — {stepName}' with a filled-bar visualisation. (Placeholder — fill in after first grading round.)",
+    "notes": "Initial placeholder."
+  },
+  "E8": {
+    "model": "openrouter/google/gemini-2.5-pro",
+    "temperature": 0.2,
+    "prompt": "Edit ONLY: src/components/platform/PlatformJobsTab.tsx. Add a concurrency warning dialog before triggering an app whose concurrencyPolicy is 'none' or 'replace' when a run is already active. (Placeholder.)",
+    "notes": "Initial placeholder."
+  },
+  "E9": {
+    "model": "openrouter/anthropic/claude-sonnet-4.6",
+    "temperature": 0.2,
+    "prompt": "Edit ONLY: src/components/platform/PlatformJobsTab.tsx (ExecutionDetailDrawer). Ensure the drawer renders step timeline, per-step output, and error details cleanly. (Placeholder.)",
+    "notes": "Initial placeholder."
+  },
+  "E10": {
+    "model": "openrouter/anthropic/claude-sonnet-4.6",
+    "temperature": 0.2,
+    "prompt": "Edit ONLY: src/pages/PlatformAdmin.tsx. The Jobs tab should render the platform tenant's executions clearly with the existing PlatformJobsTab component. Verify the tab is accessible and the platform apps are listed. (Placeholder.)",
+    "notes": "Initial placeholder."
+  }
+}

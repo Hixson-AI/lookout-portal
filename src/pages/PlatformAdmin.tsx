@@ -33,8 +33,10 @@ import {
 } from 'lucide-react';
 import { CatalogGroupBrowser } from '../components/workflow/CatalogGroupBrowser';
 import { type GroupSelection, filterBySelection } from '../lib/catalog-taxonomy';
+import { PlatformJobsTab } from '../components/platform/PlatformJobsTab';
+import { Zap } from 'lucide-react';
 
-type Tab = 'actions' | 'settings';
+type Tab = 'actions' | 'settings' | 'jobs';
 
 type CatalogActionWithEmbedding = AgentAction & { hasEmbedding?: boolean };
 
@@ -236,7 +238,16 @@ export function PlatformAdmin() {
         >
           <span className="flex items-center gap-2"><Settings className="w-4 h-4" />AI Settings</span>
         </button>
+        <button
+          onClick={() => setTab('jobs')}
+          className={`px-4 py-2 text-sm font-medium rounded-t-md transition-colors ${tab === 'jobs' ? 'bg-white border border-b-white border-gray-200 text-indigo-600 -mb-px' : 'text-gray-500 hover:text-gray-700'}`}
+        >
+          <span className="flex items-center gap-2"><Zap className="w-4 h-4" />Jobs</span>
+        </button>
       </div>
+
+      {/* ── Jobs tab (Slice 6.x Execution Engine) ─────────────────── */}
+      {tab === 'jobs' && <PlatformJobsTab toast={toast} />}
 
       {/* ── Actions tab ─────────────────────────────────────────── */}
       {tab === 'actions' && (
