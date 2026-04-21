@@ -88,9 +88,13 @@ export function PlatformAdmin() {
     setSyncing(true);
     try {
       const result = await triggerN8nSync(undefined, force);
-      toast(result.message || 'n8n catalog synced', 'success');
-      const updated = await getCatalog();
-      setActions(updated as CatalogActionWithEmbedding[]);
+      toast((result.message || 'Sync started') + ' — catalog will refresh in ~30s', 'success');
+      // Sync runs in a detached background process; poll after a delay
+      setTimeout(() => {
+        getCatalog()
+          .then(data => setActions(data as CatalogActionWithEmbedding[]))
+          .catch(() => {});
+      }, 30_000);
     } catch (err) {
       toast((err as Error).message || 'Sync failed', 'error');
     } finally {
@@ -127,11 +131,14 @@ export function PlatformAdmin() {
     setEnrichingId(action.id);
     try {
       await triggerN8nSync(nodeName);
-      toast(`Enriched ${action.name}`, 'success');
-      const updated = await getCatalog();
-      setActions(updated as CatalogActionWithEmbedding[]);
-      const fresh = (updated as CatalogActionWithEmbedding[]).find(a => a.id === action.id);
-      if (fresh) setDetailAction(fresh);
+      toast(`Enriching ${action.name} in background — refreshing in ~15s`, 'success');
+      setTimeout(() => {
+        getCatalog().then(updated => {
+          setActions(updated as CatalogActionWithEmbedding[]);
+          const fresh = (updated as CatalogActionWithEmbedding[]).find(a => a.id === action.id);
+          if (fresh) setDetailAction(fresh);
+        }).catch(() => {});
+      }, 15_000);
     } catch (err) {
       toast((err as Error).message || 'Enrich failed', 'error');
     } finally {
