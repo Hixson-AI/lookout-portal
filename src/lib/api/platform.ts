@@ -24,7 +24,9 @@ export interface CatalogAction {
 
 export interface SyncResult {
   message: string;
-  output: string;
+  output?: string;
+  executionId?: string;
+  status?: string;
 }
 
 export interface ReindexResult {
