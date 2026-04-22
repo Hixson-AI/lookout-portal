@@ -34,6 +34,10 @@ import {
 import { CatalogGroupBrowser } from '../components/workflow/CatalogGroupBrowser';
 import { type GroupSelection, filterBySelection } from '../lib/catalog-taxonomy';
 import { PlatformJobsTab } from '../components/platform/PlatformJobsTab';
+import { getTenants } from '../lib/api/tenants';
+import { apiRequest } from '../lib/api/index';
+import { getPlatformExecution } from '../lib/api/platform-jobs';
+import type { Tenant } from '../lib/types';
 import { Zap } from 'lucide-react';
 
 type Tab = 'actions' | 'settings' | 'jobs';
@@ -55,6 +59,7 @@ export function PlatformAdmin() {
   const [detailAction, setDetailAction] = useState<CatalogActionWithEmbedding | null>(null);
   const [enrichingId, setEnrichingId] = useState<string | null>(null);
   const [reindexingId, setReindexingId] = useState<string | null>(null);
+  const [syncAppId, setSyncAppId] = useState<{ tenantId: string; appId: string } | null>(null);
   const [groupSelection, setGroupSelection] = useState<GroupSelection>({ mode: 'all' });
 
   // ── Settings tab state ─────────────────────────────────────────────
@@ -74,6 +79,46 @@ export function PlatformAdmin() {
   }, [toast]);
 
   useEffect(() => { loadActions(); }, [loadActions]);
+
+  // ── Resolve platform "Sync n8n Catalog" app for execution polling ──
+  useEffect(() => {
+    (async () => {
+      try {
+        const tenants = await getTenants();
+        const platform = (tenants as Tenant[]).find(
+          (t: any) => (t.slug === 'platform' && t.isSystem) || t.slug === 'platform',
+        );
+        if (!platform) return;
+        const apps = await apiRequest<Array<{ id: string; name: string }>>(
+          `/v1/tenants/${platform.id}/apps`,
+        );
+        const app = apps.find(a => a.name === 'Sync n8n Catalog');
+        if (app) setSyncAppId({ tenantId: platform.id, appId: app.id });
+      } catch {
+        // non-fatal — enrich will fall back to a time-based refresh
+      }
+    })();
+  }, []);
+
+  // ── Poll a platform execution until it leaves running/queued ───────
+  const pollExecution = useCallback(
+    async (appId: string, executionId: string, timeoutMs = 120_000) => {
+      const start = Date.now();
+      while (Date.now() - start < timeoutMs) {
+        try {
+          const exec = await getPlatformExecution(appId, executionId);
+          if (exec.status !== 'running' && exec.status !== 'queued' && exec.status !== 'cancelling') {
+            return exec;
+          }
+        } catch {
+          // transient — keep polling
+        }
+        await new Promise(r => setTimeout(r, 2_000));
+      }
+      return null;
+    },
+    [],
+  );
 
   // ── Load settings ──────────────────────────────────────────────────
   useEffect(() => {
@@ -127,20 +172,44 @@ export function PlatformAdmin() {
   const handleReindexSelected = () => handleReindex([...selected]);
 
   // ── Enrich single n8n action ───────────────────────────────────────
+  //
+  // Dispatches the Sync n8n Catalog app for the target node, then polls the
+  // resulting AppExecution via /v1/platform/apps/:appId/executions/:id and
+  // refreshes the catalog + detail drawer the moment it leaves the running
+  // state. Falls back to a timed refresh if we can't resolve the appId or the
+  // API didn't return an executionId (e.g. older control-plane).
   const handleEnrichOne = async (action: CatalogActionWithEmbedding) => {
     const nodeName = action.actionType?.startsWith('n8n:') ? action.actionType.slice(4) : null;
     if (!nodeName) return;
     setEnrichingId(action.id);
+
+    const refreshDetail = async () => {
+      const updated = await getCatalog();
+      setActions(updated as CatalogActionWithEmbedding[]);
+      const fresh = (updated as CatalogActionWithEmbedding[]).find(a => a.id === action.id);
+      if (fresh) setDetailAction(fresh);
+    };
+
     try {
-      await triggerN8nSync(nodeName);
-      toast(`Enriching ${action.name} in background — refreshing in ~15s`, 'success');
-      setTimeout(() => {
-        getCatalog().then(updated => {
-          setActions(updated as CatalogActionWithEmbedding[]);
-          const fresh = (updated as CatalogActionWithEmbedding[]).find(a => a.id === action.id);
-          if (fresh) setDetailAction(fresh);
-        }).catch(() => {});
-      }, 15_000);
+      const result = await triggerN8nSync(nodeName);
+
+      if (syncAppId && result.executionId) {
+        toast(`Enriching ${action.name}…`, 'info');
+        const exec = await pollExecution(syncAppId.appId, result.executionId);
+        if (exec?.status === 'completed') {
+          await refreshDetail();
+          toast(`Enriched ${action.name}`, 'success');
+        } else if (exec?.status === 'failed' || exec?.status === 'cancelled') {
+          toast(`Enrich ${exec.status}: ${exec.error ?? 'see Jobs tab'}`, 'error');
+          await refreshDetail();
+        } else {
+          toast('Enrich still running — check Jobs tab', 'info');
+        }
+      } else {
+        // Fallback: no execution id available — do a timed refresh.
+        toast(`Enriching ${action.name} in background — refreshing in ~15s`, 'success');
+        setTimeout(() => { refreshDetail().catch(() => {}); }, 15_000);
+      }
     } catch (err) {
       toast((err as Error).message || 'Enrich failed', 'error');
     } finally {
