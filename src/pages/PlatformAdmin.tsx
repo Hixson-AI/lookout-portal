@@ -7,8 +7,9 @@ import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
 import { ToastStack } from '../components/ui/ToastStack';
 import { useToast } from '../hooks/useToast';
-import { getCatalog } from '../lib/api/actions';
+import { getCatalog, updateAction } from '../lib/api/actions';
 import type { AgentAction } from '../lib/api/actions';
+import { AVAILABLE_ICON_NAMES, getIconComponent } from '../lib/action-icons';
 import {
   getPlatformSettings,
   setPlatformSetting,
@@ -59,6 +60,7 @@ export function PlatformAdmin() {
   const [detailAction, setDetailAction] = useState<CatalogActionWithEmbedding | null>(null);
   const [enrichingId, setEnrichingId] = useState<string | null>(null);
   const [reindexingId, setReindexingId] = useState<string | null>(null);
+  const [savingIconId, setSavingIconId] = useState<string | null>(null);
   const [syncAppId, setSyncAppId] = useState<{ tenantId: string; appId: string } | null>(null);
   const [groupSelection, setGroupSelection] = useState<GroupSelection>({ mode: 'all' });
 
@@ -472,7 +474,13 @@ export function PlatformAdmin() {
                             />
                           </td>
                           <td className="px-4 py-2.5">
-                            <p className="font-medium text-gray-800">{a.name}</p>
+                            <div className="flex items-center gap-2">
+                              {(() => {
+                                const Icon = getIconComponent(a.icon, a.category);
+                                return <Icon className="w-4 h-4 text-gray-400 shrink-0" />;
+                              })()}
+                              <p className="font-medium text-gray-800">{a.name}</p>
+                            </div>
                             <p className="text-xs text-gray-400 sm:hidden mt-0.5">
                               {a.category}
                               <Badge variant={a.executionMode === 'n8n' ? 'outline' : 'secondary'} className="text-xs ml-2">
@@ -545,6 +553,46 @@ export function PlatformAdmin() {
                     <Badge variant={detailAction.hasEmbedding ? 'default' : 'secondary'}>
                       {detailAction.hasEmbedding ? '✓ embedded' : 'not embedded'}
                     </Badge>
+                  </div>
+
+                  {/* Icon */}
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">Icon</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {AVAILABLE_ICON_NAMES.map(name => {
+                        const Icon = getIconComponent(name);
+                        const isActive = detailAction.icon === name;
+                        return (
+                          <button
+                            key={name}
+                            title={name}
+                            disabled={savingIconId === detailAction.id}
+                            onClick={async () => {
+                              if (isActive) return;
+                              setSavingIconId(detailAction.id);
+                              try {
+                                await updateAction(detailAction.id, { icon: name });
+                                setActions(prev => prev.map(a => a.id === detailAction.id ? { ...a, icon: name } : a));
+                                setDetailAction(prev => prev ? { ...prev, icon: name } : prev);
+                                toast('Icon updated', 'success');
+                              } catch (err) {
+                                toast((err as Error).message || 'Failed to update icon', 'error');
+                              } finally {
+                                setSavingIconId(null);
+                              }
+                            }}
+                            className={`p-1.5 rounded-md border transition-colors ${
+                              isActive
+                                ? 'bg-indigo-100 border-indigo-300 text-indigo-700'
+                                : 'bg-white border-gray-200 text-gray-400 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                          >
+                            <Icon className="w-4 h-4" />
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[10px] text-gray-400 mt-1">Click to change. AI auto-picks on discovery; admins can override.</p>
                   </div>
 
                   {/* Tags */}

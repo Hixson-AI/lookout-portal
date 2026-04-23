@@ -5,47 +5,13 @@ import {
   ChevronRight,
   Layers,
   LayoutGrid,
-  Globe,
-  Bot,
-  RefreshCw,
-  GitBranch,
-  MessageSquare,
-  Calendar,
-  Mail,
-  HardDrive,
-  CreditCard,
-  Smartphone,
-  Zap,
   Sparkles,
-  Box,
 } from "lucide-react"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import type { AgentAction } from "../../lib/api/actions"
 import { groupActionsByProvider } from "../../lib/catalog-taxonomy"
-
-const CATEGORY_ICON: Record<string, React.ReactNode> = {
-  integration: <Globe className="h-4 w-4" />,
-  ai: <Bot className="h-4 w-4" />,
-  data: <RefreshCw className="h-4 w-4" />,
-  logic: <GitBranch className="h-4 w-4" />,
-  communication: <MessageSquare className="h-4 w-4" />,
-  trigger: <Zap className="h-4 w-4" />,
-  "google-calendar": <Calendar className="h-4 w-4" />,
-  "google-gmail": <Mail className="h-4 w-4" />,
-  "google-chat": <MessageSquare className="h-4 w-4" />,
-  "google-drive": <HardDrive className="h-4 w-4" />,
-  quickbooks: <CreditCard className="h-4 w-4" />,
-  twilio: <Smartphone className="h-4 w-4" />,
-  resend: <Mail className="h-4 w-4" />,
-  sendgrid: <Mail className="h-4 w-4" />,
-  mailgun: <Mail className="h-4 w-4" />,
-  postmark: <Mail className="h-4 w-4" />,
-}
-
-function getActionIcon(category: string): React.ReactNode {
-  return CATEGORY_ICON[category] ?? <Box className="h-4 w-4" />
-}
+import { getIconComponent } from "../../lib/action-icons"
 
 interface ActionLibraryPanelProps {
   actions: AgentAction[]
@@ -100,7 +66,10 @@ export function ActionLibraryPanel({
       >
         <div className="flex items-center gap-2.5">
           <span className="text-muted-foreground group-hover:text-primary transition-colors shrink-0">
-            {getActionIcon(action.category)}
+            {(() => {
+              const Icon = getIconComponent(action.icon, action.category)
+              return <Icon className="h-4 w-4" />
+            })()}
           </span>
           <div className="min-w-0">
             <div className="text-sm font-medium text-foreground truncate">

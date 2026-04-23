@@ -24,6 +24,7 @@ export interface AgentAction {
   isSystem: boolean;
   executionMode?: 'native' | 'n8n';
   isReusable: boolean;
+  icon?: string;
   createdAt: string;
   updatedAt: string;
 }
