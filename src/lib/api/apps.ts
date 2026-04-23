@@ -5,6 +5,7 @@
 import { apiRequest } from './index';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_URL = import.meta.env.VITE_API_URL;
 
 export interface WorkflowStep {
   id: string;
@@ -114,14 +115,14 @@ export async function deleteApp(tenantId: string, appId: string): Promise<void> 
 export async function getAppExecutions(tenantId: string, appId: string): Promise<AppExecution[]> {
   return apiRequest<AppExecution[]>(`/api/v1/apps/${appId}/executions`, {
     headers: { 'X-Tenant-Id': tenantId },
-  }, API_BASE_URL);
+  }, API_URL);
 }
 
 // Get a specific execution
 export async function getExecution(tenantId: string, appId: string, executionId: string): Promise<AppExecution> {
   return apiRequest<AppExecution>(`/api/v1/apps/${appId}/executions/${executionId}`, {
     headers: { 'X-Tenant-Id': tenantId },
-  }, API_BASE_URL);
+  }, API_URL);
 }
 
 // Trigger an app execution
@@ -129,7 +130,7 @@ export async function triggerApp(_tenantId: string, appId: string, input?: Recor
   return apiRequest<AppExecution>(`/v1/webhooks/${appId}`, {
     method: 'POST',
     body: JSON.stringify(input || {}),
-  }, API_BASE_URL);
+  }, API_URL);
 }
 
 // Test a workflow step
