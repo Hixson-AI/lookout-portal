@@ -75,8 +75,11 @@ export function PlatformAdmin() {
   const loadActions = useCallback(() => {
     setActionsLoading(true);
     getCatalog()
-      .then(data => setActions(data as CatalogActionWithEmbedding[]))
-      .catch(() => toast('Failed to load action catalog', 'error'))
+      .then(data => setActions(Array.isArray(data) ? data as CatalogActionWithEmbedding[] : []))
+      .catch(() => {
+        toast('Failed to load action catalog', 'error');
+        setActions([]);
+      })
       .finally(() => setActionsLoading(false));
   }, [toast]);
 
@@ -269,19 +272,19 @@ export function PlatformAdmin() {
   const toggleSelect = (id: string) => setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const toggleSelectAll = (ids: string[]) => setSelected(prev => ids.every(id => prev.has(id)) ? new Set() : new Set(ids));
 
-  const filteredActions = filterBySelection(actions as any, groupSelection).filter((a: CatalogActionWithEmbedding) => {
+  const filteredActions = (Array.isArray(actions) ? filterBySelection(actions as any, groupSelection) : []).filter((a: CatalogActionWithEmbedding) => {
     const matchesSearch = !search || a.name.toLowerCase().includes(search.toLowerCase()) || a.category.toLowerCase().includes(search.toLowerCase());
     const matchesMode = modeFilter === 'all' || (a.executionMode ?? 'native') === modeFilter;
     return matchesSearch && matchesMode;
   }) as CatalogActionWithEmbedding[];
 
-  const embeddedCount = actions.filter(a => (a as CatalogActionWithEmbedding).hasEmbedding).length;
-  const n8nCount = actions.filter(a => a.executionMode === 'n8n').length;
-  const nativeCount = actions.filter(a => !a.executionMode || a.executionMode === 'native').length;
-  const unenrichedN8n = actions.filter(a =>
+  const embeddedCount = Array.isArray(actions) ? actions.filter(a => (a as CatalogActionWithEmbedding).hasEmbedding).length : 0;
+  const n8nCount = Array.isArray(actions) ? actions.filter(a => a.executionMode === 'n8n').length : 0;
+  const nativeCount = Array.isArray(actions) ? actions.filter(a => !a.executionMode || a.executionMode === 'native').length : 0;
+  const unenrichedN8n = Array.isArray(actions) ? actions.filter(a =>
     a.executionMode === 'n8n' &&
     (Object.keys((a.inputSchema as any)?.properties ?? {}).length === 0 || !a.tags?.length)
-  ).length;
+  ).length : 0;
   const needsDiscovery = !actionsLoading && (n8nCount === 0 || unenrichedN8n > 0);
 
   const openAiSetting = settings.find(s => s.key === 'openai_api_key');

@@ -33,9 +33,10 @@ export function AppsTab({ tenant }: AppsTabProps) {
       setLoading(true);
       setError(null);
       const data = await api.getApps(tenant.id);
-      setApps(data);
+      setApps(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load apps');
+      setApps([]);
     } finally {
       setLoading(false);
     }
@@ -49,9 +50,10 @@ export function AppsTab({ tenant }: AppsTabProps) {
     try {
       setExecLoading(true);
       const data = await api.getAppExecutions(tenant.id, appId);
-      setExecutions(data);
+      setExecutions(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load executions:', err);
+      setExecutions([]);
     } finally {
       setExecLoading(false);
     }
@@ -317,18 +319,18 @@ export function AppsTab({ tenant }: AppsTabProps) {
                         <div className="p-3 rounded-lg bg-muted">
                           <div className="text-xs text-emerald-600">Completed</div>
                           <div className="text-xl font-bold text-emerald-600">
-                            {executions.filter(e => e.status === 'completed').length}
+                            {Array.isArray(executions) ? executions.filter(e => e.status === 'completed').length : 0}
                           </div>
                         </div>
                         <div className="p-3 rounded-lg bg-muted">
                           <div className="text-xs text-red-600">Failed</div>
                           <div className="text-xl font-bold text-red-600">
-                            {executions.filter(e => e.status === 'failed').length}
+                            {Array.isArray(executions) ? executions.filter(e => e.status === 'failed').length : 0}
                           </div>
                         </div>
                       </div>
                       {/* Execution list */}
-                      {executions.map((exec) => (
+                      {Array.isArray(executions) && executions.map((exec) => (
                         <div key={exec.id} className="p-3 rounded-lg border border-border">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
