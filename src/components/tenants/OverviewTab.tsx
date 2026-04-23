@@ -49,55 +49,55 @@ export function OverviewTab({ tenant }: OverviewTabProps) {
   return (
     <div className="space-y-6">
       {/* Tenant Info */}
-      <Card className="card-elevated">
+        <Card>
         <CardHeader>
-          <CardTitle className="text-gradient">Tenant Information</CardTitle>
+          <CardTitle>Tenant Information</CardTitle>
           <CardDescription>Overview of tenant details</CardDescription>
         </CardHeader>
         <CardContent>
           <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <dt className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Name</dt>
-              <dd className="text-lg font-semibold">{tenant.name}</dd>
+              <dt className="text-sm font-medium text-muted-foreground">Name</dt>
+              <dd className="text-base font-semibold text-foreground">{tenant.name}</dd>
             </div>
             <div className="space-y-1">
-              <dt className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Slug</dt>
-              <dd className="text-lg font-semibold">@{tenant.slug}</dd>
+              <dt className="text-sm font-medium text-muted-foreground">Slug</dt>
+              <dd className="text-base font-semibold text-foreground">@{tenant.slug}</dd>
             </div>
             <div className="space-y-1">
-              <dt className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Status</dt>
-              <dd className="flex items-center gap-2">
-                <BadgeCheck className="h-4 w-4" />
+              <dt className="text-sm font-medium text-muted-foreground">Status</dt>
+              <dd className="flex items-center gap-2 text-foreground">
+                <BadgeCheck className="h-4 w-4 text-primary" />
                 <span className="capitalize">{tenant.status}</span>
               </dd>
             </div>
             <div className="space-y-1">
-              <dt className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Tier</dt>
-              <dd className="flex items-center gap-2">
-                <Building2 className="h-4 w-4" />
+              <dt className="text-sm font-medium text-muted-foreground">Tier</dt>
+              <dd className="flex items-center gap-2 text-foreground">
+                <Building2 className="h-4 w-4 text-primary" />
                 <span className="capitalize">{tenant.tier}</span>
               </dd>
             </div>
             {tenant.profile && (
               <div className="space-y-1">
-                <dt className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Profile</dt>
-                <dd className="flex items-center gap-2">
+                <dt className="text-sm font-medium text-muted-foreground">Profile</dt>
+                <dd className="flex items-center gap-2 text-foreground">
                   <span className="capitalize">{tenant.profile}</span>
                 </dd>
               </div>
             )}
             <div className="space-y-1">
-              <dt className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Created</dt>
-              <dd className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
+              <dt className="text-sm font-medium text-muted-foreground">Created</dt>
+              <dd className="flex items-center gap-2 text-foreground">
+                <Calendar className="h-4 w-4 text-primary" />
                 <span>{formatDate(tenant.createdAt)}</span>
               </dd>
             </div>
-            <div className="space-y-1">
-              <dt className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>API Endpoint</dt>
-              <dd className="flex items-center gap-2">
-                <Globe className="h-4 w-4" />
-                <span className="text-sm font-mono">{controlPlaneUrl}</span>
+            <div className="space-y-1 md:col-span-2">
+              <dt className="text-sm font-medium text-muted-foreground">API Endpoint</dt>
+              <dd className="flex items-center gap-2 text-foreground">
+                <Globe className="h-4 w-4 text-primary shrink-0" />
+                <span className="text-sm font-mono break-all">{controlPlaneUrl}</span>
               </dd>
             </div>
           </dl>
@@ -105,14 +105,14 @@ export function OverviewTab({ tenant }: OverviewTabProps) {
       </Card>
 
       {/* API Keys */}
-      <Card className="card-elevated">
+      <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-gradient">API Keys</CardTitle>
+              <CardTitle>API Keys</CardTitle>
               <CardDescription>Manage API keys for this tenant</CardDescription>
             </div>
-            <Button className="btn-gradient" onClick={() => setIsCreateDialogOpen(true)}>
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Create Key
             </Button>
@@ -120,7 +120,7 @@ export function OverviewTab({ tenant }: OverviewTabProps) {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8">Loading API keys...</div>
+            <div className="text-center py-8 text-muted-foreground animate-pulse">Loading API keys...</div>
           ) : (
             <ApiKeyList
               apiKeys={apiKeys || []}

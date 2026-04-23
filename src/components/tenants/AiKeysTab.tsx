@@ -125,18 +125,18 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8" style={{ color: 'var(--text-secondary)' }}>Loading AI keys...</div>;
+    return <div className="text-center py-8 text-muted-foreground animate-pulse">Loading AI keys...</div>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-purple-500" />
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
             AI Keys
           </h2>
-          <p style={{ color: 'var(--text-secondary)' }}>
+          <p className="text-sm text-muted-foreground">
             Manage AI provider keys for this tenant. 
             {tenant.profile === 'shared' ? ' Shared tenants use OpenRouter for non-PHI workloads.' : ' Dedicated tenants use Anthropic for PHI workloads under BAA.'}
           </p>
@@ -159,8 +159,7 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
                   id="provider"
                   value={provider}
                   onChange={(e) => setProvider(e.target.value as 'openrouter' | 'anthropic')}
-                  className="w-full mt-1 px-3 py-2 border rounded-md bg-background"
-                  style={{ borderColor: 'var(--border)' }}
+                  className="w-full mt-1 px-3 py-2 border border-input rounded-md bg-background text-foreground"
                 >
                   <option value="openrouter">OpenRouter</option>
                   <option value="anthropic" disabled={tenant.profile !== 'dedicated'}>
@@ -180,7 +179,7 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
                     placeholder="sk-ant-..."
                     className="mt-1"
                   />
-                  <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+                  <p className="text-sm mt-1 text-muted-foreground">
                     Paste the Anthropic API key from the console
                   </p>
                 </div>
@@ -205,8 +204,7 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
                       id="limitReset"
                       value={limitReset}
                       onChange={(e) => setLimitReset(e.target.value as 'daily' | 'weekly' | 'monthly')}
-                      className="w-full mt-1 px-3 py-2 border rounded-md bg-background"
-                      style={{ borderColor: 'var(--border)' }}
+                      className="w-full mt-1 px-3 py-2 border border-input rounded-md bg-background text-foreground"
                     >
                       <option value="daily">Daily</option>
                       <option value="weekly">Weekly</option>
@@ -225,9 +223,9 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
 
       {!aiKeys || aiKeys.length === 0 ? (
         <Card className="p-12 text-center border-dashed">
-          <Key className="h-16 w-16 mx-auto mb-4 opacity-50" style={{ color: 'var(--text-secondary)' }} />
+          <Key className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
           <h3 className="text-lg font-semibold mb-2">No AI keys configured</h3>
-          <p style={{ color: 'var(--text-secondary)' }}>
+          <p className="text-muted-foreground">
             Add an AI key to enable AI features for this tenant
           </p>
         </Card>
@@ -246,7 +244,7 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
                     </Badge>
                   </div>
                   
-                  <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border" style={{ borderColor: 'var(--border)' }}>
+                  <div className="mb-4 p-3 bg-muted rounded-lg border border-border">
                     <div className="flex items-center gap-2">
                       <code className="flex-1 font-mono text-sm break-all">
                         {visibleKeys[key.id] ? decryptedKeys[key.id] || 'Loading...' : `${key.key_prefix}••••••••••••••••`}
@@ -281,23 +279,23 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                     {key.credit_limit && (
                       <div>
-                        <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Credit Limit</p>
+                        <p className="text-xs text-muted-foreground">Credit Limit</p>
                         <p className="font-semibold">${key.credit_limit}</p>
                       </div>
                     )}
                     {key.limit_reset && (
                       <div>
-                        <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Reset</p>
+                        <p className="text-xs text-muted-foreground">Reset</p>
                         <p className="font-semibold capitalize">{key.limit_reset}</p>
                       </div>
                     )}
                     <div>
-                      <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Created</p>
+                      <p className="text-xs text-muted-foreground">Created</p>
                       <p className="font-semibold">{new Date(key.created_at).toLocaleDateString()}</p>
                     </div>
                     {key.last_used_at && (
                       <div>
-                        <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Last Used</p>
+                        <p className="text-xs text-muted-foreground">Last Used</p>
                         <p className="font-semibold">{new Date(key.last_used_at).toLocaleDateString()}</p>
                       </div>
                     )}

@@ -20,7 +20,9 @@ export function TenantDetail() {
   if (isLoading) {
     return (
       <Layout>
-        <div className="text-center py-8" style={{ color: 'var(--text-secondary)' }}>Loading tenant...</div>
+        <div className="text-center py-12 text-muted-foreground animate-pulse">
+          Loading tenant...
+        </div>
       </Layout>
     );
   }
@@ -28,8 +30,8 @@ export function TenantDetail() {
   if (error || !tenant) {
     return (
       <Layout>
-        <div className="text-center py-8" style={{ color: 'var(--accent)' }}>
-          {error?.message || 'Tenant not found'}
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-center text-destructive">
+          <p className="font-medium">{error?.message || 'Tenant not found'}</p>
         </div>
       </Layout>
     );
@@ -38,37 +40,53 @@ export function TenantDetail() {
   return (
     <Layout>
       <div className="space-y-6">
-        <Button variant="ghost" onClick={() => navigate('/tenants')} className="mb-4">
-          <ArrowLeft className="h-4 w-4 mr-2" />
+        <Button variant="ghost" size="sm" onClick={() => navigate('/tenants')} className="-ml-2 text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="h-4 w-4 mr-1" />
           Back to Tenants
         </Button>
 
-        <div>
-          <h1 className="text-3xl font-bold text-gradient">{tenant.name}</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>@{tenant.slug}</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">{tenant.name}</h1>
+            <p className="text-sm text-muted-foreground">@{tenant.slug}</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider">Status</p>
+              <p className="text-sm font-semibold capitalize">{tenant.status}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider">Tier</p>
+              <p className="text-sm font-semibold capitalize">{tenant.tier}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider">Created</p>
+              <p className="text-sm font-semibold">{new Date(tenant.createdAt).toLocaleDateString()}</p>
+            </div>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
+          <TabsList className="w-full sm:w-auto">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="ai-keys">AI Keys</TabsTrigger>
             <TabsTrigger value="usage">Usage</TabsTrigger>
             <TabsTrigger value="apps">Apps</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
-          <TabsContent value="overview" activeValue={activeTab}>
+          <TabsContent value="overview" activeValue={activeTab} className="animate-fade-in">
             <OverviewTab tenant={tenant} />
           </TabsContent>
-          <TabsContent value="ai-keys" activeValue={activeTab}>
+          <TabsContent value="ai-keys" activeValue={activeTab} className="animate-fade-in">
             <AiKeysTab tenant={tenant} />
           </TabsContent>
-          <TabsContent value="usage" activeValue={activeTab}>
+          <TabsContent value="usage" activeValue={activeTab} className="animate-fade-in">
             <UsageTab tenant={tenant} />
           </TabsContent>
-          <TabsContent value="apps" activeValue={activeTab}>
+          <TabsContent value="apps" activeValue={activeTab} className="animate-fade-in">
             <AppsTab tenant={tenant} />
           </TabsContent>
-          <TabsContent value="settings" activeValue={activeTab}>
+          <TabsContent value="settings" activeValue={activeTab} className="animate-fade-in">
             <SettingsTab tenant={tenant} />
           </TabsContent>
         </Tabs>

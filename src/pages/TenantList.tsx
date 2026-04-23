@@ -4,6 +4,7 @@ import { useTenants, useCreateTenant } from '../hooks/useTenants';
 import { Layout } from '../components/layout/Layout';
 import { TenantCard } from '../components/tenants/TenantCard';
 import { TenantCreateDialog } from '../components/tenants/TenantCreateDialog';
+import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Search, Plus } from 'lucide-react';
@@ -26,7 +27,9 @@ export function TenantList() {
   if (isLoading) {
     return (
       <Layout>
-        <div className="text-center py-8" style={{ color: 'var(--text-secondary)' }}>Loading tenants...</div>
+        <div className="text-center py-12 text-muted-foreground animate-pulse">
+          Loading tenants...
+        </div>
       </Layout>
     );
   }
@@ -34,8 +37,9 @@ export function TenantList() {
   if (error) {
     return (
       <Layout>
-        <div className="text-center py-8" style={{ color: 'var(--accent)' }}>
-          Error loading tenants: {error.message}
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-center text-destructive">
+          <p className="font-medium">Error loading tenants</p>
+          <p className="text-sm mt-1">{error.message}</p>
         </div>
       </Layout>
     );
@@ -44,21 +48,21 @@ export function TenantList() {
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gradient">Tenants</h1>
-            <p style={{ color: 'var(--text-secondary)' }}>Manage your platform tenants</p>
+            <h1 className="text-2xl font-bold tracking-tight">Tenants</h1>
+            <p className="text-sm text-muted-foreground mt-1">Manage your platform tenants</p>
           </div>
           {user?.isSystemAdmin && (
-            <Button className="btn-gradient" onClick={() => setCreateOpen(true)}>
+            <Button onClick={() => setCreateOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Create Tenant
             </Button>
           )}
         </div>
 
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" style={{ color: 'var(--text-muted)' }} />
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search tenants..."
             value={searchQuery}
@@ -68,9 +72,13 @@ export function TenantList() {
         </div>
 
         {filteredTenants.length === 0 ? (
-          <div className="text-center py-12" style={{ color: 'var(--text-muted)' }}>
-            {searchQuery ? 'No tenants match your search.' : 'No tenants found.'}
-          </div>
+          <Card className="py-16 text-center border-dashed">
+            <CardContent>
+              <p className="text-muted-foreground">
+                {searchQuery ? 'No tenants match your search.' : 'No tenants found.'}
+              </p>
+            </CardContent>
+          </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredTenants.map((tenant) => (

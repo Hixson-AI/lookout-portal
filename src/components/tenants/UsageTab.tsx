@@ -20,7 +20,7 @@ export function UsageTab({ tenant }: UsageTabProps) {
 
 
   if (isLoading) {
-    return <div className="text-center py-8" style={{ color: 'var(--text-secondary)' }}>Loading usage data...</div>;
+    return <div className="text-center py-8 text-muted-foreground animate-pulse">Loading usage data...</div>;
   }
 
   const totalCost = summary.reduce((sum, s) => sum + s.total_cost_usd, 0);
@@ -29,29 +29,27 @@ export function UsageTab({ tenant }: UsageTabProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">AI Usage</h2>
-        <p style={{ color: 'var(--text-secondary)' }}>Track AI API usage and costs for this tenant</p>
+        <h2 className="text-xl font-bold">AI Usage</h2>
+        <p className="text-sm text-muted-foreground">Track AI API usage and costs for this tenant</p>
       </div>
 
       <div className="flex gap-4 items-end">
         <div>
-          <label className="text-sm" style={{ color: 'var(--text-secondary)' }}>Start Date</label>
+          <label className="text-sm text-muted-foreground">Start Date</label>
           <input
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="mt-1 px-3 py-2 border rounded-md bg-background"
-            style={{ borderColor: 'var(--border)' }}
+            className="mt-1 px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm"
           />
         </div>
         <div>
-          <label className="text-sm" style={{ color: 'var(--text-secondary)' }}>End Date</label>
+          <label className="text-sm text-muted-foreground">End Date</label>
           <input
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="mt-1 px-3 py-2 border rounded-md bg-background"
-            style={{ borderColor: 'var(--border)' }}
+            className="mt-1 px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm"
           />
         </div>
       </div>
@@ -59,21 +57,21 @@ export function UsageTab({ tenant }: UsageTabProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-4">
           <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="h-5 w-5" style={{ color: 'var(--accent)' }} />
-            <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Total Cost</span>
+            <TrendingUp className="h-5 w-5 text-primary" />
+            <span className="text-sm text-muted-foreground">Total Cost</span>
           </div>
           <div className="text-2xl font-bold">{formatCurrency(totalCost)}</div>
         </Card>
         <Card className="p-4">
           <div className="flex items-center gap-2 mb-2">
-            <BarChart3 className="h-5 w-5" style={{ color: 'var(--accent)' }} />
-            <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Total Requests</span>
+            <BarChart3 className="h-5 w-5 text-primary" />
+            <span className="text-sm text-muted-foreground">Total Requests</span>
           </div>
           <div className="text-2xl font-bold">{totalRequests.toLocaleString()}</div>
         </Card>
         <Card className="p-4">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Providers Used</span>
+            <span className="text-sm text-muted-foreground">Providers Used</span>
           </div>
           <div className="text-2xl font-bold">{summary.length}</div>
         </Card>
@@ -81,9 +79,9 @@ export function UsageTab({ tenant }: UsageTabProps) {
 
       {summary.length === 0 ? (
         <Card className="p-8 text-center">
-          <BarChart3 className="h-12 w-12 mx-auto mb-4" style={{ color: 'var(--text-secondary)' }} />
-          <p style={{ color: 'var(--text-secondary)' }}>No usage data available</p>
-          <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
+          <BarChart3 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+          <p className="text-muted-foreground">No usage data available</p>
+          <p className="text-sm mt-2 text-muted-foreground">
             Usage data will appear here once AI features are used
           </p>
         </Card>
@@ -92,7 +90,7 @@ export function UsageTab({ tenant }: UsageTabProps) {
           <h3 className="text-lg font-semibold mb-4">Usage by Provider and Model</h3>
           <div className="space-y-4">
             {summary.map((item, index) => (
-              <div key={index} className="border-b pb-4 last:border-0" style={{ borderColor: 'var(--border)' }}>
+              <div key={index} className="border-b border-border pb-4 last:border-0">
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
@@ -101,7 +99,7 @@ export function UsageTab({ tenant }: UsageTabProps) {
                       </Badge>
                       <span className="font-medium">{item.model}</span>
                     </div>
-                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    <p className="text-sm text-muted-foreground">
                       {item.request_count} requests
                     </p>
                   </div>
@@ -111,11 +109,11 @@ export function UsageTab({ tenant }: UsageTabProps) {
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span style={{ color: 'var(--text-secondary)' }}>Input Tokens:</span>{' '}
+                    <span className="text-muted-foreground">Input Tokens:</span>{' '}
                     {formatTokens(item.total_input_tokens)}
                   </div>
                   <div>
-                    <span style={{ color: 'var(--text-secondary)' }}>Output Tokens:</span>{' '}
+                    <span className="text-muted-foreground">Output Tokens:</span>{' '}
                     {formatTokens(item.total_output_tokens)}
                   </div>
                 </div>

@@ -64,21 +64,21 @@ export function SettingsTab({ tenant }: SettingsTabProps) {
 
   return (
     <div className="space-y-6">
-      <Card className="card-elevated">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-gradient">Tenant Settings</CardTitle>
+          <CardTitle>Tenant Settings</CardTitle>
           <CardDescription>Update tenant configuration</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {error && (
             <Alert>
-              <AlertDescription style={{ color: 'var(--accent)' }}>{error}</AlertDescription>
+              <AlertDescription className="text-destructive">{error}</AlertDescription>
             </Alert>
           )}
 
           {success && (
             <Alert>
-              <AlertDescription style={{ color: 'var(--accent)' }}>
+              <AlertDescription className="text-primary">
                 Tenant updated successfully
               </AlertDescription>
             </Alert>
@@ -102,7 +102,7 @@ export function SettingsTab({ tenant }: SettingsTabProps) {
               onChange={(e) => handleSlugChange(e.target.value)}
               placeholder="tenant-slug"
             />
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-xs text-muted-foreground">
               Used in URLs and API key prefixes. Lowercase, alphanumeric, and hyphens only.
             </p>
           </div>
@@ -123,14 +123,14 @@ export function SettingsTab({ tenant }: SettingsTabProps) {
           <div className="space-y-2">
             <Label>Tier</Label>
             <Input value={tenant.tier} disabled className="bg-muted" />
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-xs text-muted-foreground">
               Tier cannot be changed. Contact support to upgrade.
             </p>
           </div>
 
           {hasChanges && (
             <div className="flex gap-2 pt-4">
-              <Button className="btn-gradient" onClick={handleSave} disabled={updateTenant.isPending}>
+              <Button onClick={handleSave} disabled={updateTenant.isPending}>
                 <Save className="h-4 w-4 mr-2" />
                 Save Changes
               </Button>
