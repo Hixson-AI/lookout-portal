@@ -40,6 +40,10 @@ function App() {
           path="/tenants/:id/apps/:appId"
           element={user ? <AppBuilder /> : <Navigate to="/login" />}
         />
+        <Route
+          path="/tenants/:id/apps/:appId/edit"
+          element={user ? <AppBuilder /> : <Navigate to="/login" />}
+        />
       </Routes>
     </Router>
   );
