@@ -265,7 +265,52 @@ function KVEditor({ label, value, onChange, keyPlaceholder = 'Key', valuePlaceho
   );
 }
 
+// ── Inline secret value input (saves directly to app secrets) ─────────
 
+function InlineSecretInput({ tenantId, appId, secretKey }: { tenantId: string; appId: string; secretKey: string }) {
+  const [value, setValue] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = async () => {
+    if (!value) return;
+    setSaving(true);
+    try {
+      await api.setAppSecret(tenantId, appId, secretKey, value);
+      setSaved(true);
+      setValue('');
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      /* silent */
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="flex gap-2 items-center">
+      <input
+        type="password"
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        placeholder={`Enter ${secretKey}`}
+        className="flex-1 px-2 py-1.5 border rounded text-xs font-mono bg-white"
+        style={{ borderColor: 'var(--border)' }}
+      />
+      <button
+        onClick={handleSave}
+        disabled={saving || !value}
+        className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+          saved
+            ? 'bg-green-100 text-green-700'
+            : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
+        } disabled:opacity-50`}
+      >
+        {saving ? 'Saving…' : saved ? 'Saved' : 'Save'}
+      </button>
+    </div>
+  );
+}
 
 // ── HTTP Request ──────────────────────────────────────────────────────
 
@@ -658,7 +703,7 @@ function EmailSendConfig({ config, onChange }: { config: any; onChange: (c: any)
 
 // ── Twilio SMS ────────────────────────────────────────────────────────
 
-function TwilioSmsConfig({ config, onChange }: { config: any; onChange: (c: any) => void }) {
+function TwilioSmsConfig({ config, onChange, tenantId, appId }: { config: any; onChange: (c: any) => void; tenantId?: string; appId?: string }) {
   const set = (key: string, val: any) => onChange({ ...config, [key]: val });
 
   return (
@@ -671,6 +716,13 @@ function TwilioSmsConfig({ config, onChange }: { config: any; onChange: (c: any)
           <TextInput value={config.authTokenSecret || 'TWILIO_AUTH_TOKEN'} onChange={v => set('authTokenSecret', v)} monospace />
         </Field>
       </div>
+      {tenantId && appId && (
+        <div className="p-3 rounded-lg border bg-amber-50 border-amber-200 space-y-2">
+          <p className="text-xs font-medium text-amber-800">Set Secret Values</p>
+          <InlineSecretInput tenantId={tenantId} appId={appId} secretKey={config.accountSidSecret || 'TWILIO_ACCOUNT_SID'} />
+          <InlineSecretInput tenantId={tenantId} appId={appId} secretKey={config.authTokenSecret || 'TWILIO_AUTH_TOKEN'} />
+        </div>
+      )}
       <Field label="From (Twilio number)">
         <TextInput value={config.from || ''} onChange={v => set('from', v)} placeholder="+15551234567" monospace />
       </Field>
@@ -748,7 +800,7 @@ function EnrichPrompt({ actionType, onEnriched }: { actionType?: string; onEnric
 }
 
 function DynamicSchemaForm({
-  config, onChange, inputSchema, secretSchema, actionType, onEnriched,
+  config, onChange, inputSchema, secretSchema, actionType, onEnriched, tenantId, appId,
 }: {
   config: any;
   onChange: (c: any) => void;
@@ -756,6 +808,8 @@ function DynamicSchemaForm({
   secretSchema?: SecretEntry[] | null;
   actionType?: string;
   onEnriched?: () => void;
+  tenantId?: string;
+  appId?: string;
 }) {
   const [showSecrets, setShowSecrets] = useState(false);
   const [revealedFields, setRevealedFields] = useState<Set<string>>(new Set());
@@ -800,11 +854,16 @@ function DynamicSchemaForm({
             {showSecrets ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
           {showSecrets && (
-            <div className="px-3 pb-2 space-y-1">
+            <div className="px-3 pb-2 space-y-2">
               {secretSchema.map(s => (
-                <div key={s.key} className="flex items-start gap-2 text-xs text-amber-900">
-                  <code className="bg-amber-100 px-1.5 py-0.5 rounded font-mono text-amber-800 shrink-0">{s.key}</code>
-                  <span className="text-amber-700">{s.description}{!s.required && ' (optional)'}</span>
+                <div key={s.key}>
+                  <div className="flex items-start gap-2 text-xs text-amber-900 mb-1">
+                    <code className="bg-amber-100 px-1.5 py-0.5 rounded font-mono text-amber-800 shrink-0">{s.key}</code>
+                    <span className="text-amber-700">{s.description}{!s.required && ' (optional)'}</span>
+                  </div>
+                  {tenantId && appId && (
+                    <InlineSecretInput tenantId={tenantId} appId={appId} secretKey={s.key} />
+                  )}
                 </div>
               ))}
             </div>
@@ -962,7 +1021,7 @@ export function ActionConfigPanel({ step, allSteps = [], onChange, tenantId, app
           {step.stepId === 'action:condition' && <ConditionConfig config={config} onChange={update} />}
           {step.stepId === 'action:delay' && <DelayConfig config={config} onChange={update} />}
           {step.stepId === 'action:email-send' && <EmailSendConfig config={config} onChange={update} />}
-          {step.stepId === 'action:twilio-sms' && <TwilioSmsConfig config={config} onChange={update} />}
+          {step.stepId === 'action:twilio-sms' && <TwilioSmsConfig config={config} onChange={update} tenantId={tenantId} appId={appId} />}
           {!['action:http-request','action:ai-processing','action:data-transform','action:condition','action:delay','action:email-send','action:twilio-sms'].includes(step.stepId) && (
             <DynamicSchemaForm
               config={config}
@@ -971,6 +1030,8 @@ export function ActionConfigPanel({ step, allSteps = [], onChange, tenantId, app
               secretSchema={secretSchema}
               actionType={step.stepId}
               onEnriched={onEnriched}
+              tenantId={tenantId}
+              appId={appId}
             />
           )}
           
