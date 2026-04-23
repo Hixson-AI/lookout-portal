@@ -130,10 +130,20 @@ pnpm test:e2e      # playwright e2e (requires running app)
 | `DEV_FLY_APP_NAME` | var | Fly.io app name |
 | `CLOUDFLARE_DOMAIN` | var | Root domain for DNS |
 
+## Design System
+
+- **Framework**: Tailwind CSS 3.x with custom theme extension
+- **Tokens**: Semantic color tokens mapped to HSL CSS variables (`bg-primary`, `text-muted-foreground`, `border-border`, etc.)
+- **Palette**: Hixson-green primary (emerald-600) on clean white/slate backgrounds (light); deep slate with brighter emerald accent (dark)
+- **Primitives**: shadcn/ui-style components in `src/components/ui/` — Card, Button, Badge, Tabs, Input, Dialog, Label, Alert. Styled via Tailwind utilities + `class-variance-authority` for variants
+- **Icons**: lucide-react
+- **No MUI**: Custom Tailwind primitives only; lighter bundle, full design control
+
 ## License
 
 Private - Hixson AI internal platform
 
 ## Changelog
+- 2026-04-23: UI/UX refresh — rebuilt Tailwind theme with semantic HSL tokens, polished all tenant and apps views, replaced inline styles with Tailwind utilities, tightened card/tab layouts, added quick stats row to TenantDetail.
 - 2026-04-20: Added Builder Chat system (BuilderChat, ChatWidgets, 4 widget types), Action Library panel replacing static catalog, field validators with 27 types, unit tests (60 passing), Playwright e2e tests with mocked API. Renamed "step catalog" → "Action Library" throughout. Step config panel refactored to dialog.
 - 2026-04-13: App Builder MVP with flow canvas, drag-drop, step config, data mapping, secrets panel, autosave, undo stack, validation, execution log.

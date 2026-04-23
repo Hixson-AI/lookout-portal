@@ -260,14 +260,14 @@ pnpm preview
 ## Implementation Notes
 
 **Additional features implemented beyond original spec:**
-- **Central styling system**: CSS variables (`var(--bg-body)`, `var(--text-primary)`, etc.) for consistent theming across all pages
+- **Central styling system**: Tailwind CSS theme extension with semantic HSL tokens (`bg-primary`, `text-muted-foreground`, `border-border`) mapped to CSS variables in `index.css`
 - **API key masking**: List response shows only first 5 characters of key prefix for security
 - **Subdomain-based tenant identification**: Portal extracts tenant name from subdomain (e.g., "hixson-ai" from `hixson-ai.portal.dev.client.cumberlandstrategygroup.com`) for OAuth state parameter
 - **OAuth redirect URI handling**: Always uses main portal domain as redirect_uri (`portal.dev.client.cumberlandstrategygroup.com`) since Google doesn't support wildcard redirect URIs
 - **Cross-subdomain token passing**: Token passed via URL fragment when redirecting from main portal domain to tenant subdomain (localStorage not shared across subdomains)
 - **API response unwrapping**: Backend `{ data: T }` pattern handled in api.ts with proper TypeScript typing
 - **Date formatting**: Fixed "Invalid Date" issues with proper ISO date parsing in ApiKeyList and OverviewTab
-- **Dialog transparency fix**: Dialog component uses `var(--bg-card)` for proper background
+- **Design system refresh**: Semantic Tailwind tokens (HSL CSS variables) with Hixson-green palette; no MUI dependency
 - **Debug logs removed**: Cleaned up console.log statements from auth callback
 - **Tenant profile field**: Added to Tenant interface and conditionally displayed in OverviewTab
 - **Wildcard DNS**: Added `*.portal.dev.client.${CLOUDFLARE_DOMAIN}` for tenant portal subdomains
@@ -278,7 +278,7 @@ pnpm preview
 - Deployment target: Fly.io (not Railway) - matches other services
 - Auth flow: Subdomain-based tenant identification for tenant portal access
 - API key masking: First 5 characters in list, full key shown once on create
-- Central styling: CSS variables instead of hardcoded Tailwind classes
+- Central styling: Tailwind theme extension with semantic HSL CSS variables (shadcn/ui-style tokens)
 - Wildcard DNS: Added for tenant portal subdomains (matching API pattern)
 
 ## Next Slice
