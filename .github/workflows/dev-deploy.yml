@@ -167,6 +167,16 @@ jobs:
             --build-arg="VITE_API_BASE_URL=${{ secrets.DEV_API_BASE_URL }}" \
             --no-cache
 
+      - name: Run ExecutionStepTree E2E test
+        run: |
+          npx playwright install chromium
+          npx playwright test e2e/execution-step-tree.spec.ts --project=chromium
+        env:
+          JWT_SECRET: ${{ secrets.DEV_JWT_SECRET }}
+          E2E_TENANT_ID: ${{ vars.E2E_TENANT_ID }}
+          E2E_TEST_APP_ID: ${{ secrets.E2E_TEST_APP_ID }}
+          E2E_TEST_EXECUTION_ID: ${{ secrets.E2E_TEST_EXECUTION_ID }}
+
       - name: Get Fly.io IPs and trigger DNS workflow
         env:
           GH_TOKEN: ${{ github.token }}
