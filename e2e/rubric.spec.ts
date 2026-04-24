@@ -75,12 +75,12 @@ async function buildDemoWorkflow(page: Parameters<typeof authenticateAs>[0]) {
   await page.getByPlaceholder('Describe what this workflow does').fill(
     'Receives a customer inquiry via webhook, classifies it with AI, then routes to email or SMS.'
   );
-  // Add steps (click catalog items)
+  // Add steps (click catalog items - use items visible without scroll)
   await page.getByText('HTTP Request').first().click();
   await page.waitForTimeout(300);
-  await page.getByText('AI Processing').first().click();
+  await page.getByText('OpenAI').first().click();
   await page.waitForTimeout(300);
-  await page.getByText('Condition/Branch').first().click();
+  await page.getByText('Date & Time').first().click();
   await page.waitForTimeout(500);
 }
 
@@ -429,7 +429,7 @@ test('D10 — Saving & Versioning: autosave, undo, history', async ({ page }) =>
   } catch { /* best-effort */ }
 
   // Make another change to trigger the autosave path
-  await page.getByText('Delay').first().click();
+  await page.getByPlaceholder('Describe what this workflow does').fill('Updated description for autosave test');
   await page.waitForTimeout(600);
 
   const result = await analyzeScreen(

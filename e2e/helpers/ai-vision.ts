@@ -26,7 +26,7 @@ function getClient(): OpenAI {
 }
 
 /** Deep reasoning model — use for maturity audits */
-export const VISION_MODEL_DEEP = 'google/gemini-2.5-pro-preview-03-25';
+export const VISION_MODEL_DEEP = 'google/gemini-2.5-pro';
 /** Fast model — use for quick yes/no presence checks */
 export const VISION_MODEL_FAST = 'google/gemini-2.0-flash-001';
 
