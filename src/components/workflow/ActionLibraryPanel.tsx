@@ -52,6 +52,10 @@ export function ActionLibraryPanel({
 
   const ActionCard = ({ action }: { action: AgentAction }) => {
     const id = action.actionType ?? action.id
+    // Slice 6.2.E.3: runtime badge. Source of truth is
+    // actionType prefix (n8n:* / action:*) because `executionMode` is
+    // optional and not always populated in older catalog rows.
+    const isN8n = (action.actionType ?? '').startsWith('n8n:')
     return (
       <button
         key={id}
@@ -71,9 +75,21 @@ export function ActionLibraryPanel({
               return <Icon className="h-4 w-4" />
             })()}
           </span>
-          <div className="min-w-0">
-            <div className="text-sm font-medium text-foreground truncate">
-              {action.name}
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <div className="text-sm font-medium text-foreground truncate">
+                {action.name}
+              </div>
+              <span
+                className={`text-[9px] font-semibold px-1 rounded shrink-0 ${
+                  isN8n
+                    ? 'bg-purple-100 text-purple-700'
+                    : 'bg-blue-100 text-blue-700'
+                }`}
+                title={isN8n ? 'Runs on lookout-n8n-runner' : 'Runs on lookout-workers'}
+              >
+                {isN8n ? 'n8n' : 'native'}
+              </span>
             </div>
             <div className="text-xs text-muted-foreground truncate">
               {action.description}
