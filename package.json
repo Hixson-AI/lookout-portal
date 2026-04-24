@@ -9,6 +9,8 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "test": "vitest",
+    "test:ci": "vitest run",
+    "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
     "rubric:execution:grade": "playwright test e2e/rubric-execution.spec.ts",
     "rubric:execution:backend": "playwright test e2e/rubric-execution.spec.ts --grep @backend",

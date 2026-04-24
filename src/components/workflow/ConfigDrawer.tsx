@@ -48,7 +48,7 @@ export function ConfigDrawer({
   const catalogItem = catalog.find((c) => (c.actionType ?? c.id) === step.stepId)
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} side="right" className="w-[420px] md:w-[480px]">
+    <Drawer open={open} onOpenChange={onOpenChange} side="right" className="w-[380px] md:w-[420px] lg:w-[480px]">
       <DrawerHeader className="border-b">
         <div className="flex items-center justify-between w-full">
           <DrawerTitle className="text-sm flex items-center gap-2">

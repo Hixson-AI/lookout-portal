@@ -1012,6 +1012,24 @@ export function ActionConfigPanel({ step, allSteps = [], onChange, tenantId, app
         </div>
       )}
 
+      {/* Syntax help banner */}
+      {tab === 'config' && (
+        <div className="p-3 rounded-lg bg-blue-50 border border-blue-100 mb-4">
+          <div className="flex items-start gap-2">
+            <Sparkles className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-xs font-semibold text-blue-900 mb-1">Syntax Reference</p>
+              <p className="text-[10px] text-blue-700">
+                <code className="font-mono bg-blue-100 px-1 rounded">{{SECRET_NAME}}</code> — reference app secrets
+              </p>
+              <p className="text-[10px] text-blue-700 mt-0.5">
+                <code className="font-mono bg-blue-100 px-1 rounded">{{stepId.field}}</code> — reference previous step outputs
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Tab content */}
       {tab === 'config' && (
         <div className="space-y-4">

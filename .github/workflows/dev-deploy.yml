@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, fly, x64]
     environment: dev
     env:
       FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
@@ -37,12 +37,15 @@ jobs:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
       
-      - name: Build app
+      - name: Lint, typecheck, test
         run: |
           pnpm install
           pnpm lint
-          pnpm test
-          pnpm build
+          pnpm typecheck
+          pnpm test:ci
+
+      - name: Build app
+        run: pnpm build
         env:
           VITE_CONTROL_PLANE_URL: ${{ vars.DEV_CONTROL_PLANE_URL }}
           VITE_API_BASE_URL: ${{ secrets.DEV_API_BASE_URL }}

@@ -1,0 +1,35 @@
+name: rubric
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 12 * * 1'   # Weekly Monday 12:00 UTC
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: write
+
+jobs:
+  rubric:
+    runs-on: [self-hosted, fly, x64]
+    environment: dev
+    env:
+      OPENROUTER_E2E_KEY: ${{ secrets.OPENROUTER_E2E_KEY }}
+      JWT_SECRET: ${{ secrets.DEV_JWT_SECRET }}
+      E2E_TENANT_ID: ${{ vars.E2E_TENANT_ID }}
+      E2E_BASE_URL: https://dev.lookout.example
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install
+      - run: npx playwright install chromium
+      - run: npx playwright test e2e/rubric.spec.ts --project=chromium
+      - name: Commit rubric-history.json bump
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "rubric: round auto-logged"
+          file_pattern: e2e/rubric-history.json

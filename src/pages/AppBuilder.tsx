@@ -21,6 +21,7 @@ import {
   CheckCircle,
   HelpCircle,
   X,
+  KeyRound,
 } from "lucide-react"
 import { FlowCanvas } from "../components/workflow/FlowCanvas"
 import { BuilderChat } from "../components/workflow/BuilderChat"
@@ -587,6 +588,16 @@ export default function AppBuilder() {
           <Button
             variant="ghost"
             size="sm"
+            className="h-8 px-2 gap-1.5"
+            onClick={() => setSettingsOpen(true)}
+            title="Manage secrets"
+          >
+            <KeyRound className="h-4 w-4" />
+            <span className="text-xs hidden sm:inline">{secrets.length} secret{secrets.length !== 1 ? 's' : ''}</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
             className="h-8 w-8 p-0"
             onClick={() => setChatCollapsed((c) => !c)}
             title="AI Builder"
@@ -695,7 +706,7 @@ export default function AppBuilder() {
       {/* ── Main Layout ───────────────────────────────────────────── */}
       <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Left Rail — Action Library */}
-        <aside className="w-72 shrink-0 border-r border-border bg-card overflow-hidden hidden md:flex flex-col">
+        <aside className="w-72 shrink-0 border-r border-border bg-card overflow-hidden hidden md:flex lg:flex-col">
           <ActionLibraryPanel
             actions={rawCatalog}
             onAdd={handleAddFromLibrary}
@@ -703,6 +714,17 @@ export default function AppBuilder() {
             error={catalogError}
           />
         </aside>
+
+        {/* Mobile/tablet action library trigger */}
+        <div className="md:hidden fixed bottom-4 left-4 z-30">
+          <Button
+            size="sm"
+            className="h-10 w-10 rounded-full shadow-lg"
+            onClick={() => setCatalogDialogOpen(true)}
+          >
+            <HelpCircle className="h-5 w-5" />
+          </Button>
+        </div>
 
         {/* Center — Canvas + Bottom Panel */}
         <div className="flex-1 flex flex-col min-w-0">

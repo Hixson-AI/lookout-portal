@@ -118,8 +118,8 @@ test('D2 — Data Mapping: visual output→input field wiring', async ({ page })
   await buildDemoWorkflow(page);
   await page.waitForTimeout(800);
 
-  // Click the AI Processing node on the canvas to open its config panel
-  const aiNode = page.locator('.react-flow__node').filter({ hasText: 'AI Processing' }).first();
+  // Click the OpenAI node on the canvas to open its config panel
+  const aiNode = page.locator('.react-flow__node').filter({ hasText: 'OpenAI' }).first();
   if (await aiNode.count() > 0) {
     await aiNode.click();
     await page.waitForTimeout(600);

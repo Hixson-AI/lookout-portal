@@ -91,31 +91,66 @@ Be specific. Reference actual UI elements you see. Do not be vague.`;
   const msg = response.choices[0].message;
   const raw = msg.content ?? '{}';
 
-  // Extract JSON from fenced code block if present — try all fences
-  let jsonStr = raw.trim();
+  // ── 1. Try fenced JSON blocks (most common) ───────────────────────────
+  let jsonStr: string | null = null;
   const fenceMatches = [...raw.matchAll(/```(?:json)?\s*([\s\S]*?)```/g)];
   if (fenceMatches.length > 0) {
     // Use the last fence match (models sometimes wrap their thinking in a fence first)
     jsonStr = fenceMatches[fenceMatches.length - 1][1].trim();
   }
 
-  try {
-    const parsed = JSON.parse(jsonStr) as VisionResult;
-    if (!parsed.reasoning && msg.reasoning) {
-      parsed.reasoning = (msg.reasoning as string).trim().slice(0, 500);
+  // ── 2. If no fence, try parsing the whole raw string as JSON ──────────
+  if (!jsonStr) {
+    const trimmed = raw.trim();
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      jsonStr = trimmed;
     }
-    // Ensure answer is a string
-    if (parsed.answer == null) parsed.answer = '';
-    return parsed;
-  } catch {
-    // Try to extract score from raw text as last resort
-    const scoreMatch = raw.match(/"answer"\s*:\s*"?(\d+)"?/);
-    if (scoreMatch) {
-      return { answer: scoreMatch[1], reasoning: raw.slice(0, 500), suggestions: [], issues: [] };
-    }
-    // Model returned prose — wrap it
-    return { answer: raw.slice(0, 200), reasoning: raw, suggestions: [], issues: [] };
   }
+
+  // ── 3. Attempt to parse whatever we found ───────────────────────────────
+  if (jsonStr) {
+    try {
+      const parsed = JSON.parse(jsonStr) as VisionResult;
+      if (!parsed.reasoning && (msg as any).reasoning) {
+        parsed.reasoning = ((msg as any).reasoning as string).trim().slice(0, 500);
+      }
+      if (parsed.answer == null) parsed.answer = '';
+      return parsed;
+    } catch (parseErr) {
+      // Log the malformed JSON so we can fix the prompt or model
+      console.warn('[ai-vision] JSON parse failed for fenced content:', (parseErr as Error).message);
+      console.warn('[ai-vision] First 300 chars of fenced content:', jsonStr.slice(0, 300));
+    }
+  }
+
+  // ── 4. Last resort: aggressively extract any 1–10 score from text ───
+  // Patterns: "Score: 7", "7/10", "I rate this 7", JSON field "answer": 7
+  const scorePatterns = [
+    /"answer"\s*[:=]\s*"?(\d+)"?/,
+    /[Ss]core[:\s]+(\d+)/,
+    /(\d+)\s*\/\s*10/,
+    /[Rr]ate\s+(?:it\s+)?(?:a\s+)?(\d+)/,
+    /\b(\d)\b[\s\S]{0,30}(?:out of 10|out of ten|\/10)/i,
+  ];
+  for (const re of scorePatterns) {
+    const m = raw.match(re);
+    if (m) {
+      const score = parseInt(m[1], 10);
+      if (score >= 1 && score <= 10) {
+        return {
+          answer: String(score),
+          reasoning: raw.slice(0, 500),
+          suggestions: [],
+          issues: ['Model returned unstructured text; score extracted heuristically.'],
+        };
+      }
+    }
+  }
+
+  // ── 5. Nothing worked — return raw text so the test at least sees it ──
+  console.warn('[ai-vision] Could not extract structured JSON or score from response.');
+  console.warn('[ai-vision] Raw response (first 400 chars):', raw.slice(0, 400));
+  return { answer: raw.slice(0, 200), reasoning: raw, suggestions: [], issues: [] };
 }
 
 /**
