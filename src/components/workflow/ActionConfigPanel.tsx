@@ -1020,10 +1020,10 @@ export function ActionConfigPanel({ step, allSteps = [], onChange, tenantId, app
             <div className="flex-1">
               <p className="text-xs font-semibold text-blue-900 mb-1">Syntax Reference</p>
               <p className="text-[10px] text-blue-700">
-                <code className="font-mono bg-blue-100 px-1 rounded">{{SECRET_NAME}}</code> — reference app secrets
+                <code className="font-mono bg-blue-100 px-1 rounded">&lbrace;SECRET_NAME&rbrace;</code> — reference app secrets
               </p>
               <p className="text-[10px] text-blue-700 mt-0.5">
-                <code className="font-mono bg-blue-100 px-1 rounded">{{stepId.field}}</code> — reference previous step outputs
+                <code className="font-mono bg-blue-100 px-1 rounded">&lbrace;stepId.field&rbrace;</code> — reference previous step outputs
               </p>
             </div>
           </div>

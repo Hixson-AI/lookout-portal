@@ -111,8 +111,8 @@ Be specific. Reference actual UI elements you see. Do not be vague.`;
   if (jsonStr) {
     try {
       const parsed = JSON.parse(jsonStr) as VisionResult;
-      if (!parsed.reasoning && (msg as any).reasoning) {
-        parsed.reasoning = ((msg as any).reasoning as string).trim().slice(0, 500);
+      if (!parsed.reasoning && (msg as Partial<VisionResult>).reasoning) {
+        parsed.reasoning = ((msg as Partial<VisionResult>).reasoning as string).trim().slice(0, 500);
       }
       if (parsed.answer == null) parsed.answer = '';
       return parsed;
