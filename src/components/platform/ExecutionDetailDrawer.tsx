@@ -83,6 +83,8 @@ export function ExecutionDetailDrawer({
   };
 
   const statusDescription = getStatusDescription(execution.status);
+  const calculatedDuration = calculateDuration(execution.startedAt, execution.completedAt);
+  const displayDuration = execution.durationSeconds ?? calculatedDuration;
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex justify-end">
@@ -124,7 +126,7 @@ export function ExecutionDetailDrawer({
               <Card>
                 <CardContent className="p-3">
                   <div className="text-xs text-muted-foreground">Duration</div>
-                  <div className="font-semibold text-sm">{execution.durationSeconds ?? '—'}s</div>
+                  <div className="font-semibold text-sm">{displayDuration != null ? `${displayDuration}s` : '—'}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -412,4 +414,11 @@ function getStatusBadgeColor(status: string): string {
 
 function formatDateTime(dateStr: string): string {
   return new Date(dateStr).toLocaleString();
+}
+
+function calculateDuration(startedAt: string, completedAt: string | null): number | null {
+  if (!completedAt) return null;
+  const start = new Date(startedAt).getTime();
+  const end = new Date(completedAt).getTime();
+  return Math.round((end - start) / 1000);
 }
