@@ -7,6 +7,7 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Input } from '../ui/input';
 import { Plus, Play, Eye, Trash2, Clock, CheckCircle, XCircle, Loader2, Key, Lock, X, Settings2 } from 'lucide-react';
+import { ExecutionDetailDrawer } from '../platform/ExecutionDetailDrawer';
 
 interface AppsTabProps {
   tenant: Tenant;
@@ -27,6 +28,7 @@ export function AppsTab({ tenant }: AppsTabProps) {
   const [newSecretKey, setNewSecretKey] = useState('');
   const [newSecretValue, setNewSecretValue] = useState('');
   const [savingSecret, setSavingSecret] = useState(false);
+  const [selectedExecution, setSelectedExecution] = useState<AppExecution | null>(null);
 
   const loadApps = useCallback(async () => {
     try {
@@ -331,7 +333,11 @@ export function AppsTab({ tenant }: AppsTabProps) {
                       </div>
                       {/* Execution list */}
                       {Array.isArray(executions) && executions.map((exec) => (
-                        <div key={exec.id} className="p-3 rounded-lg border border-border">
+                        <div
+                          key={exec.id}
+                          className="p-3 rounded-lg border border-border cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => setSelectedExecution(exec)}
+                        >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               {getStatusIcon(exec.status)}
@@ -435,6 +441,24 @@ export function AppsTab({ tenant }: AppsTabProps) {
             )}
           </div>
         </div>
+      )}
+
+      {/* Execution Detail Drawer */}
+      {selectedExecution && selectedApp && (
+        <ExecutionDetailDrawer
+          execution={selectedExecution}
+          tenantId={tenant.id}
+          appId={selectedApp.id}
+          onClose={() => setSelectedExecution(null)}
+          onToast={(msg, kind) => {
+            // Simple toast implementation using alert for now
+            if (kind === 'error') {
+              alert(msg);
+            } else {
+              console.log(`[${kind}] ${msg}`);
+            }
+          }}
+        />
       )}
     </div>
   );

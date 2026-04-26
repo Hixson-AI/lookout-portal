@@ -12,11 +12,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Loader2, Play, RefreshCw, X } from 'lucide-react';
+import { Loader2, Play, RefreshCw } from 'lucide-react';
 import { getTenants } from '../../lib/api/tenants';
 import { apiRequest } from '../../lib/api/index';
-import { listPlatformExecutions, getPlatformExecution, type PlatformExecution } from '../../lib/api/platform-jobs';
+import { listPlatformExecutions, type PlatformExecution } from '../../lib/api/platform-jobs';
 import { triggerN8nSync, triggerReindex } from '../../lib/api/platform';
+import { ExecutionDetailDrawer } from './ExecutionDetailDrawer';
 import type { Tenant } from '../../lib/types';
 
 interface PlatformApp {
@@ -38,6 +39,7 @@ export function PlatformJobsTab({ toast }: Props) {
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState<Record<string, boolean>>({});
   const [detail, setDetail] = useState<PlatformExecution | null>(null);
+  const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
 
   const pollHandleRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -142,13 +144,9 @@ export function PlatformJobsTab({ toast }: Props) {
   };
 
   // ── Open detail drawer ──────────────────────────────────────────────
-  const openDetail = async (appId: string, executionId: string) => {
-    try {
-      const full = await getPlatformExecution(appId, executionId);
-      setDetail(full);
-    } catch (err) {
-      toast((err as Error).message || 'Failed to load execution detail', 'error');
-    }
+  const openDetail = (appId: string, execution: PlatformExecution) => {
+    setDetail(execution);
+    setSelectedAppId(appId);
   };
 
   if (loading) {
@@ -226,7 +224,7 @@ export function PlatformJobsTab({ toast }: Props) {
                     <li
                       key={r.id}
                       className="flex items-center justify-between py-1 px-2 hover:bg-gray-50 rounded cursor-pointer"
-                      onClick={() => openDetail(app.id, r.id)}
+                      onClick={() => openDetail(app.id, r)}
                     >
                       <div className="flex items-center gap-3">
                         <StatusBadge status={r.status} />
@@ -249,7 +247,18 @@ export function PlatformJobsTab({ toast }: Props) {
         );
       })}
 
-      {detail && <ExecutionDetailDrawer execution={detail} onClose={() => setDetail(null)} />}
+      {detail && selectedAppId && platformTenantId && (
+        <ExecutionDetailDrawer
+          execution={detail}
+          tenantId={platformTenantId}
+          appId={selectedAppId}
+          onClose={() => {
+            setDetail(null);
+            setSelectedAppId(null);
+          }}
+          onToast={toast}
+        />
+      )}
     </div>
   );
 }
@@ -278,83 +287,6 @@ function ProgressBar({ current, total }: { current: number; total: number }) {
         className="bg-blue-500 h-1.5 rounded-full transition-all"
         style={{ width: `${pct}%` }}
       />
-    </div>
-  );
-}
-
-function ExecutionDetailDrawer({
-  execution,
-  onClose,
-}: {
-  execution: PlatformExecution;
-  onClose: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex justify-end">
-      <div className="w-full max-w-2xl bg-white h-full overflow-y-auto">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="font-semibold">Execution Detail</h3>
-          <button onClick={onClose}>
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="p-4 space-y-3 text-sm">
-          <Field label="ID" value={execution.id} mono />
-          <Field label="Status" value={<StatusBadge status={execution.status} />} />
-          <Field label="Trigger" value={execution.triggerType} />
-          <Field label="Started" value={new Date(execution.startedAt).toLocaleString()} />
-          {execution.completedAt && (
-            <Field label="Completed" value={new Date(execution.completedAt).toLocaleString()} />
-          )}
-          {execution.durationSeconds != null && (
-            <Field label="Duration" value={`${execution.durationSeconds}s`} />
-          )}
-          {execution.machineId && <Field label="Machine ID" value={execution.machineId} mono />}
-          {execution.machineType && <Field label="Machine Type" value={execution.machineType} />}
-          {execution.imageRef && <Field label="Image" value={execution.imageRef} mono />}
-          {execution.error && (
-            <div>
-              <div className="text-xs text-gray-500 mb-1">Error</div>
-              <pre className="bg-red-50 text-red-700 text-xs p-2 rounded whitespace-pre-wrap">
-                {execution.error}
-              </pre>
-            </div>
-          )}
-          {execution.logs != null && (
-            <div>
-              <div className="text-xs text-gray-500 mb-1">Step Log</div>
-              <pre className="bg-gray-50 text-xs p-2 rounded max-h-64 overflow-auto whitespace-pre-wrap">
-                {JSON.stringify(execution.logs, null, 2)}
-              </pre>
-            </div>
-          )}
-          {execution.output != null && (
-            <div>
-              <div className="text-xs text-gray-500 mb-1">Output</div>
-              <pre className="bg-gray-50 text-xs p-2 rounded max-h-64 overflow-auto whitespace-pre-wrap">
-                {JSON.stringify(execution.output, null, 2)}
-              </pre>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Field({
-  label,
-  value,
-  mono,
-}: {
-  label: string;
-  value: React.ReactNode;
-  mono?: boolean;
-}) {
-  return (
-    <div className="flex gap-2 items-start">
-      <div className="text-xs text-gray-500 w-24 shrink-0">{label}</div>
-      <div className={`text-sm ${mono ? 'font-mono text-xs' : ''}`}>{value}</div>
     </div>
   );
 }
