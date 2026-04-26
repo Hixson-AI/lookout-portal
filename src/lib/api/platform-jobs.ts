@@ -25,6 +25,7 @@ export interface PlatformExecution {
   imageRef: string | null;
   durationSeconds: number | null;
   computeCostUsd: number | null;
+  llmCostUsd?: number;
   error: string | null;
   output?: unknown;
   input?: unknown;

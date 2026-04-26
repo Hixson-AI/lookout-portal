@@ -39,6 +39,7 @@ interface ExecutionDetail {
   input?: unknown;
   logs?: unknown;
   computeCostUsd?: number | null;
+  llmCostUsd?: number;
 }
 
 interface Props {
@@ -85,6 +86,9 @@ export function ExecutionDetailDrawer({
   const statusDescription = getStatusDescription(execution.status);
   const calculatedDuration = calculateDuration(execution.startedAt, execution.completedAt);
   const displayDuration = execution.durationSeconds ?? calculatedDuration;
+  const computeCost = execution.computeCostUsd ?? 0;
+  const llmCost = execution.llmCostUsd ?? 0;
+  const totalCost = computeCost + llmCost;
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex justify-end">
@@ -133,6 +137,17 @@ export function ExecutionDetailDrawer({
                 <CardContent className="p-3">
                   <div className="text-xs text-muted-foreground">Trigger</div>
                   <div className="font-semibold text-sm">{execution.triggerType}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-3">
+                  <div className="text-xs text-muted-foreground">Cost</div>
+                  <div className="font-semibold text-sm">${totalCost.toFixed(4)}</div>
+                  {llmCost > 0 && (
+                    <div className="text-xs text-muted-foreground">
+                      ${computeCost.toFixed(4)} compute + ${llmCost.toFixed(4)} LLM
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
