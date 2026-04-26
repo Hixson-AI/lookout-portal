@@ -37,6 +37,11 @@ export function ExecutionTimeline({ tenantId, appId, executionId }: Props) {
     };
   }, [tenantId, appId, executionId]);
 
+  const { timeline, minTime, totalDuration } = useMemo(
+    () => (steps && steps.length > 0 ? buildTimeline(steps) : { timeline: [], minTime: 0, totalDuration: 1 }),
+    [steps],
+  );
+
   if (loading) {
     return (
       <div className="text-center py-8 text-muted-foreground flex items-center justify-center gap-2">
@@ -52,8 +57,6 @@ export function ExecutionTimeline({ tenantId, appId, executionId }: Props) {
       </div>
     );
   }
-
-  const { timeline, minTime, totalDuration } = useMemo(() => buildTimeline(steps), [steps]);
 
   return (
     <div className="space-y-4">
