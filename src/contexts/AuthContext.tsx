@@ -11,12 +11,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     clearJwt();
     setUser(null);
+    window.location.href = '/login';
   }, []);
 
   useEffect(() => {
-    // Register 401 handler so api.ts can clear auth state without hard redirect
+    // Register 401 handler to clear auth state and redirect to login
     setOnAuthError(() => {
       console.warn('[auth] 401 received from API — session may be invalid');
+      clearJwt();
+      setUser(null);
+      // Debounce redirect to avoid multiple rapid redirects
+      setTimeout(() => {
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+      }, 100);
     });
 
     // Handle OAuth callback on mount, then resolve user state
