@@ -56,7 +56,7 @@ export function Header() {
         )}
       </div>
       {/* Mobile menu */}
-      {mobileMenuOpen && (
+      {mobileMenuOpen && user && (
         <div className="md:hidden border-t border-border bg-card/95 backdrop-blur-sm">
           <nav className="container mx-auto px-4 py-3 flex flex-col gap-3">
             {user.isSystemAdmin ? (
