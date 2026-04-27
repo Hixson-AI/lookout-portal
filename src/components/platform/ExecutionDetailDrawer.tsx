@@ -11,13 +11,14 @@
  */
 
 import { useState } from 'react';
-import { X, Copy, ChevronDown, ChevronRight, Share2 } from 'lucide-react';
+import { X, Copy, ChevronDown, ChevronRight, Share2, Ban } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { ExecutionTimeline } from './ExecutionTimeline';
 import { ExecutionStepTree } from './ExecutionStepTree';
+import { cancelExecution } from '../../lib/api/execution-steps';
 
 interface ExecutionDetail {
   id: string;
@@ -65,6 +66,7 @@ export function ExecutionDetailDrawer({
 }: Props) {
   const [activeTab, setActiveTab] = useState('overview');
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['timing', 'machine']));
+  const [cancelling, setCancelling] = useState(false);
 
   const toggleSection = (section: string) => {
     setExpandedSections((prev) => {
@@ -83,6 +85,20 @@ export function ExecutionDetailDrawer({
     onToast?.(`Copied ${label}`, 'success');
   };
 
+  const handleCancel = async () => {
+    setCancelling(true);
+    try {
+      await cancelExecution(tenantId, appId, execution.id);
+      onToast?.('Execution cancelled', 'success');
+    } catch (err) {
+      onToast?.((err as Error).message || 'Failed to cancel execution', 'error');
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  const canCancel = execution.status === 'running' || execution.status === 'queued';
+
   const statusDescription = getStatusDescription(execution.status);
   const calculatedDuration = calculateDuration(execution.startedAt, execution.completedAt);
   const displayDuration = execution.durationSeconds ?? calculatedDuration;
@@ -100,6 +116,17 @@ export function ExecutionDetailDrawer({
             <Badge className={getStatusBadgeColor(execution.status)}>{statusDescription}</Badge>
           </div>
           <div className="flex items-center gap-2">
+            {canCancel && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleCancel}
+                disabled={cancelling}
+              >
+                <Ban className="w-4 h-4 mr-2" />
+                {cancelling ? 'Cancelling...' : 'Cancel'}
+              </Button>
+            )}
             <Button variant="ghost" size="icon" onClick={() => copyToClipboard(window.location.href, 'URL')}>
               <Share2 className="w-4 h-4" />
             </Button>

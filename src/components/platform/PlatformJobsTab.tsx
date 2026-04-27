@@ -12,12 +12,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Loader2, Play, RefreshCw } from 'lucide-react';
+import { Loader2, Play, RefreshCw, Ban } from 'lucide-react';
 import { getTenants } from '../../lib/api/tenants';
 import { apiRequest } from '../../lib/api/index';
 import { listPlatformExecutions, type PlatformExecution } from '../../lib/api/platform-jobs';
 import { triggerN8nSync, triggerReindex } from '../../lib/api/platform';
 import { ExecutionDetailDrawer } from './ExecutionDetailDrawer';
+import { cancelExecution } from '../../lib/api/execution-steps';
 import type { Tenant } from '../../lib/types';
 
 interface PlatformApp {
@@ -40,6 +41,7 @@ export function PlatformJobsTab({ toast }: Props) {
   const [running, setRunning] = useState<Record<string, boolean>>({});
   const [detail, setDetail] = useState<PlatformExecution | null>(null);
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState<Record<string, boolean>>({});
 
   const pollHandleRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -149,6 +151,22 @@ export function PlatformJobsTab({ toast }: Props) {
     setSelectedAppId(appId);
   };
 
+  // ── Cancel execution ─────────────────────────────────────────────────
+  const handleCancel = async (appId: string, executionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!platformTenantId) return;
+    setCancelling((c) => ({ ...c, [executionId]: true }));
+    try {
+      await cancelExecution(platformTenantId, appId, executionId);
+      toast('Execution cancelled', 'success');
+      setTimeout(() => void refreshExecutions(), 500);
+    } catch (err) {
+      toast((err as Error).message || 'Failed to cancel execution', 'error');
+    } finally {
+      setCancelling((c) => ({ ...c, [executionId]: false }));
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center gap-2 text-gray-500 py-12 justify-center">
@@ -235,8 +253,25 @@ export function PlatformJobsTab({ toast }: Props) {
                           <span className="text-xs text-gray-400">via {r.triggerType}</span>
                         )}
                       </div>
-                      <div className="text-xs text-gray-500">
-                        {r.durationSeconds != null ? `${r.durationSeconds}s` : '—'}
+                      <div className="flex items-center gap-2">
+                        <div className="text-xs text-gray-500">
+                          {r.durationSeconds != null ? `${r.durationSeconds}s` : '—'}
+                        </div>
+                        {(r.status === 'running' || r.status === 'queued') && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={(e) => handleCancel(app.id, r.id, e)}
+                            disabled={cancelling[r.id]}
+                          >
+                            {cancelling[r.id] ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Ban className="w-3 h-3" />
+                            )}
+                          </Button>
+                        )}
                       </div>
                     </li>
                   ))}

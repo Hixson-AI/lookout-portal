@@ -74,3 +74,20 @@ export function openExecutionEvents(
   const url = `${API_URL}/api/v1/apps/${appId}/executions/${executionId}/events`;
   return new EventSource(url, { withCredentials: true });
 }
+
+/**
+ * Cancels a running execution.
+ *
+ * POST /api/v1/tenants/:tenantId/apps/:appId/cancel/:executionId
+ */
+export async function cancelExecution(
+  tenantId: string,
+  appId: string,
+  executionId: string,
+): Promise<{ data: { executionId: string; status: string } }> {
+  return apiRequest<{ data: { executionId: string; status: string } }>(
+    `/api/v1/tenants/${tenantId}/apps/${appId}/cancel/${executionId}`,
+    { method: 'POST' },
+    API_URL,
+  );
+}
