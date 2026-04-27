@@ -20,7 +20,7 @@ import {
   getPlatformExecutionSteps,
   type PlatformExecution,
 } from '../../lib/api/platform-jobs';
-import { triggerN8nSync, triggerReindex } from '../../lib/api/platform';
+import { triggerN8nSync, triggerReindex, isReindexCounts } from '../../lib/api/platform';
 import { ExecutionDetailDrawer } from './ExecutionDetailDrawer';
 import { cancelExecution } from '../../lib/api/execution-steps';
 import type { Tenant } from '../../lib/types';
@@ -131,12 +131,14 @@ export function PlatformJobsTab({ toast }: Props) {
         toast(result.message || 'Sync started', 'success');
       } else if (app.name === 'Reindex Embeddings') {
         const result = await triggerReindex();
-        toast(
-          'failed' in result && 'indexed' in result
-            ? `Reindexed: ${result.indexed} ok, ${result.failed} failed`
-            : 'Reindex started',
-          'success',
-        );
+        if (isReindexCounts(result)) {
+          toast(
+            `Reindexed: ${result.indexed} ok, ${result.failed} failed`,
+            result.failed > 0 ? 'error' : 'success',
+          );
+        } else {
+          toast('Reindex started — watch this tab for progress', 'info');
+        }
       } else {
         toast(`No trigger wired for "${app.name}" yet`, 'info');
       }

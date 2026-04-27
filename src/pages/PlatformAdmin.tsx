@@ -16,6 +16,7 @@ import {
   clearPlatformSetting,
   triggerN8nSync,
   triggerReindex,
+  isReindexCounts,
   type PlatformSetting,
 } from '../lib/api/platform';
 import {
@@ -160,7 +161,19 @@ export function PlatformAdmin() {
     try {
       const result = await triggerReindex(ids);
       const label = ids ? `${ids.length} action${ids.length !== 1 ? 's' : ''}` : 'all actions';
-      toast(`Reindexed ${label}: ${result.indexed} ok, ${result.failed} failed`, result.failed > 0 ? 'error' : 'success');
+      if (isReindexCounts(result)) {
+        toast(
+          `Reindexed ${label}: ${result.indexed} ok, ${result.failed} failed`,
+          result.failed > 0 ? 'error' : 'success',
+        );
+      } else {
+        // Full reindex was dispatched async on a worker. The Jobs tab will
+        // show the live status; counts arrive when the run completes.
+        toast(
+          `Reindex started (${label}) — track progress in the Jobs tab`,
+          'info',
+        );
+      }
       const updated = await getCatalog();
       setActions(updated as CatalogActionWithEmbedding[]);
       if (detailAction) {
