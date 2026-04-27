@@ -303,6 +303,7 @@ export function ExecutionDetailDrawer({
               appId={appId}
               executionId={execution.id}
               stepsLoader={stepsLoader}
+              disableSse={disableSse}
             />
           </TabsContent>
 

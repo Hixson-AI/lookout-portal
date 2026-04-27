@@ -5,9 +5,14 @@
  * and support for overlapping steps in parallel rows.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { CheckCircle2, Clock, Loader2, XCircle } from 'lucide-react';
-import { getExecutionSteps, type AppStepExecution } from '../../lib/api/execution-steps';
+import {
+  getExecutionSteps,
+  openExecutionEvents,
+  type AppStepExecution,
+  type StepUpdate,
+} from '../../lib/api/execution-steps';
 
 interface Props {
   tenantId: string;
@@ -15,12 +20,22 @@ interface Props {
   executionId: string;
   /** Optional override that fetches steps via a different path (e.g. control-plane proxy for platform jobs). */
   stepsLoader?: () => Promise<AppStepExecution[]>;
+  /** Disable SSE step-update stream (control plane proxy doesn't yet stream). */
+  disableSse?: boolean;
 }
 
-export function ExecutionTimeline({ tenantId, appId, executionId, stepsLoader }: Props) {
+export function ExecutionTimeline({
+  tenantId,
+  appId,
+  executionId,
+  stepsLoader,
+  disableSse = false,
+}: Props) {
   const [steps, setSteps] = useState<AppStepExecution[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const esRef = useRef<EventSource | null>(null);
 
+  // Initial load.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -40,6 +55,47 @@ export function ExecutionTimeline({ tenantId, appId, executionId, stepsLoader }:
       cancelled = true;
     };
   }, [tenantId, appId, executionId, stepsLoader]);
+
+  // SSE subscription for live updates.
+  useEffect(() => {
+    if (disableSse) return;
+    const es = openExecutionEvents(appId, executionId);
+    esRef.current = es;
+
+    es.addEventListener('snapshot', (ev: MessageEvent) => {
+      try {
+        const { steps } = JSON.parse(ev.data) as { steps: AppStepExecution[] };
+        setSteps(steps);
+      } catch {
+        // ignore malformed snapshot
+      }
+    });
+
+    es.addEventListener('step-update', (ev: MessageEvent) => {
+      try {
+        const upd = JSON.parse(ev.data) as StepUpdate;
+        setSteps((prev) => {
+          if (!prev) return prev;
+          return prev.map((step) =>
+            step.id === upd.stepExecutionId
+              ? { ...step, status: upd.status, error: upd.error ?? step.error }
+              : step,
+          );
+        });
+      } catch {
+        // ignore malformed update
+      }
+    });
+
+    es.onerror = () => {
+      // EventSource auto-reconnects; nothing to do.
+    };
+
+    return () => {
+      es.close();
+      esRef.current = null;
+    };
+  }, [appId, executionId, disableSse]);
 
   const { timeline, minTime, totalDuration } = useMemo(
     () => (steps && steps.length > 0 ? buildTimeline(steps) : { timeline: [], minTime: 0, totalDuration: 1 }),
