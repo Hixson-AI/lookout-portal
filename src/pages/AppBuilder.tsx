@@ -30,6 +30,7 @@ import { ActionLibraryPanel } from "../components/workflow/ActionLibraryPanel"
 import { ConfigDrawer } from "../components/workflow/ConfigDrawer"
 import { WorkflowSettings } from "../components/workflow/WorkflowSettings"
 import { BottomPanel } from "../components/workflow/BottomPanel"
+import { RunPanelDialog } from "../components/workflow/RunPanelDialog"
 import { Button } from "../components/ui/button"
 import { Badge } from "../components/ui/badge"
 import { Input } from "../components/ui/input"
@@ -135,6 +136,7 @@ export default function AppBuilder() {
   const [validateResult, setValidateResult] = useState<"pass" | "fail" | null>(null)
   const [executionLog, setExecutionLog] = useState<string[]>([])
   const [showLog, setShowLog] = useState(false)
+  const [runPanelOpen, setRunPanelOpen] = useState(false)
 
   // Load action library from API
   const loadCatalog = useCallback(() => {
@@ -784,6 +786,8 @@ export default function AppBuilder() {
         tenantId={tid}
         appId={currentAppId ?? undefined}
         onEnriched={loadCatalog}
+        onViewStatus={() => setRunPanelOpen(true)}
+        hasRunData={executionLog.length > 0 || Object.keys(testResults).length > 0}
       />
 
       {/* ── Floating AI Builder ───────────────────────────────────── */}
@@ -946,6 +950,17 @@ export default function AppBuilder() {
           setCatalogDialogOpen(false)
         }}
         catalog={rawCatalog}
+      />
+
+      {/* ── Run Panel Dialog ──────────────────────────────────────── */}
+      <RunPanelDialog
+        open={runPanelOpen}
+        onOpenChange={setRunPanelOpen}
+        log={executionLog}
+        validateResult={validateResult}
+        errorCount={Object.keys(validationErrors).length}
+        testResults={testResults}
+        stepName={selectedStep?.name}
       />
     </div>
   )

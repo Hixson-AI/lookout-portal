@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Zap, Loader2 } from "lucide-react"
+import { Zap, Loader2, Activity } from "lucide-react"
 import { Button } from "../ui/button"
 import { Drawer, DrawerHeader, DrawerTitle, DrawerContent } from "../ui/drawer"
 import { ActionConfigPanel } from "./ActionConfigPanel"
@@ -22,6 +22,8 @@ interface ConfigDrawerProps {
   tenantId?: string
   appId?: string
   onEnriched?: () => void
+  onViewStatus?: () => void
+  hasRunData?: boolean
 }
 
 export function ConfigDrawer({
@@ -37,6 +39,8 @@ export function ConfigDrawer({
   testResults,
   validationErrors,
   tenantId,
+  onViewStatus,
+  hasRunData,
   appId,
   onEnriched,
 }: ConfigDrawerProps) {
@@ -95,25 +99,39 @@ export function ConfigDrawer({
               onEnriched={onEnriched}
             />
             <div className="pt-4 border-t border-border">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onTest(step)}
-                disabled={testingStep === step.id}
-                className="w-full text-xs"
-              >
-                {testingStep === step.id ? (
-                  <>
-                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                    Testing…
-                  </>
-                ) : (
-                  <>
-                    <Zap className="h-3 w-3 mr-1" />
-                    Test Step
-                  </>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onTest(step)}
+                  disabled={testingStep === step.id}
+                  className="flex-1 text-xs"
+                >
+                  {testingStep === step.id ? (
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                      Testing…
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="h-3 w-3 mr-1" />
+                      Test Step
+                    </>
+                  )}
+                </Button>
+                {hasRunData && onViewStatus && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={onViewStatus}
+                    className="text-xs"
+                    title="View run status"
+                  >
+                    <Activity className="h-3 w-3 mr-1" />
+                    View Status
+                  </Button>
                 )}
-              </Button>
+              </div>
               {validationErrors[step.id] && (
                 <p className="text-xs text-destructive mt-2">{validationErrors[step.id]}</p>
               )}
