@@ -75,3 +75,47 @@ No new portal-side env vars. The `OPENAI_API_KEY` lives only in `lookout-control
 - Seed the `agent_steps` DB table with the platform's built-in steps (HTTP Request, AI Processing, etc.) so the catalog is non-empty by default
 - Stream AI responses (SSE) instead of single-shot for better perceived latency
 - Persist chat history per-app so the AI remembers previous conversations
+
+---
+
+## 4.3 Addendum: Required Secrets Discovery and Management (2026-04-27)
+
+### Overview
+
+Proactively surface missing credentials to tenants by computing required secrets from workflow JSON against the catalog, diffing against existing `AppSecret` rows, and displaying the results in the portal.
+
+### Backend (lookout-control)
+
+- `computeRequiredSecrets(prisma, workflowJson)` helper — walks workflow JSON tree, queries both `agentStep` (by `id`) and `agentAction` (by `actionType`) for secret schemas, dedupes by key, tracks `unknown_step_ids`
+- `GET /v1/tenants/:tenantId/apps/:appId/required-secrets` — computes required secrets diff vs existing `AppSecret` rows, excludes auto-injected AI keys (`OPENROUTER_API_KEY`, `ANTHROPIC_API_KEY`)
+- `POST /v1/tenants/:tenantId/apps/:appId/required-secrets/augment` — LLM augmentation via `SecretSchemaAgent` for unknown stepIds, validates entries have `key`, `type`, `required`, tags LLM-only entries with `source: 'ai'`
+- `GET /v1/tenants/:tenantId/required-secrets` — tenant-wide rollup with `by_app` and `by_key` groupings, `missing_total`, `extra_total`
+- `manage_required_secrets` tool added to `BuilderChatAgent` UI_TOOLS with system prompt rule
+
+### Frontend (lookout-portal)
+
+- `RequiredSecretsPanel` component — displays missing, present, extra secrets with inline editing, "Re-analyze with AI" button gated on `unknown_step_ids.length > 0`
+- `AppsTab` — lazily fetches missing-count per app, renders badge with "N missing" next to app name
+- `TenantSecrets` page — dedicated page at `/tenants/:id/secrets` with By Key (clickable app links) and By App tabs
+- `RequiredSecretsWidget` — wraps panel with Done (fetches final diff, returns summary to LLM) and Skip buttons, dispatched in BuilderChat
+- `App.tsx` — lazy-loaded heavy routes (TenantSecrets, AppBuilder, PlatformAdmin) to reduce main chunk size
+- `vite.config.ts` — manual chunks for vendor libraries (react, xyflow, query)
+
+### Files Changed
+
+| File | Change |
+|---|---|
+| `src/lib/api/app-secrets.ts` | Added `RequiredSecretsDiff`, `TenantRequiredSecretsRollup` interfaces and `getAppRequiredSecrets`, `augmentAppRequiredSecrets`, `getTenantRequiredSecrets` functions |
+| `src/components/secrets/RequiredSecretsPanel.tsx` | New component for displaying and managing required secrets |
+| `src/components/tenants/AppsTab.tsx` | Integrated `RequiredSecretsPanel`, added missing-count badges |
+| `src/pages/TenantSecrets.tsx` | New page for tenant-wide secrets rollup |
+| `src/App.tsx` | Added route for `/tenants/:id/secrets`, lazy-loaded heavy routes |
+| `src/pages/TenantDetail.tsx` | Added "Manage Secrets" nav button |
+| `src/components/workflow/ChatWidgets.tsx` | Added `RequiredSecretsWidget` with Done/Skip buttons |
+| `src/components/workflow/BuilderChat.tsx` | Added `appId` prop, dispatched `RequiredSecretsWidget` for `manage_required_secrets` tool |
+| `src/pages/AppBuilder.tsx` | Passed `appId` to `BuilderChat` |
+| `vite.config.ts` | Added manual chunks for vendor libraries |
+
+### Tests
+
+- `lookout-control/test/routes/required-secrets.test.ts` — 5 unit tests for `computeRequiredSecrets` (union, dedup, unknown-step tracking, deep tree walk, empty input)

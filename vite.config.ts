@@ -7,4 +7,15 @@ export default defineConfig({
   server: {
     port: 7333,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router-dom'],
+          xyflow: ['@xyflow/react'],
+          query: ['@tanstack/react-query'],
+        },
+      },
+    },
+  },
 })
