@@ -3,7 +3,7 @@
  * Displays missing, configured, and extra secrets for an app with inline editing.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -27,7 +27,7 @@ export function RequiredSecretsPanel({ tenantId, appId, onClose, message }: Requ
   const [saving, setSaving] = useState<Set<string>>(new Set());
   const [newSecrets, setNewSecrets] = useState<Record<string, string>>({});
 
-  const loadDiff = async (useAugment = false) => {
+  const loadDiff = useCallback(async (useAugment = false) => {
     try {
       setError(null);
       if (useAugment) {
@@ -39,17 +39,17 @@ export function RequiredSecretsPanel({ tenantId, appId, onClose, message }: Requ
         const result = await getAppRequiredSecrets(tenantId, appId);
         setDiff(result);
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to load required secrets');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load required secrets');
       setAugmenting(false);
     } finally {
       setLoading(false);
     }
-  };
+  }, [tenantId, appId]);
 
   useEffect(() => {
     loadDiff();
-  }, [tenantId, appId]);
+  }, [loadDiff]);
 
   const handleSaveSecret = async (key: string, value: string) => {
     try {
