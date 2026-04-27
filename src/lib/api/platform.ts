@@ -29,9 +29,23 @@ export interface SyncResult {
   status?: string;
 }
 
-export interface ReindexResult {
-  indexed: number;
-  failed: number;
+/**
+ * Reindex API response — discriminated by which path the control plane took:
+ *
+ * - Selective reindex (`ids` provided): runs in-process and returns counts.
+ * - Full reindex: dispatched asynchronously through the Machine Runner and
+ *   returns an `executionId` + status. `indexed` / `failed` are NOT yet
+ *   known — the worker will publish them via the execution lifecycle.
+ *   Local-dev fallback (no machine runner wired) still returns counts.
+ */
+export type ReindexResult =
+  | { indexed: number; failed: number }
+  | { message: string; executionId: string; status: string };
+
+export function isReindexCounts(
+  r: ReindexResult,
+): r is { indexed: number; failed: number } {
+  return typeof (r as { indexed?: unknown }).indexed === 'number';
 }
 
 export async function getPlatformSettings(): Promise<PlatformSetting[]> {
