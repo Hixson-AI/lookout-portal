@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -32,6 +33,7 @@ import {
   X,
   Sparkles,
   ChevronRight,
+  ArrowLeft,
 } from 'lucide-react';
 import { CatalogGroupBrowser } from '../components/workflow/CatalogGroupBrowser';
 import { type GroupSelection, filterBySelection } from '../lib/catalog-taxonomy';
@@ -47,6 +49,7 @@ type Tab = 'actions' | 'settings' | 'jobs';
 type CatalogActionWithEmbedding = AgentAction & { hasEmbedding?: boolean };
 
 export function PlatformAdmin() {
+  const navigate = useNavigate();
   const { toasts, toast, dismiss } = useToast();
   const [tab, setTab] = useState<Tab>('actions');
 
@@ -305,6 +308,11 @@ export function PlatformAdmin() {
   return (
     <Layout>
       <ToastStack toasts={toasts} onDismiss={dismiss} />
+
+      <Button variant="ghost" size="sm" onClick={() => navigate('/tenants')} className="-ml-2 text-muted-foreground hover:text-foreground mb-4">
+        <ArrowLeft className="h-4 w-4 mr-1" />
+        Back to Tenants
+      </Button>
 
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gradient mb-1">Platform Admin</h1>
