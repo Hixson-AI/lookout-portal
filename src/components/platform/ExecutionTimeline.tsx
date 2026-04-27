@@ -13,9 +13,11 @@ interface Props {
   tenantId: string;
   appId: string;
   executionId: string;
+  /** Optional override that fetches steps via a different path (e.g. control-plane proxy for platform jobs). */
+  stepsLoader?: () => Promise<AppStepExecution[]>;
 }
 
-export function ExecutionTimeline({ tenantId, appId, executionId }: Props) {
+export function ExecutionTimeline({ tenantId, appId, executionId, stepsLoader }: Props) {
   const [steps, setSteps] = useState<AppStepExecution[] | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -23,7 +25,9 @@ export function ExecutionTimeline({ tenantId, appId, executionId }: Props) {
     let cancelled = false;
     (async () => {
       try {
-        const data = await getExecutionSteps(tenantId, appId, executionId);
+        const data = stepsLoader
+          ? await stepsLoader()
+          : await getExecutionSteps(tenantId, appId, executionId);
         if (!cancelled) setSteps(data);
       } catch (err) {
         console.error('Failed to load steps for timeline:', err);
@@ -35,7 +39,7 @@ export function ExecutionTimeline({ tenantId, appId, executionId }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [tenantId, appId, executionId]);
+  }, [tenantId, appId, executionId, stepsLoader]);
 
   const { timeline, minTime, totalDuration } = useMemo(
     () => (steps && steps.length > 0 ? buildTimeline(steps) : { timeline: [], minTime: 0, totalDuration: 1 }),

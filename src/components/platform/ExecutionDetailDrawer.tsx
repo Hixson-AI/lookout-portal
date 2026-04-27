@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { ExecutionTimeline } from './ExecutionTimeline';
 import { ExecutionStepTree } from './ExecutionStepTree';
-import { cancelExecution } from '../../lib/api/execution-steps';
+import { cancelExecution, type AppStepExecution } from '../../lib/api/execution-steps';
 
 interface ExecutionDetail {
   id: string;
@@ -53,6 +53,14 @@ interface Props {
   /** API base URL for retry calls */
   apiBaseUrl?: string;
   onToast?: (msg: string, kind?: 'success' | 'error' | 'info') => void;
+  /**
+   * Optional override for step fetching. Platform admin pages should pass
+   * `() => getPlatformExecutionSteps(appId, executionId)` to route through
+   * the control-plane proxy instead of the tenant-scoped API.
+   */
+  stepsLoader?: () => Promise<AppStepExecution[]>;
+  /** Disable SSE step-update stream (control plane proxy doesn't yet stream). */
+  disableSse?: boolean;
 }
 
 export function ExecutionDetailDrawer({
@@ -63,6 +71,8 @@ export function ExecutionDetailDrawer({
   serviceSecret,
   apiBaseUrl,
   onToast,
+  stepsLoader,
+  disableSse,
 }: Props) {
   const [activeTab, setActiveTab] = useState('overview');
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['timing', 'machine']));
@@ -288,7 +298,12 @@ export function ExecutionDetailDrawer({
 
           {/* Timeline Tab */}
           <TabsContent value="timeline" className="mt-4">
-            <ExecutionTimeline tenantId={tenantId} appId={appId} executionId={execution.id} />
+            <ExecutionTimeline
+              tenantId={tenantId}
+              appId={appId}
+              executionId={execution.id}
+              stepsLoader={stepsLoader}
+            />
           </TabsContent>
 
           {/* Step Tree Tab */}
@@ -301,6 +316,8 @@ export function ExecutionDetailDrawer({
               serviceSecret={serviceSecret}
               apiBaseUrl={apiBaseUrl}
               onToast={onToast}
+              stepsLoader={stepsLoader}
+              disableSse={disableSse}
             />
           </TabsContent>
         </Tabs>

@@ -7,6 +7,7 @@
  */
 
 import { apiRequest } from './index';
+import type { AppStepExecution } from './execution-steps';
 
 export interface PlatformExecution {
   id: string;
@@ -42,4 +43,23 @@ export function getPlatformExecution(appId: string, executionId: string): Promis
   return apiRequest<PlatformExecution>(
     `/v1/platform/apps/${appId}/executions/${executionId}`,
   );
+}
+
+/**
+ * Fetch step rows for a platform execution via the control-plane proxy.
+ * Mirrors `getExecutionSteps` but routes through `/v1/platform/...` which
+ * uses the service-secret bypass instead of tenant-API auth (the platform
+ * tenant is not addressable via the normal client-tenant auth path).
+ */
+export async function getPlatformExecutionSteps(
+  appId: string,
+  executionId: string,
+): Promise<AppStepExecution[]> {
+  const envelope = await apiRequest<{ data: AppStepExecution[] } | AppStepExecution[]>(
+    `/v1/platform/apps/${appId}/executions/${executionId}/steps`,
+  );
+  // apiRequest already unwraps `data`, but be defensive in case the proxy
+  // returns the raw array.
+  if (Array.isArray(envelope)) return envelope;
+  return (envelope as { data: AppStepExecution[] }).data;
 }

@@ -41,6 +41,15 @@ interface Props {
   /** API base URL for the retry call (defaults to VITE_API_URL). */
   apiBaseUrl?: string;
   onToast?: (msg: string, kind?: 'success' | 'error' | 'info') => void;
+  /**
+   * Optional override for the initial step fetch. Platform admin pages route
+   * through `/v1/platform/...` on the control plane instead of hitting the
+   * tenant-scoped API directly (the platform tenant has no API key/auth
+   * surface for direct calls).
+   */
+  stepsLoader?: () => Promise<AppStepExecution[]>;
+  /** When true, skip the SSE subscription. SSE is not yet proxied through control plane. */
+  disableSse?: boolean;
 }
 
 export function ExecutionStepTree({
@@ -51,6 +60,8 @@ export function ExecutionStepTree({
   serviceSecret,
   apiBaseUrl = import.meta.env.VITE_API_URL,
   onToast,
+  stepsLoader,
+  disableSse = false,
 }: Props) {
   const [rows, setRows] = useState<AppStepExecution[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +73,9 @@ export function ExecutionStepTree({
     let cancelled = false;
     (async () => {
       try {
-        const initial = await getExecutionSteps(tenantId, appId, executionId);
+        const initial = stepsLoader
+          ? await stepsLoader()
+          : await getExecutionSteps(tenantId, appId, executionId);
         if (!cancelled) setRows(initial);
       } catch (err) {
         if (!cancelled) setError((err as Error).message || 'Failed to load steps');
@@ -71,10 +84,12 @@ export function ExecutionStepTree({
     return () => {
       cancelled = true;
     };
-  }, [tenantId, appId, executionId]);
+  }, [tenantId, appId, executionId, stepsLoader]);
 
-  // SSE subscription.
+  // SSE subscription. Skipped when no API key auth path is available
+  // (platform admin context — control plane proxy doesn't yet stream SSE).
   useEffect(() => {
+    if (disableSse) return;
     const es = openExecutionEvents(appId, executionId);
     esRef.current = es;
 
@@ -112,7 +127,7 @@ export function ExecutionStepTree({
       es.close();
       esRef.current = null;
     };
-  }, [appId, executionId]);
+  }, [appId, executionId, disableSse]);
 
   const tree = useMemo(() => buildTree(rows ?? []), [rows]);
 

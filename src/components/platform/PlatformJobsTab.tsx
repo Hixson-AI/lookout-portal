@@ -12,10 +12,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Loader2, Play, RefreshCw, Ban } from 'lucide-react';
+import { Loader2, Play, RefreshCw, Ban, Eye } from 'lucide-react';
 import { getTenants } from '../../lib/api/tenants';
 import { apiRequest } from '../../lib/api/index';
-import { listPlatformExecutions, type PlatformExecution } from '../../lib/api/platform-jobs';
+import {
+  listPlatformExecutions,
+  getPlatformExecutionSteps,
+  type PlatformExecution,
+} from '../../lib/api/platform-jobs';
 import { triggerN8nSync, triggerReindex } from '../../lib/api/platform';
 import { ExecutionDetailDrawer } from './ExecutionDetailDrawer';
 import { cancelExecution } from '../../lib/api/execution-steps';
@@ -257,6 +261,17 @@ export function PlatformJobsTab({ toast }: Props) {
                         <div className="text-xs text-gray-500">
                           {r.durationSeconds != null ? `${r.durationSeconds}s` : '—'}
                         </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openDetail(app.id, r);
+                          }}
+                        >
+                          <Eye className="w-3 h-3 mr-1" /> View Run
+                        </Button>
                         {(r.status === 'running' || r.status === 'queued') && (
                           <Button
                             variant="ghost"
@@ -292,6 +307,8 @@ export function PlatformJobsTab({ toast }: Props) {
             setSelectedAppId(null);
           }}
           onToast={toast}
+          stepsLoader={() => getPlatformExecutionSteps(selectedAppId, detail.id)}
+          disableSse
         />
       )}
     </div>
