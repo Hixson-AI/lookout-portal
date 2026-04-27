@@ -812,6 +812,7 @@ export default function AppBuilder() {
               tenantId={tid}
               workflow={workflow}
               collapsed={false}
+              appId={currentAppId ?? undefined}
               onApplySteps={handleApplySteps}
               onToggle={() => setChatCollapsed(true)}
             />

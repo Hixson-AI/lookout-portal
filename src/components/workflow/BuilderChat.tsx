@@ -18,6 +18,7 @@ import {
   FieldInputWidget,
   ChoiceSelectWidget,
   ConfirmAddStepsWidget,
+  RequiredSecretsWidget,
 } from './ChatWidgets';
 import { chat as apiChat } from '../../lib/api/agents';
 import type { ChatApiMessage, RawToolCall, ToolCallProps } from '../../lib/api/agents';
@@ -52,6 +53,7 @@ interface BuilderChatProps {
   tenantId: string;
   workflow: unknown;
   collapsed: boolean;
+  appId?: string;
   onApplySteps: (
     steps: ConfirmStep[],
     trigger: { type: string; schedule?: string },
@@ -74,7 +76,7 @@ const GREETING: DisplayMessage = {
 
 // ── Component ──────────────────────────────────────────────────────────────
 
-export function BuilderChat({ tenantId, workflow, collapsed, onApplySteps, onToggle }: BuilderChatProps) {
+export function BuilderChat({ tenantId, workflow, collapsed, appId, onApplySteps, onToggle }: BuilderChatProps) {
   const [messages, setMessages] = useState<DisplayMessage[]>([GREETING]);
   const [apiHistory, setApiHistory] = useState<ChatApiMessage[]>([]);
   const [input, setInput] = useState('');
@@ -229,6 +231,19 @@ export function BuilderChat({ tenantId, workflow, collapsed, onApplySteps, onTog
           {...commonProps}
           onConfirm={(steps, trigger) => handleConfirm(msg.id, tcId, steps, trigger)}
           onReject={() => handleReject(msg.id, tcId)}
+        />
+      );
+    }
+
+    if (tool === 'manage_required_secrets') {
+      if (!appId) {
+        return <div className="text-red-500 text-sm">App ID required to manage secrets</div>;
+      }
+      return (
+        <RequiredSecretsWidget
+          {...commonProps}
+          props={{ ...props, tenantId, appId }}
+          onSubmit={result => handleWidgetSubmit(msg.id, tcId, result)}
         />
       );
     }

@@ -4,6 +4,7 @@ import { Login } from './pages/Login';
 import { Home } from './pages/Home';
 import { TenantList } from './pages/TenantList';
 import { TenantDetail } from './pages/TenantDetail';
+import { TenantSecrets } from './pages/TenantSecrets';
 import AppBuilder from './pages/AppBuilder';
 import { PlatformAdmin } from './pages/PlatformAdmin';
 
@@ -31,6 +32,10 @@ function App() {
         <Route
           path="/tenants/:id"
           element={user ? <TenantDetail /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/tenants/:id/secrets"
+          element={user ? <TenantSecrets /> : <Navigate to="/login" />}
         />
         <Route
           path="/tenants/:id/apps/new"

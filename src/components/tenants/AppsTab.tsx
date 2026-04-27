@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Tenant, App, AppExecution, AppSecretMeta } from '../../lib/types';
+import type { Tenant, App, AppExecution } from '../../lib/types';
 import { api } from '../../lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { Input } from '../ui/input';
-import { Plus, Play, Eye, Trash2, Clock, CheckCircle, XCircle, Loader2, Key, Lock, X, Settings2 } from 'lucide-react';
+import { Plus, Play, Eye, Trash2, Clock, CheckCircle, XCircle, Loader2, Key, Settings2 } from 'lucide-react';
 import { ExecutionDetailDrawer } from '../platform/ExecutionDetailDrawer';
+import { RequiredSecretsPanel } from '../secrets/RequiredSecretsPanel';
+import { getAppRequiredSecrets } from '../../lib/api/app-secrets';
 
 interface AppsTabProps {
   tenant: Tenant;
@@ -23,12 +24,8 @@ export function AppsTab({ tenant }: AppsTabProps) {
   const [triggering, setTriggering] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showSecretsFor, setShowSecretsFor] = useState<string | null>(null);
-  const [appSecrets, setAppSecrets] = useState<AppSecretMeta[]>([]);
-  const [secretsLoading, setSecretsLoading] = useState(false);
-  const [newSecretKey, setNewSecretKey] = useState('');
-  const [newSecretValue, setNewSecretValue] = useState('');
-  const [savingSecret, setSavingSecret] = useState(false);
   const [selectedExecution, setSelectedExecution] = useState<AppExecution | null>(null);
+  const [missingCounts, setMissingCounts] = useState<Map<string, number>>(new Map());
 
   const loadApps = useCallback(async () => {
     try {
@@ -47,6 +44,26 @@ export function AppsTab({ tenant }: AppsTabProps) {
   useEffect(() => {
     loadApps();
   }, [loadApps]);
+
+  // Lazily fetch missing-secret counts per app so we can render a badge.
+  useEffect(() => {
+    if (apps.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const entries = await Promise.all(
+        apps.map(async (app) => {
+          try {
+            const diff = await getAppRequiredSecrets(tenant.id, app.id);
+            return [app.id, diff.missing.length] as const;
+          } catch {
+            return [app.id, 0] as const;
+          }
+        }),
+      );
+      if (!cancelled) setMissingCounts(new Map(entries));
+    })();
+    return () => { cancelled = true; };
+  }, [apps, tenant.id]);
 
   const loadExecutions = useCallback(async (appId: string) => {
     try {
@@ -67,49 +84,11 @@ export function AppsTab({ tenant }: AppsTabProps) {
     }
   }, [selectedApp, loadExecutions]);
 
-  const loadSecrets = useCallback(async (appId: string) => {
-    try {
-      setSecretsLoading(true);
-      const data = await api.getAppSecrets(tenant.id, appId);
-      setAppSecrets(data);
-    } catch (err) {
-      console.error('Failed to load secrets:', err);
-    } finally {
-      setSecretsLoading(false);
-    }
-  }, [tenant.id]);
-
   const handleShowSecrets = (appId: string) => {
     if (showSecretsFor === appId) {
       setShowSecretsFor(null);
     } else {
       setShowSecretsFor(appId);
-      loadSecrets(appId);
-    }
-  };
-
-  const handleAddSecret = async () => {
-    if (!showSecretsFor || !newSecretKey || !newSecretValue) return;
-    try {
-      setSavingSecret(true);
-      await api.setAppSecret(tenant.id, showSecretsFor, newSecretKey, newSecretValue);
-      setNewSecretKey('');
-      setNewSecretValue('');
-      await loadSecrets(showSecretsFor);
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to save secret');
-    } finally {
-      setSavingSecret(false);
-    }
-  };
-
-  const handleDeleteSecret = async (appId: string, key: string) => {
-    if (!confirm(`Delete secret ${key}?`)) return;
-    try {
-      await api.deleteAppSecret(tenant.id, appId, key);
-      await loadSecrets(appId);
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete secret');
     }
   };
 
@@ -230,7 +209,14 @@ export function AppsTab({ tenant }: AppsTabProps) {
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold truncate text-foreground">{app.name}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold truncate text-foreground">{app.name}</h3>
+                        {(missingCounts.get(app.id) ?? 0) > 0 && (
+                          <Badge variant="destructive" className="text-xs flex-shrink-0">
+                            {missingCounts.get(app.id)} missing
+                          </Badge>
+                        )}
+                      </div>
                       <p className="text-sm truncate mt-1 text-muted-foreground">
                         {app.description || 'No description'}
                       </p>
@@ -369,75 +355,11 @@ export function AppsTab({ tenant }: AppsTabProps) {
 
             {/* Secrets Panel */}
             {showSecretsFor && selectedApp && showSecretsFor === selectedApp.id && (
-              <Card className="mt-4">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Key className="h-4 w-4" />
-                      <CardTitle className="text-sm">Secrets — {selectedApp.name}</CardTitle>
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={() => setShowSecretsFor(null)}>
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {secretsLoading ? (
-                    <div className="text-center py-4 text-muted-foreground animate-pulse">Loading...</div>
-                  ) : (
-                    <>
-                      {appSecrets.length === 0 ? (
-                        <p className="text-sm mb-4 text-muted-foreground">No secrets configured yet.</p>
-                      ) : (
-                        <div className="space-y-2 mb-4">
-                          {appSecrets.map((s) => (
-                            <div key={s.id} className="flex items-center justify-between p-2 rounded-lg border border-border">
-                              <div className="flex items-center gap-2">
-                                <Lock className="h-3 w-3 text-muted-foreground" />
-                                <span className="font-mono text-sm">{s.key}</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-muted-foreground">
-                                  {new Date(s.created_at).toLocaleDateString()}
-                                </span>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDeleteSecret(showSecretsFor!, s.key)}
-                                >
-                                  <Trash2 className="h-3 w-3 text-destructive" />
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      <div className="flex gap-2">
-                        <Input
-                          type="text"
-                          value={newSecretKey}
-                          onChange={(e) => setNewSecretKey(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, ''))}
-                          className="flex-1 font-mono"
-                          placeholder="SECRET_KEY"
-                        />
-                        <Input
-                          type="password"
-                          value={newSecretValue}
-                          onChange={(e) => setNewSecretValue(e.target.value)}
-                          className="flex-1 font-mono"
-                          placeholder="value"
-                        />
-                        <Button
-                          onClick={handleAddSecret}
-                          disabled={savingSecret || !newSecretKey || !newSecretValue}
-                        >
-                          {savingSecret ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add'}
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
+              <RequiredSecretsPanel
+                tenantId={tenant.id}
+                appId={selectedApp.id}
+                onClose={() => setShowSecretsFor(null)}
+              />
             )}
           </div>
         </div>

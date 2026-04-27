@@ -12,6 +12,8 @@ import { CheckCircle, Plus, ChevronRight } from 'lucide-react';
 import type { ToolCallProps } from '../../lib/api/agents';
 import { VALIDATORS, HTML_TYPE, TEXTAREA_TYPES } from '../../lib/field-validators';
 import type { FieldType } from '../../lib/field-validators';
+import { RequiredSecretsPanel } from '../secrets/RequiredSecretsPanel';
+import { getAppRequiredSecrets } from '../../lib/api/app-secrets';
 
 const CATEGORY_COLORS: Record<string, string> = {
   integration:      'bg-blue-100 text-blue-800',
@@ -365,6 +367,71 @@ export function ConfirmAddStepsWidget({ props, onConfirm, onReject, disabled }: 
           disabled={disabled}
         >
           Not quite
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ── RequiredSecretsWidget ──────────────────────────────────────────────────────
+
+interface RequiredSecretsWidgetProps {
+  props: ToolCallProps & { tenantId: string; appId: string };
+  onSubmit: (result: string) => void;
+  disabled: boolean;
+}
+
+export function RequiredSecretsWidget({ props, onSubmit, disabled }: RequiredSecretsWidgetProps) {
+  const { message = 'Your workflow needs these credentials.', tenantId, appId } = props;
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleDone = async () => {
+    setSubmitting(true);
+    try {
+      const diff = await getAppRequiredSecrets(tenantId, appId);
+      const totalRequired = diff.required.length;
+      const filled = diff.present.length;
+      const stillMissing = diff.missing.map(s => s.key);
+      const summary = stillMissing.length === 0
+        ? `All ${totalRequired} required secrets are configured.`
+        : `Filled ${filled} of ${totalRequired} required secrets; ${stillMissing.length} still missing: ${stillMissing.join(', ')}`;
+      onSubmit(summary);
+    } catch {
+      onSubmit('User finished managing secrets (status unknown)');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSkip = () => {
+    onSubmit('User deferred filling required secrets');
+  };
+
+  return (
+    <div className="mt-2 rounded-xl border border-indigo-100 bg-indigo-50 p-3 space-y-2">
+      <p className="text-xs font-semibold text-indigo-700">{message}</p>
+      <RequiredSecretsPanel
+        tenantId={tenantId}
+        appId={appId}
+        message={message}
+      />
+      <div className="flex gap-2 pt-1">
+        <Button
+          size="sm"
+          className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs"
+          onClick={handleDone}
+          disabled={disabled || submitting}
+        >
+          {submitting ? 'Reporting...' : 'Done'}
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="text-xs"
+          onClick={handleSkip}
+          disabled={disabled || submitting}
+        >
+          Skip
         </Button>
       </div>
     </div>

@@ -51,6 +51,9 @@ export function TenantDetail() {
             <p className="text-sm text-muted-foreground">@{tenant.slug}</p>
           </div>
           <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={() => navigate(`/tenants/${id}/secrets`)}>
+              Manage Secrets
+            </Button>
             <div className="text-right">
               <p className="text-xs text-muted-foreground uppercase tracking-wider">Status</p>
               <p className="text-sm font-semibold capitalize">{tenant.status}</p>
