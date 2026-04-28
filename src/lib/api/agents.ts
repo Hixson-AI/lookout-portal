@@ -121,6 +121,9 @@ export interface ToolCallProps {
   // confirm_add_steps
   summary?: string;
   trigger?: { type: string; schedule?: string };
+  // multi-field progress (used by field_input when configuring a step's fields one at a time)
+  stepIndex?: number;
+  totalSteps?: number;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }

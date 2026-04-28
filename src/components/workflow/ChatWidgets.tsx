@@ -142,7 +142,13 @@ export function FieldInputWidget({ props, onSubmit, disabled }: FieldInputWidget
     min_length,
     max_length,
     pattern,
+    stepIndex,
+    totalSteps,
   } = props;
+  const showProgress =
+    typeof stepIndex === 'number' &&
+    typeof totalSteps === 'number' &&
+    totalSteps > 1;
   const hasDefault = default_value.trim().length > 0;
   const [editing, setEditing] = useState(!hasDefault);
   const [value, setValue] = useState(default_value);
@@ -214,6 +220,11 @@ export function FieldInputWidget({ props, onSubmit, disabled }: FieldInputWidget
 
   return (
     <div className="mt-2 rounded-xl border border-indigo-100 bg-indigo-50 p-3 space-y-2">
+      {showProgress && (
+        <p className="text-[10px] uppercase tracking-wide text-indigo-400">
+          Field {stepIndex} of {totalSteps}
+        </p>
+      )}
       <label className="block text-xs font-semibold text-indigo-700">{label}</label>
 
       {!editing ? (
@@ -540,105 +551,6 @@ export function RequiredSecretsWidget({ props, onSubmit, disabled }: RequiredSec
           className="text-xs"
           onClick={handleSkip}
           disabled={disabled || submitting}
-        >
-          Skip
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-// ── GuidedFillWidget ───────────────────────────────────────────────────────
-
-interface GuidedFillWidgetProps {
-  props: ToolCallProps;
-  onSubmit: (result: string) => void;
-  disabled: boolean;
-}
-
-export function GuidedFillWidget({ props, onSubmit, disabled }: GuidedFillWidgetProps) {
-  const {
-    stepName = 'Step',
-    missingFields = [],
-  } = props;
-
-  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
-  const [currentFieldIndex, setCurrentFieldIndex] = useState(0);
-
-  const currentField = missingFields[currentFieldIndex] as string | undefined;
-
-  const handleFieldSubmit = () => {
-    if (!currentField) return;
-
-    const value = fieldValues[currentField] || '';
-    setFieldValues(prev => ({ ...prev, [currentField]: value }));
-
-    if (currentFieldIndex < missingFields.length - 1) {
-      setCurrentFieldIndex(currentFieldIndex + 1);
-    } else {
-      const allValues = { ...fieldValues, [currentField]: value };
-      onSubmit(JSON.stringify(allValues));
-    }
-  };
-
-  const handleSkip = () => {
-    onSubmit('User skipped guided fill');
-  };
-
-  if (!currentField) {
-    return (
-      <div className="mt-2 rounded-xl border border-indigo-100 bg-indigo-50 p-3 space-y-2">
-        <p className="text-xs font-semibold text-indigo-700">{stepName}</p>
-        <p className="text-xs text-gray-600">No missing fields to fill.</p>
-        <Button
-          size="sm"
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs"
-          onClick={() => onSubmit(JSON.stringify(fieldValues))}
-          disabled={disabled}
-        >
-          <ChevronRight className="h-3.5 w-3.5 mr-1" />
-          Continue
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="mt-2 rounded-xl border border-indigo-100 bg-indigo-50 p-3 space-y-2">
-      <p className="text-xs font-semibold text-indigo-700">{stepName}</p>
-      <p className="text-xs text-gray-600">
-        Field {currentFieldIndex + 1} of {missingFields.length}
-      </p>
-
-      <div className="space-y-1">
-        <label className="block text-xs font-medium text-gray-700">{currentField}</label>
-        <input
-          type="text"
-          value={fieldValues[currentField] || ''}
-          onChange={e => setFieldValues(prev => ({ ...prev, [currentField]: e.target.value }))}
-          onKeyDown={e => e.key === 'Enter' && handleFieldSubmit()}
-          placeholder={`Enter ${currentField}`}
-          disabled={disabled}
-          className="w-full px-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:opacity-50"
-        />
-      </div>
-
-      <div className="flex gap-2 pt-1">
-        <Button
-          size="sm"
-          className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs"
-          onClick={handleFieldSubmit}
-          disabled={disabled}
-        >
-          <ChevronRight className="h-3.5 w-3.5 mr-1" />
-          {currentFieldIndex < missingFields.length - 1 ? 'Next' : 'Done'}
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          className="text-xs"
-          onClick={handleSkip}
-          disabled={disabled}
         >
           Skip
         </Button>
