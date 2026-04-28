@@ -18,13 +18,21 @@ export interface ValidationError {
  * Validate a config object against a JSON Schema.
  * Returns array of validation errors (empty if valid).
  */
+type JsonSchema = {
+  type?: string;
+  properties?: Record<string, JsonSchema>;
+  required?: string[];
+  enum?: unknown[];
+  minimum?: number;
+  maximum?: number;
+  minLength?: number;
+  maxLength?: number;
+  pattern?: string;
+};
+
 export function validateSchema(
   config: Record<string, unknown>,
-  schema: {
-    type?: string;
-    properties?: Record<string, any>;
-    required?: string[];
-  }
+  schema: JsonSchema
 ): ValidationError[] {
   const errors: ValidationError[] = [];
   const properties = schema.properties ?? {};
@@ -57,7 +65,7 @@ export function validateSchema(
   return errors;
 }
 
-function validateField(field: string, value: unknown, schema: any): ValidationError[] {
+function validateField(field: string, value: unknown, schema: JsonSchema): ValidationError[] {
   const errors: ValidationError[] = [];
 
   // Type validation
