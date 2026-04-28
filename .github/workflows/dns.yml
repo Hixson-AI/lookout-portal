@@ -50,7 +50,7 @@ permissions:
 
 jobs:
   dns:
-    runs-on: [self-hosted, fly, x64]
+    runs-on: fly-runners
     steps:
       - uses: actions/checkout@v4
       

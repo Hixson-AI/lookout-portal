@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   rubric:
-    runs-on: [self-hosted, fly, x64]
+    runs-on: fly-runners
     environment: dev
     env:
       OPENROUTER_E2E_KEY: ${{ secrets.OPENROUTER_E2E_KEY }}
