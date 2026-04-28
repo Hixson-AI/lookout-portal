@@ -106,6 +106,8 @@ export function BuilderChat({ tenantId, workflow, collapsed, appId, onApplySteps
     try {
       const result = await apiChat(tenantId, newHistory, workflow);
 
+      console.log('Chat API result:', result);
+
       const assistantDisplay: DisplayMessage = {
         id: msgId(),
         role: 'assistant',
@@ -116,6 +118,7 @@ export function BuilderChat({ tenantId, workflow, collapsed, appId, onApplySteps
         rawToolCalls: result.rawToolCalls ?? undefined,
       };
 
+      console.log('Adding assistant message:', assistantDisplay);
       setMessages(prev => [...prev, assistantDisplay]);
 
       const assistantApiMsg: ChatApiMessage = {
