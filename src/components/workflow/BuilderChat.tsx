@@ -95,9 +95,27 @@ export function BuilderChat({ tenantId, workflow, collapsed, appId, onApplySteps
     const userMsg: DisplayMessage = { id: msgId(), role: 'user', text: userText };
     setMessages(prev => [...prev, userMsg]);
 
+    // Auto-recovery: inject placeholder tool responses for any unresolved tool_calls
+    // This prevents OpenAI API error when tool_call_ids don't have response messages
+    let historyToAdd = toolResults ?? [{ role: 'user', content: userText }];
+    const lastAssistantMsg = [...apiHistory].reverse().find(m => m.role === 'assistant' && m.toolCalls?.length);
+    if (lastAssistantMsg && lastAssistantMsg.toolCalls) {
+      const existingToolResponses = new Set(apiHistory.filter(m => m.role === 'tool').map(m => m.toolCallId));
+      const missingToolCalls = lastAssistantMsg.toolCalls.filter(tc => !existingToolResponses.has(tc.id));
+      if (missingToolCalls.length > 0) {
+        console.log('Auto-recovering missing tool responses for:', missingToolCalls.map(tc => tc.id));
+        const placeholderResponses: ChatApiMessage[] = missingToolCalls.map(tc => ({
+          role: 'tool' as const,
+          content: '<skipped>',
+          toolCallId: tc.id,
+        }));
+        historyToAdd = [...placeholderResponses, ...historyToAdd];
+      }
+    }
+
     const newHistory: ChatApiMessage[] = [
       ...apiHistory,
-      ...(toolResults ?? [{ role: 'user', content: userText }]),
+      ...historyToAdd,
     ];
     setApiHistory(newHistory);
     setInput('');
