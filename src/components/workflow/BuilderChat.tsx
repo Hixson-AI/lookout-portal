@@ -110,6 +110,9 @@ export function BuilderChat({ tenantId, workflow, collapsed, appId, onApplySteps
         throw new Error('API returned null/undefined result');
       }
 
+      console.log('API result received:', result);
+      console.log('Has toolCall:', !!result.toolCall, 'Tool name:', result.toolCall?.tool);
+
       const assistantDisplay: DisplayMessage = {
         id: msgId(),
         role: 'assistant',
@@ -120,7 +123,12 @@ export function BuilderChat({ tenantId, workflow, collapsed, appId, onApplySteps
         rawToolCalls: result.rawToolCalls ?? undefined,
       };
 
-      setMessages(prev => [...prev, assistantDisplay]);
+      console.log('Assistant display message:', assistantDisplay);
+      setMessages(prev => {
+        const newMessages = [...prev, assistantDisplay];
+        console.log('Messages after adding:', newMessages);
+        return newMessages;
+      });
 
       const assistantApiMsg: ChatApiMessage = {
         role: 'assistant',

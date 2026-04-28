@@ -61,11 +61,15 @@ export async function apiRequest<T>(
   }
 
   const json = await response.json() as unknown;
+  console.log('API raw response:', json);
   // Unwrap data property if present (backend pattern)
   const raw = (typeof json === 'object' && json !== null && 'data' in json)
     ? (json as ApiResponse<T>).data
     : json as T;
-  return shallowCamelize(raw);
+  console.log('API unwrapped data:', raw);
+  const camelized = shallowCamelize(raw);
+  console.log('API camelized result:', camelized);
+  return camelized;
 }
 
 export const api = {
