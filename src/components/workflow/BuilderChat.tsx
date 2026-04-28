@@ -19,6 +19,8 @@ import {
   ChoiceSelectWidget,
   ConfirmAddStepsWidget,
   RequiredSecretsWidget,
+  GuidedFillWidget,
+  TestStepWidget,
 } from './ChatWidgets';
 import { chat as apiChat } from '../../lib/api/agents';
 import type { ChatApiMessage, RawToolCall, ToolCallProps } from '../../lib/api/agents';
@@ -243,6 +245,24 @@ export function BuilderChat({ tenantId, workflow, collapsed, appId, onApplySteps
         <RequiredSecretsWidget
           {...commonProps}
           props={{ ...props, tenantId, appId }}
+          onSubmit={result => handleWidgetSubmit(msg.id, tcId, result)}
+        />
+      );
+    }
+
+    if (tool === 'guided_fill') {
+      return (
+        <GuidedFillWidget
+          {...commonProps}
+          onSubmit={result => handleWidgetSubmit(msg.id, tcId, result)}
+        />
+      );
+    }
+
+    if (tool === 'test_step') {
+      return (
+        <TestStepWidget
+          {...commonProps}
           onSubmit={result => handleWidgetSubmit(msg.id, tcId, result)}
         />
       );
