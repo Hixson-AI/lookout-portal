@@ -220,6 +220,39 @@ export default function AppBuilder() {
     setWorkflow(next)
   }, [])
 
+  /**
+   * Apply default values from catalog inputSchema to a step's config.
+   * Pre-fills optional fields with their default values when a step is landed.
+   */
+  const applyCatalogDefaults = useCallback((
+    stepId: string,
+    config: Record<string, unknown> = {}
+  ): Record<string, unknown> => {
+    const stepTail = stepId.includes(":") ? stepId.split(":").slice(1).join(":") : stepId
+    const item =
+      rawCatalog.find((a) => (a.actionType ?? a.id) === stepId) ??
+      rawCatalog.find((a) => {
+        const key = a.actionType ?? a.id
+        const tail = key.includes(":") ? key.split(":").slice(1).join(":") : key
+        return tail === stepTail
+      })
+
+    if (!item?.inputSchema) return config
+
+    const schema = item.inputSchema as { properties?: Record<string, any> }
+    const properties = schema.properties ?? {}
+    const result = { ...config }
+
+    for (const [key, def] of Object.entries(properties)) {
+      // Only apply defaults if the field is not already set
+      if (!(key in result) && def.default !== undefined) {
+        result[key] = def.default
+      }
+    }
+
+    return result
+  }, [rawCatalog])
+
   const handleApplySteps = useCallback(
     (
       steps: Array<{
@@ -234,7 +267,7 @@ export default function AppBuilder() {
         id: `step_ai_${Date.now()}_${i}`,
         stepId: s.stepId,
         name: s.name,
-        config: s.config ?? {},
+        config: applyCatalogDefaults(s.stepId, s.config),
       }))
       updateWorkflow({
         ...workflow,
@@ -248,7 +281,7 @@ export default function AppBuilder() {
       })
       setChatCollapsed(true)
     },
-    [workflow, updateWorkflow]
+    [workflow, updateWorkflow, applyCatalogDefaults]
   )
 
   // ── Autosave ────────────────────────────────────────────────────────
