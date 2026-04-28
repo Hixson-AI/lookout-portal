@@ -95,34 +95,28 @@ export function BuilderChat({ tenantId, workflow, collapsed, appId, onApplySteps
     const userMsg: DisplayMessage = { id: msgId(), role: 'user', text: userText };
     setMessages(prev => [...prev, userMsg]);
 
-    // Auto-recovery: inject placeholder tool responses for any unresolved tool_calls
-    // Tool responses must appear immediately after the assistant message with tool_calls
+    // Build the message history correctly: tool responses must immediately follow assistant messages with tool_calls
     let newHistory = [...apiHistory];
-    const lastAssistantMsg = [...newHistory].reverse().find(m => m.role === 'assistant' && m.toolCalls?.length);
-    if (lastAssistantMsg && lastAssistantMsg.toolCalls) {
-      const existingToolResponses = new Set(newHistory.filter(m => m.role === 'tool').map(m => m.toolCallId));
-      const missingToolCalls = lastAssistantMsg.toolCalls.filter(tc => !existingToolResponses.has(tc.id));
-      if (missingToolCalls.length > 0) {
-        console.log('Auto-recovering missing tool responses for:', missingToolCalls.map(tc => tc.id));
-        const placeholderResponses: ChatApiMessage[] = missingToolCalls.map(tc => ({
-          role: 'tool' as const,
-          content: '<skipped>',
-          toolCallId: tc.id,
-        }));
-        // Find the index of the last assistant message with tool_calls
+
+    // If toolResults are provided (from widget submission), insert them immediately after the last assistant message with tool_calls
+    if (toolResults && toolResults.length > 0) {
+      const lastAssistantMsg = [...newHistory].reverse().find(m => m.role === 'assistant' && m.toolCalls?.length);
+      if (lastAssistantMsg) {
         const lastAssistantIndex = newHistory.findIndex(m => m === lastAssistantMsg);
-        // Insert tool responses immediately after that assistant message
+        // Insert tool results immediately after the assistant message
         newHistory = [
           ...newHistory.slice(0, lastAssistantIndex + 1),
-          ...placeholderResponses,
+          ...toolResults,
           ...newHistory.slice(lastAssistantIndex + 1),
         ];
+      } else {
+        // No assistant message with tool_calls, just append
+        newHistory = [...newHistory, ...toolResults];
       }
     }
 
-    // Add the new user message and any tool results
-    const newMessages = toolResults ?? [{ role: 'user', content: userText }];
-    newHistory = [...newHistory, ...newMessages];
+    // Add the user message at the end
+    newHistory = [...newHistory, { role: 'user', content: userText }];
     setApiHistory(newHistory);
     setInput('');
     setLoading(true);
