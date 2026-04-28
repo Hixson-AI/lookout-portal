@@ -106,7 +106,9 @@ export function BuilderChat({ tenantId, workflow, collapsed, appId, onApplySteps
     try {
       const result = await apiChat(tenantId, newHistory, workflow);
 
-      console.log('Chat API result:', result);
+      if (!result) {
+        throw new Error('API returned null/undefined result');
+      }
 
       const assistantDisplay: DisplayMessage = {
         id: msgId(),
@@ -118,7 +120,6 @@ export function BuilderChat({ tenantId, workflow, collapsed, appId, onApplySteps
         rawToolCalls: result.rawToolCalls ?? undefined,
       };
 
-      console.log('Adding assistant message:', assistantDisplay);
       setMessages(prev => [...prev, assistantDisplay]);
 
       const assistantApiMsg: ChatApiMessage = {
@@ -128,6 +129,7 @@ export function BuilderChat({ tenantId, workflow, collapsed, appId, onApplySteps
       };
       setApiHistory(prev => [...prev, assistantApiMsg]);
     } catch (err: any) {
+      console.error('Chat API error:', err);
       setMessages(prev => [
         ...prev,
         { id: msgId(), role: 'assistant', text: `Sorry, something went wrong: ${err?.message ?? 'Unknown error'}` },
