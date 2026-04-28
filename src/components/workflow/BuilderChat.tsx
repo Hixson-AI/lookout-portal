@@ -114,8 +114,10 @@ export function BuilderChat({ tenantId, workflow, collapsed, appId, onApplySteps
       }
     }
 
-    // Add the user message at the end
-    newHistory = [...newHistory, { role: 'user', content: userText }];
+    // Add the user message at the end (only if we're not submitting a widget result)
+    if (userText || !toolResults) {
+      newHistory = [...newHistory, { role: 'user', content: userText }];
+    }
     setApiHistory(newHistory);
     setInput('');
     setLoading(true);
@@ -180,9 +182,9 @@ export function BuilderChat({ tenantId, workflow, collapsed, appId, onApplySteps
       content: result,
       toolCallId,
     };
-    setApiHistory(prev => [...prev, toolResultMsg]);
 
-    send(`(widget result: ${result})`, [toolResultMsg]);
+    // Don't add a user message when submitting widget results — the tool message IS the response to the LLM
+    send('', [toolResultMsg]);
   }, [send]);
 
   // ── confirm_add_steps handler ────────────────────────────────────────────
