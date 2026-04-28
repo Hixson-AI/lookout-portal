@@ -96,11 +96,11 @@ export function BuilderChat({ tenantId, workflow, collapsed, appId, onApplySteps
     setMessages(prev => [...prev, userMsg]);
 
     // Auto-recovery: inject placeholder tool responses for any unresolved tool_calls
-    // This prevents OpenAI API error when tool_call_ids don't have response messages
-    let historyToAdd = toolResults ?? [{ role: 'user', content: userText }];
-    const lastAssistantMsg = [...apiHistory].reverse().find(m => m.role === 'assistant' && m.toolCalls?.length);
+    // Tool responses must appear immediately after the assistant message with tool_calls
+    let newHistory = [...apiHistory];
+    const lastAssistantMsg = [...newHistory].reverse().find(m => m.role === 'assistant' && m.toolCalls?.length);
     if (lastAssistantMsg && lastAssistantMsg.toolCalls) {
-      const existingToolResponses = new Set(apiHistory.filter(m => m.role === 'tool').map(m => m.toolCallId));
+      const existingToolResponses = new Set(newHistory.filter(m => m.role === 'tool').map(m => m.toolCallId));
       const missingToolCalls = lastAssistantMsg.toolCalls.filter(tc => !existingToolResponses.has(tc.id));
       if (missingToolCalls.length > 0) {
         console.log('Auto-recovering missing tool responses for:', missingToolCalls.map(tc => tc.id));
@@ -109,14 +109,20 @@ export function BuilderChat({ tenantId, workflow, collapsed, appId, onApplySteps
           content: '<skipped>',
           toolCallId: tc.id,
         }));
-        historyToAdd = [...placeholderResponses, ...historyToAdd];
+        // Find the index of the last assistant message with tool_calls
+        const lastAssistantIndex = newHistory.findIndex(m => m === lastAssistantMsg);
+        // Insert tool responses immediately after that assistant message
+        newHistory = [
+          ...newHistory.slice(0, lastAssistantIndex + 1),
+          ...placeholderResponses,
+          ...newHistory.slice(lastAssistantIndex + 1),
+        ];
       }
     }
 
-    const newHistory: ChatApiMessage[] = [
-      ...apiHistory,
-      ...historyToAdd,
-    ];
+    // Add the new user message and any tool results
+    const newMessages = toolResults ?? [{ role: 'user', content: userText }];
+    newHistory = [...newHistory, ...newMessages];
     setApiHistory(newHistory);
     setInput('');
     setLoading(true);
