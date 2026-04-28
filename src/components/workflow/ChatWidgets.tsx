@@ -129,20 +129,87 @@ interface FieldInputWidgetProps {
 
 
 export function FieldInputWidget({ props, onSubmit, disabled }: FieldInputWidgetProps) {
-  const { label = 'Enter value', placeholder = '', hint, default_value = '', field_type = 'text' } = props;
+  const {
+    label = 'Enter value',
+    placeholder = '',
+    hint,
+    default_value = '',
+    field_type = 'text',
+    required = true,
+    allow_skip,
+    min,
+    max,
+    min_length,
+    max_length,
+    pattern,
+  } = props;
   const hasDefault = default_value.trim().length > 0;
   const [editing, setEditing] = useState(!hasDefault);
   const [value, setValue] = useState(default_value);
   const [touched, setTouched] = useState(false);
 
-  const validate = VALIDATORS[field_type as FieldType] ?? VALIDATORS.text;
+  // Skip button surfaces when caller explicitly enables it, or by default for
+  // optional fields. Required fields never show Skip.
+  const skipEnabled = required ? false : (allow_skip ?? true);
+
+  const typeValidate = VALIDATORS[field_type as FieldType] ?? VALIDATORS.text;
+
+  /**
+   * Compose the type validator with JSON Schema-style constraints supplied by
+   * the LLM (mirrors inputSchema min/max/length/pattern). Empty values short-
+   * circuit when the field is optional so the user can submit nothing.
+   */
+  const validate = (v: string): string | null => {
+    const trimmed = v.trim();
+    if (!trimmed) {
+      return required ? 'Required' : null;
+    }
+    const typeErr = typeValidate(v);
+    if (typeErr) return typeErr;
+
+    // Numeric range — only meaningful for numeric field types.
+    const numericTypes: FieldType[] = ['number', 'integer', 'percentage', 'port', 'currency'];
+    if (numericTypes.includes(field_type as FieldType)) {
+      const n = Number(trimmed);
+      if (typeof min === 'number' && n < min) return `Must be ≥ ${min}`;
+      if (typeof max === 'number' && n > max) return `Must be ≤ ${max}`;
+    }
+
+    if (typeof min_length === 'number' && trimmed.length < min_length) {
+      return `Must be at least ${min_length} characters`;
+    }
+    if (typeof max_length === 'number' && trimmed.length > max_length) {
+      return `Must be at most ${max_length} characters`;
+    }
+
+    if (typeof pattern === 'string' && pattern.length > 0) {
+      try {
+        if (!new RegExp(pattern).test(trimmed)) return 'Does not match required format';
+      } catch {
+        // Invalid regex from the model — silently ignore rather than block the user.
+      }
+    }
+
+    return null;
+  };
+
   const error = touched ? validate(value) : null;
   const isValid = !validate(value);
 
   const handleSubmit = () => {
     setTouched(true);
-    if (!value.trim() || !isValid) return;
-    onSubmit(value.trim());
+    if (!isValid) return;
+    const trimmed = value.trim();
+    if (!trimmed && !required) {
+      onSubmit('<not provided>');
+      return;
+    }
+    if (!trimmed) return;
+    onSubmit(trimmed);
+  };
+
+  const handleSkip = () => {
+    onSubmit('<not provided>');
   };
 
   return (
@@ -219,14 +286,34 @@ export function FieldInputWidget({ props, onSubmit, disabled }: FieldInputWidget
       )}
 
       {hint && <p className="text-xs text-gray-500">{hint}</p>}
-      <Button
-        size="sm"
-        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs disabled:opacity-40"
-        onClick={handleSubmit}
-        disabled={disabled || !value.trim() || (editing && !isValid)}
-      >
-        <ChevronRight className="h-3.5 w-3.5 mr-1" /> Confirm
-      </Button>
+      {!required && (
+        <p className="text-[10px] uppercase tracking-wide text-indigo-400">Optional</p>
+      )}
+      <div className="flex gap-2">
+        <Button
+          size="sm"
+          className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs disabled:opacity-40"
+          onClick={handleSubmit}
+          disabled={
+            disabled ||
+            (required && !value.trim()) ||
+            (editing && !!value.trim() && !isValid)
+          }
+        >
+          <ChevronRight className="h-3.5 w-3.5 mr-1" /> Confirm
+        </Button>
+        {skipEnabled && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-xs"
+            onClick={handleSkip}
+            disabled={disabled}
+          >
+            Skip
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
@@ -240,41 +327,64 @@ interface ChoiceSelectWidgetProps {
 }
 
 export function ChoiceSelectWidget({ props, onSubmit, disabled }: ChoiceSelectWidgetProps) {
-  const { label = 'Choose one', options = [] } = props;
-  const [selected, setSelected] = useState('');
+  const { label = 'Choose one', options = [], multi = false, required = true } = props;
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const toggle = (value: string) => {
+    if (disabled) return;
+    setSelected(prev => {
+      if (multi) {
+        const next = new Set(prev);
+        next.has(value) ? next.delete(value) : next.add(value);
+        return next;
+      }
+      return new Set([value]);
+    });
+  };
 
   const handleSubmit = () => {
-    if (!selected) return;
-    const opt = options.find(o => o.value === selected);
-    onSubmit(opt ? `${opt.label} (${opt.value})` : selected);
+    if (selected.size === 0) {
+      if (!required) onSubmit('<not provided>');
+      return;
+    }
+    const chosen = options.filter(o => selected.has(o.value));
+    onSubmit(chosen.map(o => `${o.label} (${o.value})`).join(', '));
   };
 
   return (
     <div className="mt-2 rounded-xl border border-indigo-100 bg-indigo-50 p-3 space-y-2">
       <p className="text-xs font-semibold text-indigo-700">{label}</p>
       <div className="grid grid-cols-1 gap-1">
-        {options.map(opt => (
-          <button
-            key={opt.value}
-            onClick={() => !disabled && setSelected(opt.value)}
-            disabled={disabled}
-            className={`text-left px-3 py-2 rounded-lg border text-sm transition-colors ${
-              selected === opt.value
-                ? 'border-indigo-400 bg-white shadow-sm font-medium text-indigo-700'
-                : 'border-gray-200 bg-white hover:border-indigo-300 text-gray-700'
-            } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-          >
-            {opt.label}
-          </button>
-        ))}
+        {options.map(opt => {
+          const isSelected = selected.has(opt.value);
+          return (
+            <button
+              key={opt.value}
+              onClick={() => toggle(opt.value)}
+              disabled={disabled}
+              className={`text-left px-3 py-2 rounded-lg border text-sm transition-colors flex items-center justify-between gap-2 ${
+                isSelected
+                  ? 'border-indigo-400 bg-white shadow-sm font-medium text-indigo-700'
+                  : 'border-gray-200 bg-white hover:border-indigo-300 text-gray-700'
+              } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+            >
+              <span>{opt.label}</span>
+              {isSelected && <CheckCircle className="h-4 w-4 text-indigo-500 flex-shrink-0" />}
+            </button>
+          );
+        })}
       </div>
+      {!required && (
+        <p className="text-[10px] uppercase tracking-wide text-indigo-400">Optional</p>
+      )}
       <Button
         size="sm"
         className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs"
         onClick={handleSubmit}
-        disabled={disabled || !selected}
+        disabled={disabled || (required && selected.size === 0)}
       >
-        <ChevronRight className="h-3.5 w-3.5 mr-1" /> Confirm
+        <ChevronRight className="h-3.5 w-3.5 mr-1" />
+        {multi && selected.size > 1 ? `Confirm ${selected.size} selections` : 'Confirm'}
       </Button>
     </div>
   );
