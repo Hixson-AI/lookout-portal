@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   deploy:
-    runs-on: fly-runners
+    runs-on: ubuntu-latest
     environment: dev
     env:
       FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

@@ -50,7 +50,7 @@ permissions:
 
 jobs:
   dns:
-    runs-on: fly-runners
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       
