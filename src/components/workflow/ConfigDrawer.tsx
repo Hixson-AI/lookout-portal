@@ -1,11 +1,37 @@
-import { useState } from "react"
-import { Zap, Loader2, Activity } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Zap, Loader2, Activity, X } from "lucide-react"
 import { Button } from "../ui/button"
-import { Drawer, DrawerHeader, DrawerTitle, DrawerContent } from "../ui/drawer"
+import { cn } from "../../lib/utils"
 import { ActionConfigPanel } from "./ActionConfigPanel"
 import { DataMappingPanel } from "./DataMappingPanel"
 import type { WorkflowStep } from "../../lib/types"
 import type { AgentAction } from "../../lib/api/actions"
+
+/**
+ * Locate a catalog entry for a given workflow step.
+ *
+ * Steps may carry a stepId that doesn't exactly match the catalog's
+ * `actionType` (e.g. AI-generated steps drop the `n8n:` / `action:` prefix,
+ * older imports may use the raw id). We try, in order:
+ *   1. exact match on actionType or id
+ *   2. match on the prefix-stripped tail (after `:`)
+ *   3. match where catalog tail equals the (un-prefixed) step.stepId
+ * This keeps platform-enricher schemas visible in the config dialog even when
+ * prefixes drift.
+ */
+function findCatalogItem<T extends { id: string; actionType: string | null }>(
+  catalog: T[],
+  stepId: string,
+): T | undefined {
+  const exact = catalog.find((c) => (c.actionType ?? c.id) === stepId)
+  if (exact) return exact
+  const stepTail = stepId.includes(":") ? stepId.split(":").slice(1).join(":") : stepId
+  return catalog.find((c) => {
+    const key = c.actionType ?? c.id
+    const tail = key.includes(":") ? key.split(":").slice(1).join(":") : key
+    return tail === stepTail
+  })
+}
 
 interface ConfigDrawerProps {
   open: boolean
@@ -46,21 +72,43 @@ export function ConfigDrawer({
 }: ConfigDrawerProps) {
   const [tab, setTab] = useState<"config" | "mapping">("config")
 
-  // Not rendered if no step selected
-  if (!step) return null
+  // Close on Escape
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onOpenChange(false)
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [open, onOpenChange])
 
-  const catalogItem = catalog.find((c) => (c.actionType ?? c.id) === step.stepId)
+  // Not rendered if no step selected or closed
+  if (!step || !open) return null
+
+  const catalogItem = findCatalogItem(catalog, step.stepId)
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} side="right" className="w-[380px] md:w-[420px] lg:w-[480px]">
-      <DrawerHeader className="border-b">
-        <div className="flex items-center justify-between w-full">
-          <DrawerTitle className="text-sm flex items-center gap-2">
-            <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary uppercase tracking-wide">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/50 backdrop-blur-[2px]"
+        onClick={() => onOpenChange(false)}
+      />
+      {/* Dialog panel */}
+      <div
+        className={cn(
+          "relative z-50 bg-card border border-border shadow-2xl rounded-xl",
+          "w-full max-w-2xl max-h-[90vh] flex flex-col fade-in"
+        )}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary uppercase tracking-wide shrink-0">
               {step.stepId.split(":")[1] ?? step.stepId}
             </span>
-            <span className="truncate max-w-[200px]">{step.name}</span>
-          </DrawerTitle>
+            <h2 className="text-sm font-semibold tracking-tight truncate">{step.name}</h2>
+          </div>
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"
@@ -82,10 +130,19 @@ export function ConfigDrawer({
             >
               Mapping
             </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0 ml-1"
+              onClick={() => onOpenChange(false)}
+              aria-label="Close"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
         </div>
-      </DrawerHeader>
-      <DrawerContent className="px-4 py-4">
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto px-4 py-4">
         {tab === "config" ? (
           <div className="space-y-4">
             <ActionConfigPanel
@@ -155,7 +212,8 @@ export function ConfigDrawer({
             }
           />
         )}
-      </DrawerContent>
-    </Drawer>
+        </div>
+      </div>
+    </div>
   )
 }

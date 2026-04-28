@@ -523,9 +523,15 @@ export default function AppBuilder() {
   const mappableFields = useMemo(() => {
     if (!selectedStep) return []
     if (MAPPABLE_FIELDS[selectedStep.stepId]) return MAPPABLE_FIELDS[selectedStep.stepId]
-    const item = rawCatalog.find(
-      (a) => (a.actionType ?? a.id) === selectedStep.stepId
-    )
+    const stepId = selectedStep.stepId
+    const stepTail = stepId.includes(":") ? stepId.split(":").slice(1).join(":") : stepId
+    const item =
+      rawCatalog.find((a) => (a.actionType ?? a.id) === stepId) ??
+      rawCatalog.find((a) => {
+        const key = a.actionType ?? a.id
+        const tail = key.includes(":") ? key.split(":").slice(1).join(":") : key
+        return tail === stepTail
+      })
     return item?.inputSchema
       ? schemaToMappableFields(item.inputSchema as Record<string, unknown>)
       : []

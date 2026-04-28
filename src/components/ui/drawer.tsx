@@ -35,12 +35,11 @@ export function Drawer({ open, onOpenChange, children, className, side = "right"
       {/* Panel */}
       <div
         className={cn(
-          "fixed z-50 bg-background shadow-2xl transition-transform duration-300 ease-out",
+          "fixed z-50 bg-card shadow-2xl transition-transform duration-300 ease-out flex flex-col",
           sideClasses[side],
           transformClasses[side],
           className
         )}
-        style={{ backgroundColor: "var(--bg-card)" }}
       >
         {children}
       </div>

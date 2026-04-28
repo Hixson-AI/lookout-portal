@@ -24,7 +24,7 @@ const Dialog = ({ open, onOpenChange, children, className }: { open: boolean; on
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-black/50" onClick={() => onOpenChange(false)} />
-      <div className={cn("relative z-50 card-elevated rounded-lg p-6 max-w-md w-full mx-4 fade-in", className)} style={{ backgroundColor: 'var(--bg-card)' }}>
+      <div className={cn("relative z-50 bg-card border border-border shadow-2xl rounded-lg p-6 max-w-md w-full mx-4 fade-in", className)}>
         {childrenWithProps}
       </div>
     </div>
