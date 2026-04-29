@@ -72,7 +72,7 @@ function msgId() {
 const GREETING: DisplayMessage = {
   id: 'greeting',
   role: 'assistant',
-  text: "Hi! I'm your Lookout workflow builder. Tell me what you'd like to automate and I'll help you design it. For example: \"Send a weekly SMS report to our team\" or \"Alert me by email when a webhook fires\".",
+  text: "Hi! I'm your lukout workflow builder. Tell me what you'd like to automate and I'll help you design it. For example: \"Send a weekly SMS report to our team\" or \"Alert me by email when a webhook fires\".",
 };
 
 // ── Component ──────────────────────────────────────────────────────────────

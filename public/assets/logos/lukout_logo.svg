@@ -1,0 +1,21 @@
+<svg width="400" height="120" viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Jost:wght@400;500&amp;display=swap');</style>
+  </defs>
+  <rect width="400" height="120" fill="#EAF0EC"/>
+  <g transform="translate(105, 42)">
+    <rect x="0"  y="0"  width="5"  height="36" rx="1.5" fill="#4A5C52"/>
+    <rect x="0"  y="0"  width="16" height="5"  rx="1.5" fill="#4A5C52"/>
+    <rect x="0"  y="31" width="16" height="5"  rx="1.5" fill="#4A5C52"/>
+    <rect x="8"  y="7"  width="20" height="5"  rx="1"   fill="#4A5C52"/>
+    <rect x="8"  y="16" width="14" height="5"  rx="1"   fill="#7A9186"/>
+    <rect x="8"  y="25" width="8"  height="5"  rx="1"   fill="#AEBFB8"/>
+    <rect x="58" y="0"  width="5"  height="36" rx="1.5" fill="#4A5C52"/>
+    <rect x="47" y="0"  width="16" height="5"  rx="1.5" fill="#4A5C52"/>
+    <rect x="47" y="31" width="16" height="5"  rx="1.5" fill="#4A5C52"/>
+    <rect x="35" y="7"  width="20" height="5"  rx="1"   fill="#4A5C52"/>
+    <rect x="41" y="16" width="14" height="5"  rx="1"   fill="#7A9186"/>
+    <rect x="47" y="25" width="8"  height="5"  rx="1"   fill="#AEBFB8"/>
+    <text x="76" y="24" font-family="'Jost', sans-serif" font-size="18" font-weight="500" letter-spacing="0.04em" fill="#1A2B22">lukout.io</text>
+  </g>
+</svg>

@@ -10,7 +10,10 @@ export function Header() {
   return (
     <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-40 shadow-sm">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gradient">lukout Portal</h1>
+        <div className="flex items-center gap-3">
+          <img src="/assets/logos/lukout_mark.svg" alt="lukout" className="h-8 w-8" />
+          <h1 className="text-xl font-bold text-gradient">lukout Portal</h1>
+        </div>
         {user && (
           <div className="flex items-center gap-3">
             {/* Desktop navigation */}
