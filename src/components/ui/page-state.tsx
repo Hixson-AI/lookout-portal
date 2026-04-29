@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
-import { Loader2, AlertCircle, Inbox } from 'lucide-react';
+import { AlertCircle, Inbox } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { LukoutLoader } from './lukout-loader';
 
 type Variant = 'loading' | 'empty' | 'error' | 'skeleton';
 
@@ -16,7 +17,7 @@ export interface PageStateProps {
 const defaults: Record<Variant, { title: string; icon: ReactNode; tone: string }> = {
   loading: {
     title: 'Loading...',
-    icon: <Loader2 className="h-6 w-6 animate-spin" />,
+    icon: <LukoutLoader size={32} />,
     tone: 'text-muted-foreground',
   },
   empty: {

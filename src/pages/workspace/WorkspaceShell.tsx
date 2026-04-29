@@ -3,6 +3,7 @@ import { TenantSwitcher } from '../../components/layout/TenantSwitcher';
 import { Button } from '../../components/ui/button';
 import { useCommandPalette } from '../../components/palette/CommandPalette';
 import { useTenantContext } from '../../contexts/TenantContext';
+import { LukoutLoaderCentered } from '../../components/ui/lukout-loader';
 
 export function WorkspaceShell() {
   const { currentTenant } = useTenantContext();
@@ -10,7 +11,7 @@ export function WorkspaceShell() {
   const location = useLocation();
 
   if (!currentTenant) {
-    return <div className="min-h-screen flex items-center justify-center">Loading workspace...</div>;
+    return <LukoutLoaderCentered label="Loading workspace..." />;
   }
 
   const tenantSlug = currentTenant.slug;

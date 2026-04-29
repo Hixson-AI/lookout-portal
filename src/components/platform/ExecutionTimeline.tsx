@@ -6,7 +6,8 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CheckCircle2, Clock, Loader2, XCircle } from 'lucide-react';
+import { CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { LukoutSpinner } from '../ui/lukout-loader';
 import {
   getExecutionSteps,
   openExecutionEvents,
@@ -105,7 +106,7 @@ export function ExecutionTimeline({
   if (loading) {
     return (
       <div className="text-center py-8 text-muted-foreground flex items-center justify-center gap-2">
-        <Loader2 className="w-4 h-4 animate-spin" /> Loading timeline…
+        <LukoutSpinner size={16} /> Loading timeline…
       </div>
     );
   }
@@ -299,7 +300,7 @@ function StatusIcon({ status, className }: { status: AppStepExecution['status'];
     case 'cancelled':
       return <XCircle className={className} />;
     case 'running':
-      return <Loader2 className={`animate-spin ${className}`} />;
+      return <LukoutSpinner size={16} className={className} />;
     case 'pending':
     case 'skipped':
     default:

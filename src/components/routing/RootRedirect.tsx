@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTenantContext } from '../../contexts/TenantContext';
+import { LukoutLoaderCentered } from '../ui/lukout-loader';
 
 export function RootRedirect() {
   const navigate = useNavigate();
@@ -13,10 +14,11 @@ export function RootRedirect() {
       navigate(`/${currentTenant.slug}`, { replace: true });
     } else if (availableTenants.length === 1) {
       navigate(`/${availableTenants[0].slug}`, { replace: true });
-    } else if (availableTenants.length > 1) {
+    } else {
+      // 0 or >1 tenants: route to selection screen (which handles the empty case).
       navigate('/select-tenant', { replace: true });
     }
   }, [currentTenant, availableTenants, loading, navigate]);
 
-  return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  return <LukoutLoaderCentered />;
 }

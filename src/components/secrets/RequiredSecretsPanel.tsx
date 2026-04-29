@@ -11,6 +11,7 @@ import { Badge } from '../ui/badge';
 import { Alert, AlertDescription } from '../ui/alert';
 import { getAppRequiredSecrets, augmentAppRequiredSecrets, setAppSecret, deleteAppSecret, getTenantSecrets, type RequiredSecretsDiff, type TenantSecretMeta } from '../../lib/api/app-secrets';
 import { AlertCircle, CheckCircle2, XCircle, RefreshCw, Globe } from 'lucide-react';
+import { LukoutSpinner } from '../ui/lukout-loader';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 
 interface RequiredSecretsPanelProps {
@@ -161,7 +162,7 @@ export function RequiredSecretsPanel({ tenantId, appId, onClose, message }: Requ
               >
                 {augmenting ? (
                   <>
-                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    <LukoutSpinner size={16} className="mr-2" />
                     Analyzing...
                   </>
                 ) : (

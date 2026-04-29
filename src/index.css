@@ -103,6 +103,44 @@
   .auth-bg {
     background: linear-gradient(135deg, #1E2C25 0%, #2A3D33 50%, #4A5C52 100%);
   }
+
+  /* lukout animated loader */
+  .lukout-loader .lk-bracket {
+    fill: hsl(var(--primary));
+  }
+  .lukout-loader .lk-arm {
+    fill: hsl(var(--primary));
+    opacity: 0;
+    transform-origin: left center;
+    animation: lk-arm-cycle 1.8s ease-in-out infinite;
+  }
+  .lukout-loader .lk-arm-1 {
+    animation-delay: 0s;
+  }
+  .lukout-loader .lk-arm-2 {
+    animation-delay: 0.2s;
+    fill: hsl(var(--muted-foreground));
+  }
+  .lukout-loader .lk-arm-3 {
+    animation-delay: 0.4s;
+    fill: hsl(var(--border));
+  }
+
+  @keyframes lk-arm-cycle {
+    0%   { opacity: 0; transform: scaleX(0.6); }
+    25%  { opacity: 1; transform: scaleX(1); }
+    55%  { opacity: 1; transform: scaleX(1); }
+    80%  { opacity: 0; transform: scaleX(0.6); }
+    100% { opacity: 0; transform: scaleX(0.6); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lukout-loader .lk-arm {
+      animation: none;
+      opacity: 0.85;
+      transform: none;
+    }
+  }
 }
 
 @layer base {

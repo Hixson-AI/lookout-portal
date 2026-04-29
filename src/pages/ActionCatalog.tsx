@@ -7,6 +7,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Sparkles, Search } from 'lucide-react';
 import { getCatalog, searchCatalog } from '../lib/api/actions';
 import type { AgentAction } from '../lib/api/actions';
+import { PageState } from '../components/ui/page-state';
 
 export default function ActionCatalog() {
   const [actions, setActions] = useState<AgentAction[]>([]);
@@ -110,7 +111,7 @@ export default function ActionCatalog() {
 
         {/* Step Cards */}
         {loading ? (
-          <div className="text-center py-12 text-gray-400">Loading actions…</div>
+          <PageState variant="loading" title="Loading actions…" />
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

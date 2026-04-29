@@ -5,7 +5,9 @@ import { api } from '../../lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { Plus, Play, Eye, Trash2, Clock, CheckCircle, XCircle, Loader2, Key, Settings2 } from 'lucide-react';
+import { Plus, Play, Eye, Trash2, Clock, CheckCircle, XCircle, Key, Settings2 } from 'lucide-react';
+import { LukoutSpinner } from '../ui/lukout-loader';
+import { PageState } from '../ui/page-state';
 import { ExecutionDetailDrawer } from '../platform/ExecutionDetailDrawer';
 import { RequiredSecretsPanel } from '../secrets/RequiredSecretsPanel';
 import { getAppRequiredSecrets } from '../../lib/api/app-secrets';
@@ -140,14 +142,14 @@ export function AppsTab({ tenant }: AppsTabProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed': return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'running': return <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />;
+      case 'running': return <LukoutSpinner size={16} />;
       case 'failed': return <XCircle className="h-4 w-4 text-red-500" />;
       default: return <Clock className="h-4 w-4 text-gray-400" />;
     }
   };
 
   if (loading) {
-    return <div className="text-center py-12 text-muted-foreground animate-pulse">Loading apps...</div>;
+    return <PageState variant="loading" title="Loading apps..." />;
   }
 
   if (error) {
@@ -240,7 +242,7 @@ export function AppsTab({ tenant }: AppsTabProps) {
                       disabled={triggering === app.id || app.status === 'archived'}
                       title="Trigger"
                     >
-                      {triggering === app.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
+                      {triggering === app.id ? <LukoutSpinner size={14} /> : <Play className="h-3.5 w-3.5" />}
                     </Button>
                     <Button
                       variant="ghost"
@@ -291,7 +293,7 @@ export function AppsTab({ tenant }: AppsTabProps) {
                 </CardHeader>
                 <CardContent>
                   {execLoading ? (
-                    <div className="text-center py-8 text-muted-foreground animate-pulse">Loading executions...</div>
+                    <PageState variant="loading" title="Loading executions..." />
                   ) : executions.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       No executions yet. Trigger the app to see results.

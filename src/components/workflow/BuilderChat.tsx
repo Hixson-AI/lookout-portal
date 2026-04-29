@@ -11,7 +11,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Sparkles, Send, Loader2, X, Bot } from 'lucide-react';
+import { Sparkles, Send, X, Bot } from 'lucide-react';
+import { LukoutSpinner } from '../ui/lukout-loader';
 import { Button } from '../ui/button';
 import {
   StepPickerWidget,
@@ -357,7 +358,7 @@ export function BuilderChat({ tenantId, workflow, collapsed, appId, onApplySteps
         {loading && (
           <div className="flex justify-start">
             <div className="flex items-center gap-1.5 text-gray-400">
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <LukoutSpinner size={16} />
               <span className="text-xs">Thinking…</span>
             </div>
           </div>
@@ -384,7 +385,7 @@ export function BuilderChat({ tenantId, workflow, collapsed, appId, onApplySteps
             disabled={!input.trim() || loading}
             className="bg-indigo-600 hover:bg-indigo-700 text-white flex-shrink-0 h-9 w-9 p-0"
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            {loading ? <LukoutSpinner size={16} /> : <Send className="h-4 w-4" />}
           </Button>
         </div>
         <p className="text-xs text-gray-400 mt-1.5">⏎ send · ⇧⏎ newline</p>

@@ -1,5 +1,6 @@
 import { useState } from "react"
-import { Globe, KeyRound, Lock, Plus, Trash2, Loader2 } from "lucide-react"
+import { Globe, KeyRound, Lock, Plus, Trash2 } from "lucide-react"
+import { LukoutSpinner } from "../ui/lukout-loader"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import {
@@ -203,7 +204,7 @@ export function WorkflowSettings({
                 disabled={savingSecret || !secretKey || !secretVal || !currentAppId}
               >
                 {savingSecret ? (
-                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                  <LukoutSpinner size={12} className="mr-1" />
                 ) : (
                   <Plus className="h-3 w-3 mr-1" />
                 )}

@@ -7,6 +7,7 @@ import { ApiKeyCreateDialog } from './ApiKeyCreateDialog';
 import { useState } from 'react';
 import { Plus, Globe, Calendar, Building2, BadgeCheck } from 'lucide-react';
 import { formatDate } from '../../lib/utils/formatters';
+import { PageState } from '../ui/page-state';
 
 interface OverviewTabProps {
   tenant: Tenant;
@@ -120,7 +121,7 @@ export function OverviewTab({ tenant }: OverviewTabProps) {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground animate-pulse">Loading API keys...</div>
+            <PageState variant="loading" title="Loading API keys..." />
           ) : (
             <ApiKeyList
               apiKeys={apiKeys || []}

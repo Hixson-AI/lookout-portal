@@ -12,7 +12,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Loader2, Play, RefreshCw, Ban, Eye } from 'lucide-react';
+import { Play, RefreshCw, Ban, Eye } from 'lucide-react';
+import { LukoutSpinner } from '../ui/lukout-loader';
 import { getTenants } from '../../lib/api/tenants';
 import { apiRequest } from '../../lib/api/index';
 import {
@@ -175,8 +176,8 @@ export function PlatformJobsTab({ toast }: Props) {
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 text-gray-500 py-12 justify-center">
-        <Loader2 className="w-4 h-4 animate-spin" /> Loading platform jobs…
+      <div className="flex items-center gap-2 text-muted-foreground py-12 justify-center">
+        <LukoutSpinner size={16} /> Loading platform jobs…
       </div>
     );
   }
@@ -219,7 +220,7 @@ export function PlatformJobsTab({ toast }: Props) {
                 size="sm"
               >
                 {running[app.id] ? (
-                  <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                  <LukoutSpinner size={12} className="mr-1" />
                 ) : (
                   <Play className="w-3 h-3 mr-1" />
                 )}
@@ -283,7 +284,7 @@ export function PlatformJobsTab({ toast }: Props) {
                             disabled={cancelling[r.id]}
                           >
                             {cancelling[r.id] ? (
-                              <Loader2 className="w-3 h-3 animate-spin" />
+                              <LukoutSpinner size={12} />
                             ) : (
                               <Ban className="w-3 h-3" />
                             )}

@@ -8,7 +8,8 @@
 
 import { useState } from 'react';
 import { Button } from '../ui/button';
-import { CheckCircle, Plus, ChevronRight, PlayCircle, Loader2, AlertCircle } from 'lucide-react';
+import { CheckCircle, Plus, ChevronRight, PlayCircle, AlertCircle } from 'lucide-react';
+import { LukoutSpinner } from '../ui/lukout-loader';
 import type { ToolCallProps } from '../../lib/api/agents';
 import { VALIDATORS, HTML_TYPE, TEXTAREA_TYPES } from '../../lib/field-validators';
 import type { FieldType } from '../../lib/field-validators';
@@ -623,7 +624,7 @@ export function TestStepWidget({ props, onSubmit, disabled }: TestStepWidgetProp
 
       {testing && (
         <div className="flex items-center justify-center gap-2 py-2">
-          <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
+          <LukoutSpinner size={16} />
           <span className="text-xs text-gray-600">Testing step...</span>
         </div>
       )}

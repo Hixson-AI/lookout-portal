@@ -2,13 +2,14 @@ import { useNavigate } from 'react-router-dom';
 import { useTenantContext } from '../contexts/TenantContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
+import { LukoutLoaderCentered } from '../components/ui/lukout-loader';
 
 export function SelectTenant() {
   const { availableTenants, setCurrentTenant, loading } = useTenantContext();
   const navigate = useNavigate();
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return <LukoutLoaderCentered />;
   }
 
   if (availableTenants.length === 0) {

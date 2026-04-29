@@ -4,7 +4,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Zap, Settings2, Play, Loader2, ShieldCheck, ChevronDown, ChevronUp, Eye, EyeOff, Sparkles } from 'lucide-react';
+import { Plus, Trash2, Zap, Settings2, Play, ShieldCheck, ChevronDown, ChevronUp, Eye, EyeOff, Sparkles } from 'lucide-react';
+import { LukoutSpinner } from '../ui/lukout-loader';
 import { triggerN8nSync } from '../../lib/api/platform';
 import { api } from '../../lib/api';
 import { Button } from '../ui/button';
@@ -791,7 +792,7 @@ function EnrichPrompt({ actionType, onEnriched }: { actionType?: string; onEnric
         disabled={enriching}
         className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-lg transition-colors"
       >
-        {enriching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+        {enriching ? <LukoutSpinner size={16} /> : <Sparkles className="w-4 h-4" />}
         {enriching ? 'Generating…' : 'Generate Form'}
       </button>
       {error && <p className="text-xs text-red-500">{error}</p>}
@@ -1067,7 +1068,7 @@ export function ActionConfigPanel({ step, allSteps = [], onChange, tenantId, app
               >
                 {isTesting ? (
                   <>
-                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                    <LukoutSpinner size={12} className="mr-1" />
                     Testing...
                   </>
                 ) : (

@@ -8,6 +8,7 @@ import { Label } from '../ui/label';
 import { Plus, Trash2, Key, Eye, EyeOff, Copy, Check, Sparkles } from 'lucide-react';
 import { api } from '../../lib/api';
 import type { AiKey } from '../../lib/api';
+import { PageState } from '../ui/page-state';
 
 interface Tenant {
   id: string;
@@ -125,7 +126,7 @@ export function AiKeysTab({ tenant }: AiKeysTabProps) {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8 text-muted-foreground animate-pulse">Loading AI keys...</div>;
+    return <PageState variant="loading" title="Loading AI keys..." />;
   }
 
   return (

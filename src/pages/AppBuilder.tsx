@@ -12,7 +12,6 @@ import { useParams } from "react-router-dom"
 import {
   Save,
   Undo2,
-  Loader2,
   ShieldCheck,
   Upload,
   Download,
@@ -32,6 +31,7 @@ import { WorkflowSettings } from "../components/workflow/WorkflowSettings"
 import { BottomPanel } from "../components/workflow/BottomPanel"
 import { RunPanelDialog } from "../components/workflow/RunPanelDialog"
 import { Button } from "../components/ui/button"
+import { LukoutSpinner } from "../components/ui/lukout-loader"
 import { Badge } from "../components/ui/badge"
 import { Input } from "../components/ui/input"
 import { Dialog, DialogHeader, DialogTitle, DialogContent } from "../components/ui/dialog"
@@ -674,7 +674,7 @@ export default function AppBuilder() {
             title="Validate workflow"
           >
             {validating ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <LukoutSpinner size={16} />
             ) : (
               <ShieldCheck className="h-4 w-4" />
             )}
@@ -735,7 +735,7 @@ export default function AppBuilder() {
             className="bg-primary text-primary-foreground hover:bg-primary/90"
           >
             {saving ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              <LukoutSpinner size={16} className="mr-1" />
             ) : (
               <Save className="h-4 w-4 mr-1" />
             )}
@@ -970,7 +970,7 @@ export default function AppBuilder() {
                 }}
               >
                 {n8nImporting ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                  <LukoutSpinner size={16} className="mr-1" />
                 ) : (
                   <Upload className="h-4 w-4 mr-1" />
                 )}

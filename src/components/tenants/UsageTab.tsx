@@ -4,6 +4,7 @@ import { BarChart3, TrendingUp } from 'lucide-react';
 import { useUsage } from '../../hooks/useUsage';
 import { formatCurrency, formatTokens } from '../../lib/utils/formatters';
 import { getProviderBadgeColor } from '../../lib/utils/badge-colors';
+import { PageState } from '../ui/page-state';
 
 interface Tenant {
   id: string;
@@ -20,7 +21,7 @@ export function UsageTab({ tenant }: UsageTabProps) {
 
 
   if (isLoading) {
-    return <div className="text-center py-8 text-muted-foreground animate-pulse">Loading usage data...</div>;
+    return <PageState variant="loading" title="Loading usage data..." />;
   }
 
   const totalCost = summary.reduce((sum, s) => sum + s.total_cost_usd, 0);

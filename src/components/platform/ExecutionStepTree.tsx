@@ -11,7 +11,8 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, CheckCircle2, Clock, Loader2, RefreshCw, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Clock, RefreshCw, XCircle } from 'lucide-react';
+import { LukoutSpinner } from '../ui/lukout-loader';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader } from '../ui/card';
@@ -175,7 +176,7 @@ export function ExecutionStepTree({
   if (rows === null) {
     return (
       <div className="text-sm text-muted-foreground flex items-center gap-2">
-        <Loader2 className="h-4 w-4 animate-spin" /> Loading steps…
+        <LukoutSpinner size={16} /> Loading steps…
       </div>
     );
   }
@@ -257,7 +258,7 @@ function StepNode({ node, depth, adminRetry, retrying, onRetry }: StepNodeProps)
                 disabled={retrying === row.id}
               >
                 {retrying === row.id ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <LukoutSpinner size={12} />
                 ) : (
                   <RefreshCw className="h-3 w-3 mr-1" />
                 )}
@@ -307,7 +308,7 @@ function StatusIcon({ status }: { status: AppStepExecution['status'] }) {
     case 'cancelled':
       return <XCircle className="h-4 w-4 text-red-600" />;
     case 'running':
-      return <Loader2 className="h-4 w-4 animate-spin text-blue-600" />;
+      return <LukoutSpinner size={16} />;
     case 'pending':
     case 'skipped':
     default:

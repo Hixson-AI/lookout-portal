@@ -26,7 +26,6 @@ import {
   Settings,
   CheckCircle,
   XCircle,
-  Loader2,
   Eye,
   EyeOff,
   Trash2,
@@ -43,6 +42,7 @@ import { apiRequest } from '../lib/api/index';
 import { getPlatformExecution } from '../lib/api/platform-jobs';
 import type { Tenant } from '../lib/types';
 import { Zap } from 'lucide-react';
+import { LukoutSpinner } from '../components/ui/lukout-loader';
 
 type Tab = 'actions' | 'settings' | 'jobs';
 
@@ -380,7 +380,7 @@ export function PlatformAdmin() {
                 disabled={syncing}
                 className="shrink-0 bg-amber-600 hover:bg-amber-700 text-white"
               >
-                {syncing ? <><Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />Discovering…</> : <><Sparkles className="w-3.5 h-3.5 mr-1" />Run Discovery</>}
+                {syncing ? <><LukoutSpinner size={14} className="mr-1" />Discovering…</> : <><Sparkles className="w-3.5 h-3.5 mr-1" />Run Discovery</>}
               </Button>
             </div>
           )}
@@ -402,7 +402,7 @@ export function PlatformAdmin() {
                 onClick={() => handleReindex()}
                 disabled={reindexing || syncing}
               >
-                {reindexing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <RefreshCw className="w-4 h-4 mr-1" />}
+                {reindexing ? <LukoutSpinner size={16} className="mr-1" /> : <RefreshCw className="w-4 h-4 mr-1" />}
                 <span className="hidden sm:inline">Reindex Embeddings</span>
                 <span className="sm:hidden">Reindex</span>
               </Button>
@@ -413,7 +413,7 @@ export function PlatformAdmin() {
                 disabled={syncing || reindexing}
                 title="Force re-enrich all n8n nodes (ignores already-enriched)"
               >
-                {syncing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <RefreshCw className="w-4 h-4 mr-1" />}
+                {syncing ? <LukoutSpinner size={16} className="mr-1" /> : <RefreshCw className="w-4 h-4 mr-1" />}
                 <span className="hidden sm:inline">Sync n8n Catalog</span>
                 <span className="sm:hidden">Sync n8n</span>
               </Button>
@@ -446,7 +446,7 @@ export function PlatformAdmin() {
             <div className="flex items-center gap-3 px-3 py-2 bg-indigo-50 border border-indigo-200 rounded-lg text-sm">
               <span className="text-indigo-700 font-medium">{selected.size} selected</span>
               <Button size="sm" variant="outline" onClick={handleReindexSelected} disabled={reindexing} className="border-indigo-300 text-indigo-700 hover:bg-indigo-100">
-                {reindexing ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <RefreshCw className="w-3.5 h-3.5 mr-1" />}
+                {reindexing ? <LukoutSpinner size={14} className="mr-1" /> : <RefreshCw className="w-3.5 h-3.5 mr-1" />}
                 Reindex Selected
               </Button>
               <button onClick={() => setSelected(new Set())} className="ml-auto text-indigo-400 hover:text-indigo-600">
@@ -459,8 +459,8 @@ export function PlatformAdmin() {
           <Card>
             <CardContent className="p-0">
               {actionsLoading ? (
-                <div className="flex items-center justify-center py-16 text-sm text-gray-400">
-                  <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading catalog…
+                <div className="flex items-center justify-center py-16 text-sm text-muted-foreground gap-2">
+                  <LukoutSpinner size={20} /> Loading catalog…
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -721,7 +721,7 @@ export function PlatformAdmin() {
                       className="flex-1"
                     >
                       {enrichingId === detailAction.id
-                        ? <><Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />Enriching…</>
+                        ? <><LukoutSpinner size={14} className="mr-1" />Enriching…</>
                         : <><Sparkles className="w-3.5 h-3.5 mr-1" />Re-enrich</>}
                     </Button>
                   )}
@@ -733,7 +733,7 @@ export function PlatformAdmin() {
                     className="flex-1"
                   >
                     {reindexingId === detailAction.id
-                      ? <><Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />Reindexing…</>
+                      ? <><LukoutSpinner size={14} className="mr-1" />Reindexing…</>
                       : <><RefreshCw className="w-3.5 h-3.5 mr-1" />Reindex</>}
                   </Button>
                 </div>
@@ -757,8 +757,8 @@ export function PlatformAdmin() {
             </CardHeader>
             <CardContent className="space-y-3">
               {settingsLoading ? (
-                <div className="text-sm text-gray-400 flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" /> Loading…
+                <div className="text-sm text-muted-foreground flex items-center gap-2">
+                  <LukoutSpinner size={16} /> Loading…
                 </div>
               ) : (
                 <>
@@ -804,7 +804,7 @@ export function PlatformAdmin() {
                       onClick={handleSaveKey}
                       disabled={savingKey || !openAiKeyInput.trim()}
                     >
-                      {savingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save'}
+                      {savingKey ? <LukoutSpinner size={16} /> : 'Save'}
                     </Button>
                   </div>
                 </>

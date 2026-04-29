@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
-import { Zap, Loader2, Activity, X } from "lucide-react"
+import { Zap, Activity, X } from "lucide-react"
+import { LukoutSpinner } from "../ui/lukout-loader"
 import { Button } from "../ui/button"
 import { cn } from "../../lib/utils"
 import { ActionConfigPanel } from "./ActionConfigPanel"
@@ -166,7 +167,7 @@ export function ConfigDrawer({
                 >
                   {testingStep === step.id ? (
                     <>
-                      <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                      <LukoutSpinner size={12} className="mr-1" />
                       Testing…
                     </>
                   ) : (
