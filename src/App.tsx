@@ -18,6 +18,9 @@ const AppsDashboard = lazy(() => import('./pages/AppsDashboard').then(m => ({ de
 const AppPage = lazy(() => import('./pages/AppPage').then(m => ({ default: m.AppPage })));
 const WorkspaceSettings = lazy(() => import('./pages/WorkspaceSettings').then(m => ({ default: m.WorkspaceSettings })));
 const ActivityFeed = lazy(() => import('./pages/ActivityFeed').then(m => ({ default: m.ActivityFeed })));
+const AppRuns = lazy(() => import('./pages/AppRuns').then(m => ({ default: m.AppRuns })));
+const AppSecrets = lazy(() => import('./pages/AppSecrets').then(m => ({ default: m.AppSecrets })));
+const AppSettings = lazy(() => import('./pages/AppSettings').then(m => ({ default: m.AppSettings })));
 
 const PageFallback = () => (
   <div className="min-h-screen flex items-center justify-center">
@@ -88,9 +91,9 @@ function App() {
               <Route path="activity" element={<ActivityFeed />} />
               <Route path="apps/:appId" element={<AppPage />} />
               <Route path="apps/:appId/builder" element={<AppBuilder />} />
-              <Route path="apps/:appId/runs" element={<div>Runs coming in Phase 3</div>} />
-              <Route path="apps/:appId/secrets" element={<div>Secrets coming in Phase 3</div>} />
-              <Route path="apps/:appId/settings" element={<div>Settings coming in Phase 3</div>} />
+              <Route path="apps/:appId/runs" element={<AppRuns />} />
+              <Route path="apps/:appId/secrets" element={<AppSecrets />} />
+              <Route path="apps/:appId/settings" element={<AppSettings />} />
             </Route>
           </Routes>
         </Suspense>
