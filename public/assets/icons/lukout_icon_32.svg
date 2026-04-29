@@ -1,17 +1,17 @@
 <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
   <rect width="32" height="32" rx="6" fill="#EAF0EC"/>
   <g transform="translate(3, 9)">
-    <rect x="0"  y="0"  width="3"  height="14" rx="1" fill="#4A5C52"/>
-    <rect x="0"  y="0"  width="7"  height="3"  rx="1" fill="#4A5C52"/>
-    <rect x="0"  y="11" width="7"  height="3"  rx="1" fill="#4A5C52"/>
-    <rect x="4"  y="2"  width="7"  height="3"  rx="1" fill="#4A5C52"/>
-    <rect x="4"  y="6"  width="5"  height="3"  rx="1" fill="#7A9186"/>
-    <rect x="4"  y="10" width="3"  height="2"  rx="1" fill="#AEBFB8"/>
-    <rect x="23" y="0"  width="3"  height="14" rx="1" fill="#4A5C52"/>
-    <rect x="19" y="0"  width="7"  height="3"  rx="1" fill="#4A5C52"/>
-    <rect x="19" y="11" width="7"  height="3"  rx="1" fill="#4A5C52"/>
-    <rect x="15" y="2"  width="7"  height="3"  rx="1" fill="#4A5C52"/>
-    <rect x="17" y="6"  width="5"  height="3"  rx="1" fill="#7A9186"/>
-    <rect x="19" y="10" width="3"  height="2"  rx="1" fill="#AEBFB8"/>
+    <rect x="0"  y="0"  width="2"  height="14" rx="0.5" fill="#4A5C52"/>
+    <rect x="0"  y="0"  width="7"  height="2"  rx="0.5" fill="#4A5C52"/>
+    <rect x="0"  y="12" width="7"  height="2"  rx="0.5" fill="#4A5C52"/>
+    <rect x="3"  y="3"  width="8"  height="2"  rx="0.5" fill="#4A5C52"/>
+    <rect x="3"  y="6"  width="5"  height="2"  rx="0.5" fill="#7A9186"/>
+    <rect x="3"  y="9"  width="3"  height="2"  rx="0.5" fill="#AEBFB8"/>
+    <rect x="24" y="0"  width="2"  height="14" rx="0.5" fill="#4A5C52"/>
+    <rect x="19" y="0"  width="7"  height="2"  rx="0.5" fill="#4A5C52"/>
+    <rect x="19" y="12" width="7"  height="2"  rx="0.5" fill="#4A5C52"/>
+    <rect x="15" y="3"  width="8"  height="2"  rx="0.5" fill="#4A5C52"/>
+    <rect x="18" y="6"  width="5"  height="2"  rx="0.5" fill="#7A9186"/>
+    <rect x="20" y="9"  width="3"  height="2"  rx="0.5" fill="#AEBFB8"/>
   </g>
 </svg>

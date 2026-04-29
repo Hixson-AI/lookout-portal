@@ -12,16 +12,15 @@ export function Login() {
       <div className="w-full max-w-md fade-in">
         <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-sm card-elevated">
           <CardHeader className="text-center pb-2">
-            <div className="mx-auto mb-4 w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg" style={{ background: 'var(--gradient-header)' }}>
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </div>
+            <img
+              src="/assets/logos/lukout_mark.svg"
+              alt="lukout"
+              className="mx-auto mb-4 w-16 h-16 rounded-2xl shadow-lg"
+            />
             <CardTitle className="text-3xl font-bold text-gradient">
               lukout Portal
             </CardTitle>
-            <CardDescription className="text-base text-gray-600 mt-2">
+            <CardDescription className="text-base text-muted-foreground mt-2">
               Admin dashboard for the lukout platform
             </CardDescription>
           </CardHeader>
@@ -41,7 +40,7 @@ export function Login() {
             </Button>
           </CardContent>
         </Card>
-        <p className="text-center text-emerald-100/80 text-sm mt-6">
+        <p className="text-center text-white/70 text-sm mt-6">
           Secure authentication powered by Google OAuth
         </p>
       </div>

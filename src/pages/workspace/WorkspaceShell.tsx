@@ -20,7 +20,8 @@ export function WorkspaceShell() {
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-40 shadow-sm">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link to="/" className="text-xl font-semibold tracking-tight text-foreground">
+            <Link to="/" className="flex items-center gap-2 text-xl font-semibold tracking-tight text-foreground">
+              <img src="/assets/logos/lukout_mark.svg" alt="" className="h-7 w-7" />
               lukout
             </Link>
             <TenantSwitcher />
