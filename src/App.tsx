@@ -5,6 +5,8 @@ import { Login } from './pages/Login';
 import { Home } from './pages/Home';
 import { TenantList } from './pages/TenantList';
 import { TenantDetail } from './pages/TenantDetail';
+import { CommandPaletteProvider } from './components/palette/CommandPalette';
+import { Toaster } from './components/ui/toaster';
 
 const TenantSecrets = lazy(() => import('./pages/TenantSecrets').then(m => ({ default: m.TenantSecrets })));
 const AppBuilder = lazy(() => import('./pages/AppBuilder'));
@@ -28,39 +30,42 @@ function App() {
   }
 
   return (
-    <Router>
-      <Suspense fallback={<PageFallback />}>
-      <Routes>
-        <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
-        <Route path="/" element={user ? <Home /> : <Navigate to="/login" />} />
-        <Route path="/platform" element={user?.isSystemAdmin ? <PlatformAdmin /> : <Navigate to="/" />} />
-        <Route
-          path="/tenants"
-          element={user ? <TenantList /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/tenants/:id"
-          element={user ? <TenantDetail /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/tenants/:id/secrets"
-          element={user ? <TenantSecrets /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/tenants/:id/apps/new"
-          element={user ? <AppBuilder /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/tenants/:id/apps/:appId"
-          element={user ? <AppBuilder /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/tenants/:id/apps/:appId/edit"
-          element={user ? <AppBuilder /> : <Navigate to="/login" />}
-        />
-      </Routes>
-      </Suspense>
-    </Router>
+    <CommandPaletteProvider>
+      <Router>
+        <Suspense fallback={<PageFallback />}>
+          <Routes>
+            <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
+            <Route path="/" element={user ? <Home /> : <Navigate to="/login" />} />
+            <Route path="/platform" element={user?.isSystemAdmin ? <PlatformAdmin /> : <Navigate to="/" />} />
+            <Route
+              path="/tenants"
+              element={user ? <TenantList /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/tenants/:id"
+              element={user ? <TenantDetail /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/tenants/:id/secrets"
+              element={user ? <TenantSecrets /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/tenants/:id/apps/new"
+              element={user ? <AppBuilder /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/tenants/:id/apps/:appId"
+              element={user ? <AppBuilder /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/tenants/:id/apps/:appId/edit"
+              element={user ? <AppBuilder /> : <Navigate to="/login" />}
+            />
+          </Routes>
+        </Suspense>
+      </Router>
+      <Toaster />
+    </CommandPaletteProvider>
   );
 }
 

@@ -17,13 +17,16 @@
     "rubric:execution:ui": "playwright test e2e/rubric-execution.spec.ts --grep -v @backend"
   },
   "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.15",
     "@tanstack/react-query": "^5.99.0",
     "@xyflow/react": "^12.10.2",
+    "cmdk": "^1.1.1",
     "lucide-react": "^1.8.0",
     "openai": "^6.34.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^7.14.1"
+    "react-router-dom": "^7.14.1",
+    "sonner": "^2.0.7"
   },
   "devDependencies": {
     "@playwright/test": "1.59.1",
