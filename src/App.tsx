@@ -21,7 +21,12 @@ const ActivityFeed = lazy(() => import('./pages/ActivityFeed').then(m => ({ defa
 const AppRuns = lazy(() => import('./pages/AppRuns').then(m => ({ default: m.AppRuns })));
 const AppSecrets = lazy(() => import('./pages/AppSecrets').then(m => ({ default: m.AppSecrets })));
 const AppSettings = lazy(() => import('./pages/AppSettings').then(m => ({ default: m.AppSettings })));
-
+const SettingsGeneral = lazy(() => import('./pages/settings/SettingsGeneral').then(m => ({ default: m.SettingsGeneral })));
+const SettingsMembers = lazy(() => import('./pages/settings/SettingsMembers').then(m => ({ default: m.SettingsMembers })));
+const SettingsBilling = lazy(() => import('./pages/settings/SettingsBilling').then(m => ({ default: m.SettingsBilling })));
+const SettingsSecrets = lazy(() => import('./pages/settings/SettingsSecrets').then(m => ({ default: m.SettingsSecrets })));
+const SettingsApiKeys = lazy(() => import('./pages/settings/SettingsApiKeys').then(m => ({ default: m.SettingsApiKeys })));
+const SettingsIntegrations = lazy(() => import('./pages/settings/SettingsIntegrations').then(m => ({ default: m.SettingsIntegrations })));
 const PageFallback = () => (
   <div className="min-h-screen flex items-center justify-center">
     <div className="text-muted-foreground">Loading...</div>
@@ -87,7 +92,14 @@ function App() {
               }
             >
               <Route index element={<AppsDashboard />} />
-              <Route path="settings" element={<WorkspaceSettings />} />
+              <Route path="settings" element={<WorkspaceSettings />}>
+                <Route index element={<SettingsGeneral />} />
+                <Route path="members" element={<SettingsMembers />} />
+                <Route path="billing" element={<SettingsBilling />} />
+                <Route path="secrets" element={<SettingsSecrets />} />
+                <Route path="api-keys" element={<SettingsApiKeys />} />
+                <Route path="integrations" element={<SettingsIntegrations />} />
+              </Route>
               <Route path="activity" element={<ActivityFeed />} />
               <Route path="apps/:appId" element={<AppPage />} />
               <Route path="apps/:appId/builder" element={<AppBuilder />} />
