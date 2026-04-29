@@ -1,7 +1,22 @@
-import { useState, useCallback, ReactNode } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useState, useCallback, useContext, ReactNode } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Command } from 'cmdk';
-import { CommandPaletteContext } from './CommandPaletteContext';
+
+interface CommandPaletteContextValue {
+  open: () => void;
+  close: () => void;
+}
+
+const CommandPaletteContext = createContext<CommandPaletteContextValue | null>(null);
+
+export function useCommandPalette() {
+  const context = useContext(CommandPaletteContext);
+  if (!context) {
+    throw new Error('useCommandPalette must be used within CommandPaletteProvider');
+  }
+  return context;
+}
 
 export function CommandPaletteProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
