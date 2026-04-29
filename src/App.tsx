@@ -45,8 +45,8 @@ function App() {
   }
 
   return (
-    <CommandPaletteProvider>
-      <Router>
+    <Router>
+      <CommandPaletteProvider>
         <Suspense fallback={<PageFallback />}>
           <Routes>
             <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
@@ -109,9 +109,9 @@ function App() {
             </Route>
           </Routes>
         </Suspense>
-      </Router>
-      <Toaster />
-    </CommandPaletteProvider>
+        <Toaster />
+      </CommandPaletteProvider>
+    </Router>
   );
 }
 
