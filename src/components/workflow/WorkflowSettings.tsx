@@ -66,11 +66,12 @@ export function WorkflowSettings({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} className="max-w-lg">
-      <DialogHeader>
-        <DialogTitle>Workflow Settings</DialogTitle>
-      </DialogHeader>
-      <DialogContent>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Workflow Settings</DialogTitle>
+          <DialogDescription>Configure workflow metadata, trigger settings, and required secrets.</DialogDescription>
+        </DialogHeader>
         <div className="space-y-6">
           {/* ── General ── */}
           <div className="space-y-3">
