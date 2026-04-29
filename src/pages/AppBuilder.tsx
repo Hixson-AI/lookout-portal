@@ -34,7 +34,7 @@ import { Button } from "../components/ui/button"
 import { LukoutSpinner } from "../components/ui/lukout-loader"
 import { Badge } from "../components/ui/badge"
 import { Input } from "../components/ui/input"
-import { Dialog, DialogHeader, DialogTitle, DialogContent } from "../components/ui/dialog"
+import { Dialog, DialogHeader, DialogTitle, DialogContent, DialogDescription } from "../components/ui/dialog"
 import { api } from "../lib/api"
 import { getCatalog } from "../lib/api/actions"
 import { importN8nWorkflow, exportN8nWorkflow } from "../lib/api/n8n"
@@ -895,6 +895,7 @@ export default function AppBuilder() {
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>Import n8n Workflow</DialogTitle>
+            <DialogDescription>Import a workflow from n8n JSON format.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
