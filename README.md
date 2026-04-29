@@ -1,6 +1,6 @@
-# Lookout Portal
+# lukout Portal
 
-Operator portal for the Lookout platform.
+Operator portal for the lukout platform.
 
 ## Overview
 
@@ -161,6 +161,7 @@ All loading states use the **Lukout loader** in `src/components/ui/lukout-loader
 Private - Hixson AI internal platform
 
 ## Changelog
+- 2026-04-29: Catalog taxonomy — replaced emoji icons with Lucide components, rebalanced capability buckets (removed generic catch-all tags, priority-based bucketing so each action counts once), added provider→Lucide icon map. Fixed routing: LegacyAppRedirect now properly handles `/apps/new` literal segment, AppsTab navigates directly to slug-based routes. Extracted `UserMenu` component and added to WorkspaceShell tenant header, fixed brand link to escape to `/tenants` instead of looping via RootRedirect. Rebranded error.html to "lukout Portal".
 - 2026-04-28: Portal Shell slice — added `LukoutLoader` / `LukoutLoaderCentered` / `LukoutSpinner` and rolled them out across loading states, replacing all `Loader2` spinners and ad-hoc "Loading…" text. Hoisted `<TenantProvider>` to the top of the authenticated route tree to fix the stuck-on-loading bug in `RootRedirect`. Redesigned the top `Header` (brand block, `NavLink` active states, user dropdown with avatar/initials, mobile drawer). See `slices/slice_portal-shell.md`.
 - 2026-04-23: UI/UX refresh — rebuilt Tailwind theme with semantic HSL tokens, polished all tenant and apps views, replaced inline styles with Tailwind utilities, tightened card/tab layouts, added quick stats row to TenantDetail.
 - 2026-04-20: Added Builder Chat system (BuilderChat, ChatWidgets, 4 widget types), Action Library panel replacing static catalog, field validators with 27 types, unit tests (60 passing), Playwright e2e tests with mocked API. Renamed "step catalog" → "Action Library" throughout. Step config panel refactored to dialog.

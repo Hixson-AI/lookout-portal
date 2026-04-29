@@ -104,8 +104,8 @@ const MAPPABLE_FIELDS: Record<
 // ── AppBuilder ─────────────────────────────────────────────────────────
 
 export default function AppBuilder() {
-  const { id: tenantId } = useParams<{ id: string }>()
-  const tid = tenantId ?? (localStorage.getItem("currentTenantId") || "")
+  const { appId: appIdParam } = useParams<{ appId: string }>()
+  const tid = localStorage.getItem("currentTenantId") || ""
 
   const [workflow, setWorkflow] = useState<Workflow>({
     name: "",
@@ -114,7 +114,7 @@ export default function AppBuilder() {
     steps: [],
   })
   const [selectedStepId, setSelectedStepId] = useState<string | null>(null)
-  const [currentAppId, setCurrentAppId] = useState<string | null>(null)
+  const [currentAppId, setCurrentAppId] = useState<string | null>(appIdParam ?? null)
   const [saving, setSaving] = useState(false)
   const [savedAt, setSavedAt] = useState<Date | null>(null)
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
@@ -155,6 +155,48 @@ export default function AppBuilder() {
   useEffect(() => {
     loadCatalog()
   }, [loadCatalog])
+
+  // ── Load existing app ───────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!appIdParam || !tid) return
+    let cancelled = false
+    api
+      .getApp(tid, appIdParam)
+      .then((app) => {
+        if (cancelled) return
+        const wf = app.workflowJson ?? ({} as any)
+        const triggerType =
+          (wf?.trigger?.type as Workflow["triggerConfig"]["type"]) ??
+          (app.triggerConfig?.type as Workflow["triggerConfig"]["type"]) ??
+          "webhook"
+        const triggerCfg =
+          (wf?.trigger?.config as Record<string, unknown>) ??
+          (app.triggerConfig?.config as Record<string, unknown>) ??
+          {}
+        setWorkflow({
+          name: app.name ?? wf?.name ?? "",
+          description: app.description ?? wf?.description ?? "",
+          triggerConfig: {
+            type: triggerType,
+            ...(triggerCfg as Partial<Workflow["triggerConfig"]>),
+          },
+          steps: ((wf?.steps ?? []) as WorkflowStep[]).map((s) => ({
+            id: s.id,
+            stepId: s.stepId,
+            name: s.name,
+            config: s.config ?? {},
+          })),
+        })
+        setCurrentAppId(app.id)
+      })
+      .catch(() => {
+        /* silent — leave empty workflow */
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [appIdParam, tid])
 
   // ── Validate ────────────────────────────────────────────────────────
 
@@ -782,21 +824,6 @@ export default function AppBuilder() {
               onDropStep={handleDropStep}
               onReorderSteps={handleReorderSteps}
             />
-
-            {/* Empty state overlay */}
-            {workflow.steps.length === 0 && (
-              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                <div className="text-center text-muted-foreground bg-card/80 backdrop-blur-sm rounded-xl px-6 py-4 border border-border shadow-sm">
-                  <p className="text-sm font-medium mb-1">
-                    Start building your workflow
-                  </p>
-                  <p className="text-xs max-w-[280px]">
-                    Drag an action from the library or describe your workflow to
-                    the AI assistant
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
 
           <BottomPanel
