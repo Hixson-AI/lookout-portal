@@ -19,10 +19,10 @@ export function Login() {
               </svg>
             </div>
             <CardTitle className="text-3xl font-bold text-gradient">
-              Lookout Portal
+              lukout Portal
             </CardTitle>
             <CardDescription className="text-base text-gray-600 mt-2">
-              Admin dashboard for the Lookout platform
+              Admin dashboard for the lukout platform
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4 pt-4">

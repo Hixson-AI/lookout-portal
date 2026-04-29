@@ -899,7 +899,7 @@ export default function AppBuilder() {
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
               Paste your n8n workflow JSON below. Steps will be mapped to the
-              Lookout action catalog (AI-assisted for unrecognized nodes).
+              lukout action catalog (AI-assisted for unrecognized nodes).
             </p>
             <textarea
               className="w-full h-48 px-3 py-2 border border-input rounded-lg text-xs font-mono resize-none focus:outline-none focus:ring-1 focus:ring-ring bg-background"
