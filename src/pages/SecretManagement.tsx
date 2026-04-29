@@ -40,11 +40,11 @@ export default function SecretManagement() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Secret Management</h1>
+      <div className="max-w-4xl mx-auto px-4 py-4 sm:py-6 lg:py-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8">Secret Management</h1>
 
         {/* Add Secret Form */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">Add Secret</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
@@ -79,15 +79,15 @@ export default function SecretManagement() {
         </div>
 
         {/* Secrets List */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
           <h2 className="text-lg font-semibold mb-4">Secrets</h2>
           {secrets.length === 0 ? (
             <div className="text-center py-8 text-gray-500">No secrets configured</div>
           ) : (
             <div className="space-y-3">
               {secrets.map((secret) => (
-                <div key={secret.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex-1">
+                <div key={secret.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border rounded-lg">
+                  <div className="flex-1 min-w-0">
                     <div className="font-medium">{secret.key}</div>
                     <div className="text-sm text-gray-500">
                       Updated: {new Date(secret.updatedAt).toLocaleString()}

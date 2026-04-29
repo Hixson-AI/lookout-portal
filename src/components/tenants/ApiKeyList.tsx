@@ -47,19 +47,27 @@ export function ApiKeyList({ apiKeys, onRevoke }: ApiKeyListProps) {
       <TableHeader>
         <TableRow>
           <TableHead>Label</TableHead>
-          <TableHead>Key Prefix</TableHead>
-          <TableHead>Created</TableHead>
-          <TableHead>Last Used</TableHead>
+          <TableHead className="hidden sm:table-cell">Key Prefix</TableHead>
+          <TableHead className="hidden md:table-cell">Created</TableHead>
+          <TableHead className="hidden md:table-cell">Last Used</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {apiKeys.map((apiKey) => (
           <TableRow key={apiKey.id}>
-            <TableCell>{apiKey.label}</TableCell>
-            <TableCell className="font-mono text-xs">{apiKey.prefix}...</TableCell>
-            <TableCell>{formatDate(apiKey.createdAt)}</TableCell>
-            <TableCell>{formatDate(apiKey.lastUsedAt)}</TableCell>
+            <TableCell>
+              <div className="font-medium">{apiKey.label}</div>
+              <div className="font-mono text-[11px] text-muted-foreground sm:hidden mt-0.5">
+                {apiKey.prefix}...
+              </div>
+              <div className="text-[11px] text-muted-foreground md:hidden mt-0.5">
+                Used {formatDate(apiKey.lastUsedAt)}
+              </div>
+            </TableCell>
+            <TableCell className="font-mono text-xs hidden sm:table-cell">{apiKey.prefix}...</TableCell>
+            <TableCell className="hidden md:table-cell">{formatDate(apiKey.createdAt)}</TableCell>
+            <TableCell className="hidden md:table-cell">{formatDate(apiKey.lastUsedAt)}</TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end gap-2">
                 <Button

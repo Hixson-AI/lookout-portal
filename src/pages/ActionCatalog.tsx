@@ -64,8 +64,8 @@ export default function ActionCatalog() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Action Library</h1>
+      <div className="max-w-7xl mx-auto px-4 py-4 sm:py-6 lg:py-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8">Action Library</h1>
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">

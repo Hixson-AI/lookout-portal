@@ -285,7 +285,7 @@ export function RequiredSecretsPanel({ tenantId, appId, onClose, message }: Requ
               <CheckCircle2 className="h-4 w-4 text-green-600" />
               Configured Secrets ({diff.present.length})
             </h4>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {diff.present.map(key => (
                 <div key={key} className="flex items-center justify-between p-2 rounded-md bg-muted">
                   <span className="text-sm font-medium">{key}</span>

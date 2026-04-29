@@ -74,12 +74,12 @@ export default function AppDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">App Dashboard</h1>
+      <div className="max-w-7xl mx-auto px-4 py-4 sm:py-6 lg:py-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8">App Dashboard</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Left Panel: App List */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6">
             <h2 className="text-lg font-semibold mb-4">Apps</h2>
             <div className="space-y-2">
               {apps.map((app) => (
@@ -103,8 +103,8 @@ export default function AppDashboard() {
           </div>
 
           {/* Right Panel: Execution History */}
-          <div className="lg:col-span-3 bg-white rounded-lg shadow p-6">
-            <div className="flex justify-between items-center mb-4">
+          <div className="lg:col-span-3 bg-white rounded-lg shadow p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
               <h2 className="text-lg font-semibold">
                 {selectedApp ? `Executions: ${selectedApp.name}` : 'Select an app to view executions'}
               </h2>
@@ -162,12 +162,12 @@ export default function AppDashboard() {
 
         {/* Stats Cards */}
         {selectedApp && (
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-white rounded-lg shadow p-6">
+          <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+            <div className="bg-white rounded-lg shadow p-4 sm:p-6">
               <div className="text-sm text-gray-500">Total Executions</div>
               <div className="text-2xl font-bold">{executions.length}</div>
             </div>
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white rounded-lg shadow p-4 sm:p-6">
               <div className="text-sm text-gray-500">Success Rate</div>
               <div className="text-2xl font-bold text-green-600">
                 {executions.length > 0
@@ -175,13 +175,13 @@ export default function AppDashboard() {
                   : 0}%
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white rounded-lg shadow p-4 sm:p-6">
               <div className="text-sm text-gray-500">Failed</div>
               <div className="text-2xl font-bold text-red-600">
                 {executions.filter(e => e.status === 'failed').length}
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white rounded-lg shadow p-4 sm:p-6">
               <div className="text-sm text-gray-500">Running</div>
               <div className="text-2xl font-bold text-blue-600">
                 {executions.filter(e => e.status === 'running').length}

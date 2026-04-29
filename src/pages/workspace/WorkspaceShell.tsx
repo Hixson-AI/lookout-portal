@@ -1,5 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { TenantSwitcher } from '../../components/layout/TenantSwitcher';
+import { UserMenu } from '../../components/layout/UserMenu';
 import { Button } from '../../components/ui/button';
 import { useCommandPalette } from '../../components/palette/CommandPalette';
 import { useTenantContext } from '../../contexts/TenantContext';
@@ -21,7 +22,14 @@ export function WorkspaceShell() {
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-40 shadow-sm">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link to="/" className="flex items-center gap-2 text-xl font-semibold tracking-tight text-foreground">
+            {/* Brand goes to the global tenant list so users can escape the
+                current tenant. The root "/" route always redirects back into
+                a tenant via RootRedirect, so it's a dead-end here. */}
+            <Link
+              to="/tenants"
+              className="flex items-center gap-2 text-xl font-semibold tracking-tight text-foreground"
+              title="All tenants"
+            >
               <img src="/assets/logos/lukout_mark.svg" alt="" className="h-7 w-7" />
               lukout
             </Link>
@@ -61,6 +69,7 @@ export function WorkspaceShell() {
             <Button variant="ghost" size="sm" onClick={open}>
               ⌘K
             </Button>
+            <UserMenu />
           </nav>
         </div>
       </header>

@@ -315,12 +315,12 @@ export function PlatformAdmin() {
       </Button>
 
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gradient mb-1">Platform Admin</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gradient mb-1">Platform Admin</h1>
         <p className="text-sm text-gray-500">Manage platform-level settings and the action catalog</p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 border-b border-gray-200">
+      <div className="flex gap-1 mb-6 border-b border-gray-200 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
         <button
           onClick={() => setTab('actions')}
           className={`px-4 py-2 text-sm font-medium rounded-t-md transition-colors ${tab === 'actions' ? 'bg-white border border-b-white border-gray-200 text-indigo-600 -mb-px' : 'text-gray-500 hover:text-gray-700'}`}

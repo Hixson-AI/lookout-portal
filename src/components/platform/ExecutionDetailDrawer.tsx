@@ -120,9 +120,9 @@ export function ExecutionDetailDrawer({
     <div className="fixed inset-0 bg-black/40 z-50 flex justify-end">
       <div className="w-full max-w-3xl bg-white h-full overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
-          <div className="flex items-center gap-3">
-            <h3 className="font-semibold text-lg">Execution Detail</h3>
+        <div className="flex flex-wrap items-center justify-between gap-2 p-4 border-b sticky top-0 bg-white z-10">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <h3 className="font-semibold text-base sm:text-lg truncate">Execution Detail</h3>
             <Badge className={getStatusBadgeColor(execution.status)}>{statusDescription}</Badge>
           </div>
           <div className="flex items-center gap-2">
@@ -157,7 +157,7 @@ export function ExecutionDetailDrawer({
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-4 mt-4">
             {/* Quick Stats */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <Card>
                 <CardContent className="p-3">
                   <div className="text-xs text-muted-foreground">Status</div>

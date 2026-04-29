@@ -172,7 +172,7 @@ export function AppsTab({ tenant }: AppsTabProps) {
         <Button
           onClick={() => {
             localStorage.setItem('currentTenantId', tenant.id);
-            navigate(`/tenants/${tenant.id}/apps/new`);
+            navigate(`/${tenant.slug}/apps/new`);
           }}
         >
           <Plus className="h-4 w-4 mr-2" />
@@ -190,7 +190,7 @@ export function AppsTab({ tenant }: AppsTabProps) {
             <Button
               onClick={() => {
                 localStorage.setItem('currentTenantId', tenant.id);
-                navigate(`/tenants/${tenant.id}/apps/new`);
+                navigate(`/${tenant.slug}/apps/new`);
               }}
             >
               <Plus className="h-4 w-4 mr-2" />

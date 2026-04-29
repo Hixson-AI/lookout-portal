@@ -13,8 +13,8 @@ export function Home() {
 
   return (
     <Layout>
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gradient mb-2">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient mb-2 break-words">
           Welcome, {user.name || user.email}
         </h1>
         <p style={{ color: 'var(--text-secondary)' }}>
