@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Plus, Trash2, Users } from 'lucide-react';
@@ -109,6 +109,7 @@ export function TeamTab({ tenant }: TeamTabProps) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Team Member</DialogTitle>
+            <DialogDescription>Add a new team member to this tenant.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>

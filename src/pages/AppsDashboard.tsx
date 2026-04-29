@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Search } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Button } from '../components/ui/button';
@@ -21,6 +21,7 @@ interface App {
 
 export function AppsDashboard() {
   const { currentTenant } = useTenantContext();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'paused'>('all');
 
@@ -44,7 +45,7 @@ export function AppsDashboard() {
         title="Apps"
         breadcrumbs={[{ label: currentTenant.name, to: `/${currentTenant.slug}` }, { label: 'Apps' }]}
         actions={
-          <Button>
+          <Button onClick={() => navigate(`/${currentTenant.slug}/apps/new`)}>
             <Plus className="h-4 w-4 mr-2" />
             Create app
           </Button>
@@ -78,7 +79,7 @@ export function AppsDashboard() {
           title="No apps yet"
           description="Create your first app to get started"
           action={
-            <Button>
+            <Button onClick={() => navigate(`/${currentTenant.slug}/apps/new`)}>
               <Plus className="h-4 w-4 mr-2" />
               Create app
             </Button>

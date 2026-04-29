@@ -6,7 +6,7 @@
  */
 
 import { useState } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, type LucideIcon } from 'lucide-react';
 import type { AgentAction } from '../../lib/api/actions';
 import {
   type GroupSelection,
@@ -14,6 +14,7 @@ import {
   type ProviderCount,
   getCapabilityGroupCounts,
   getProviderCounts,
+  getProviderIcon,
 } from '../../lib/catalog-taxonomy';
 
 interface CatalogGroupBrowserProps {
@@ -69,7 +70,7 @@ export function CatalogGroupBrowser({
           <div key={group.label}>
             <BrowserRow
               label={group.label}
-              icon={group.icon}
+              Icon={group.Icon}
               count={count}
               active={isActive(groupSel)}
               expandable
@@ -103,6 +104,7 @@ export function CatalogGroupBrowser({
             <BrowserRow
               key={provider}
               label={provider}
+              Icon={getProviderIcon(provider)}
               count={count}
               active={isActive({ mode: 'provider', provider })}
               onClick={() => onSelect({ mode: 'provider', provider })}
@@ -129,7 +131,7 @@ interface BrowserRowProps {
   count: number;
   active: boolean;
   onClick: () => void;
-  icon?: string;
+  Icon?: LucideIcon;
   indent?: boolean;
   expandable?: boolean;
   expanded?: boolean;
@@ -141,7 +143,7 @@ function BrowserRow({
   count,
   active,
   onClick,
-  icon,
+  Icon,
   indent = false,
   expandable = false,
   expanded = false,
@@ -168,7 +170,7 @@ function BrowserRow({
             : 'hover:bg-gray-100 text-gray-600'
         }`}
       >
-        {icon && <span className="shrink-0 text-sm leading-none">{icon}</span>}
+        {Icon && <Icon className={`shrink-0 w-3.5 h-3.5 ${active ? 'text-indigo-700' : 'text-gray-500'}`} />}
         <span className="flex-1 truncate text-xs capitalize">{label}</span>
         <span
           className={`shrink-0 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${

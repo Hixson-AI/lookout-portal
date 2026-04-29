@@ -9,7 +9,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { Search, Sparkles, X } from 'lucide-react';
 import { Button } from '../ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 import { searchCatalog } from '../../lib/api/actions';
 import type { AgentAction } from '../../lib/api/actions';
 import { CatalogGroupBrowser } from './CatalogGroupBrowser';
@@ -77,6 +77,7 @@ export function ActionCatalogDialog({ open, onClose, onAdd, catalog }: ActionCat
       <DialogContent className="max-w-4xl h-[80vh] flex flex-col overflow-hidden p-0">
         <DialogHeader className="px-4 pt-4 pb-2 shrink-0 border-b border-gray-100">
           <DialogTitle>Action Catalog</DialogTitle>
+          <DialogDescription>Browse and search for available actions to add to your workflow.</DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-1 overflow-hidden">

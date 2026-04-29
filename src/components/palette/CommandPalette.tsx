@@ -89,7 +89,11 @@ export function CommandPaletteProvider({ children }: { children: ReactNode }) {
                   </Command.Item>
                 </Command.Group>
                 <Command.Group heading="Actions">
-                  <Command.Item value="create-app" onSelect={() => {}} disabled={!tenantSlug}>
+                  <Command.Item
+                    value="create-app"
+                    onSelect={() => handleNavigate(`/${tenantSlug}/apps/new`)}
+                    disabled={!tenantSlug}
+                  >
                     Create new app
                   </Command.Item>
                 </Command.Group>

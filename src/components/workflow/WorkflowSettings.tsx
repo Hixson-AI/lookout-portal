@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogContent,
+  DialogDescription,
 } from "../ui/dialog"
 
 interface SecretEntry {

@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from '../ui/alert';
 import { getAppRequiredSecrets, augmentAppRequiredSecrets, setAppSecret, deleteAppSecret, getTenantSecrets, type RequiredSecretsDiff, type TenantSecretMeta } from '../../lib/api/app-secrets';
 import { AlertCircle, CheckCircle2, XCircle, RefreshCw, Globe } from 'lucide-react';
 import { LukoutSpinner } from '../ui/lukout-loader';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 
 interface RequiredSecretsPanelProps {
   tenantId: string;
@@ -231,6 +231,7 @@ export function RequiredSecretsPanel({ tenantId, appId, onClose, message }: Requ
                       <DialogContent>
                         <DialogHeader>
                           <DialogTitle>Select Tenant Secret</DialogTitle>
+                          <DialogDescription>Choose a tenant secret to use for this app secret.</DialogDescription>
                         </DialogHeader>
                         <div className="space-y-2">
                           {tenantSecrets.length === 0 ? (

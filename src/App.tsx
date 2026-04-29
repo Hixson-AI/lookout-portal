@@ -17,6 +17,7 @@ const AppBuilder = lazy(() => import('./pages/AppBuilder'));
 const PlatformAdmin = lazy(() => import('./pages/PlatformAdmin').then(m => ({ default: m.PlatformAdmin })));
 const AppsDashboard = lazy(() => import('./pages/AppsDashboard').then(m => ({ default: m.AppsDashboard })));
 const AppPage = lazy(() => import('./pages/AppPage').then(m => ({ default: m.AppPage })));
+const CreateApp = lazy(() => import('./pages/CreateApp').then(m => ({ default: m.CreateApp })));
 const WorkspaceSettings = lazy(() => import('./pages/WorkspaceSettings').then(m => ({ default: m.WorkspaceSettings })));
 const ActivityFeed = lazy(() => import('./pages/ActivityFeed').then(m => ({ default: m.ActivityFeed })));
 const AppRuns = lazy(() => import('./pages/AppRuns').then(m => ({ default: m.AppRuns })));
@@ -88,6 +89,7 @@ function App() {
                 <Route path="integrations" element={<SettingsIntegrations />} />
               </Route>
               <Route path="activity" element={<ActivityFeed />} />
+              <Route path="apps/new" element={<CreateApp />} />
               <Route path="apps/:appId" element={<AppPage />} />
               <Route path="apps/:appId/builder" element={<AppBuilder />} />
               <Route path="apps/:appId/runs" element={<AppRuns />} />

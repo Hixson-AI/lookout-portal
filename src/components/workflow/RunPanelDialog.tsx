@@ -5,6 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogContent,
+  DialogDescription,
 } from "../ui/dialog"
 
 interface RunPanelDialogProps {
@@ -35,14 +36,15 @@ export function RunPanelDialog({
   }, [log])
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} className="max-w-2xl">
-      <DialogHeader>
-        <DialogTitle className="flex items-center gap-2">
-          <Terminal className="h-4 w-4" />
-          {stepName ? `Run Status: ${stepName}` : "Run Status"}
-        </DialogTitle>
-      </DialogHeader>
-      <DialogContent>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Terminal className="h-4 w-4" />
+            {stepName ? `Run Status: ${stepName}` : "Run Status"}
+          </DialogTitle>
+          <DialogDescription>View the execution logs and results for this step.</DialogDescription>
+        </DialogHeader>
         <div className="space-y-4">
           {/* Validation Status */}
           {validateResult && (
