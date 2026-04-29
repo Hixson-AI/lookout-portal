@@ -104,7 +104,7 @@ export function TenantSecrets() {
         </TabsList>
 
         <TabsContent value="by-key" className="space-y-4">
-          {rollup.by_key.length === 0 ? (
+          {(rollup.by_key?.length ?? 0) === 0 ? (
             <Card>
               <CardContent className="py-12 text-center text-muted-foreground">
                 No missing secrets across all apps
@@ -140,7 +140,7 @@ export function TenantSecrets() {
         </TabsContent>
 
         <TabsContent value="by-app" className="space-y-4">
-          {rollup.by_app.map(app => (
+          {(rollup.by_app ?? []).map(app => (
             <Card key={app.app_id}>
               <CardHeader>
                 <CardTitle className="text-base">{app.app_name}</CardTitle>
