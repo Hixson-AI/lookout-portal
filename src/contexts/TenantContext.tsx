@@ -79,7 +79,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 export function useTenantContext() {
   const context = useContext(TenantContext);
   if (!context) {
-    throw new Error('useTenantContext must be used within TenantProvider');
+    return { currentTenant: null, availableTenants: [], setCurrentTenant: () => {}, loading: false };
   }
   return context;
 }
