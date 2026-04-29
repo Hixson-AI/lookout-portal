@@ -48,6 +48,13 @@ export interface TenantRequiredSecretsRollup {
   extra_total: number;
 }
 
+export interface TenantSecretMeta {
+  id: string;
+  key: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // List secrets for an app (keys only, never values)
 export async function getAppSecrets(tenantId: string, appId: string): Promise<AppSecretMeta[]> {
   return apiRequest<AppSecretMeta[]>(`/v1/tenants/${tenantId}/apps/${appId}/secrets`);
@@ -91,4 +98,24 @@ export async function augmentAppRequiredSecrets(tenantId: string, appId: string)
 // Get tenant-wide required secrets rollup
 export async function getTenantRequiredSecrets(tenantId: string): Promise<TenantRequiredSecretsRollup> {
   return apiRequest<TenantRequiredSecretsRollup>(`/v1/tenants/${tenantId}/required-secrets`);
+}
+
+// List tenant-wide secrets (keys only, never values)
+export async function getTenantSecrets(tenantId: string): Promise<TenantSecretMeta[]> {
+  return apiRequest<TenantSecretMeta[]>(`/v1/tenants/${tenantId}/secrets`);
+}
+
+// Set a tenant-wide secret value (encrypted at rest)
+export async function setTenantSecret(tenantId: string, key: string, value: string): Promise<void> {
+  await apiRequest<unknown>(`/v1/tenants/${tenantId}/secrets/${key}`, {
+    method: 'PUT',
+    body: JSON.stringify({ value }),
+  });
+}
+
+// Delete a tenant-wide secret
+export async function deleteTenantSecret(tenantId: string, key: string): Promise<void> {
+  await apiRequest<void>(`/v1/tenants/${tenantId}/secrets/${key}`, {
+    method: 'DELETE',
+  });
 }

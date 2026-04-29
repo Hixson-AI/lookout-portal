@@ -9,8 +9,9 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
 import { Alert, AlertDescription } from '../ui/alert';
-import { getAppRequiredSecrets, augmentAppRequiredSecrets, setAppSecret, deleteAppSecret, type RequiredSecretsDiff } from '../../lib/api/app-secrets';
-import { AlertCircle, CheckCircle2, XCircle, RefreshCw } from 'lucide-react';
+import { getAppRequiredSecrets, augmentAppRequiredSecrets, setAppSecret, deleteAppSecret, getTenantSecrets, type RequiredSecretsDiff, type TenantSecretMeta } from '../../lib/api/app-secrets';
+import { AlertCircle, CheckCircle2, XCircle, RefreshCw, Globe } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 
 interface RequiredSecretsPanelProps {
   tenantId: string;
@@ -21,11 +22,14 @@ interface RequiredSecretsPanelProps {
 
 export function RequiredSecretsPanel({ tenantId, appId, onClose, message }: RequiredSecretsPanelProps) {
   const [diff, setDiff] = useState<RequiredSecretsDiff | null>(null);
+  const [tenantSecrets, setTenantSecrets] = useState<TenantSecretMeta[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [augmenting, setAugmenting] = useState(false);
   const [saving, setSaving] = useState<Set<string>>(new Set());
   const [newSecrets, setNewSecrets] = useState<Record<string, string>>({});
+  const [selectedSecretKey, setSelectedSecretKey] = useState<string | null>(null);
+  const [showTenantSecretDialog, setShowTenantSecretDialog] = useState(false);
 
   const loadDiff = useCallback(async (useAugment = false) => {
     try {
@@ -50,6 +54,18 @@ export function RequiredSecretsPanel({ tenantId, appId, onClose, message }: Requ
   useEffect(() => {
     loadDiff();
   }, [loadDiff]);
+
+  useEffect(() => {
+    const loadTenantSecrets = async () => {
+      try {
+        const secrets = await getTenantSecrets(tenantId);
+        setTenantSecrets(secrets);
+      } catch (err: unknown) {
+        console.error('Failed to load tenant secrets', err);
+      }
+    };
+    loadTenantSecrets();
+  }, [tenantId]);
 
   const handleSaveSecret = async (key: string, value: string) => {
     try {
@@ -86,6 +102,12 @@ export function RequiredSecretsPanel({ tenantId, appId, onClose, message }: Requ
         return next;
       });
     }
+  };
+
+  const handleUseTenantSecret = (key: string) => {
+    setNewSecrets(prev => ({ ...prev, [selectedSecretKey!]: key }));
+    setShowTenantSecretDialog(false);
+    setSelectedSecretKey(null);
   };
 
   if (loading) {
@@ -187,6 +209,48 @@ export function RequiredSecretsPanel({ tenantId, appId, onClose, message }: Requ
                       {secret.required && ' • required'}
                     </Badge>
                   </div>
+                  {tenantSecrets.length > 0 && (
+                    <Dialog open={showTenantSecretDialog && selectedSecretKey === secret.key} onOpenChange={(open) => {
+                      setShowTenantSecretDialog(open);
+                      if (!open) setSelectedSecretKey(null);
+                    }}>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedSecretKey(secret.key);
+                            setShowTenantSecretDialog(true);
+                          }}
+                        >
+                          <Globe className="h-4 w-4 mr-2" />
+                          Use Tenant Secret
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Select Tenant Secret</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-2">
+                          {tenantSecrets.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">No tenant secrets available</p>
+                          ) : (
+                            tenantSecrets.map(ts => (
+                              <Button
+                                key={ts.id}
+                                variant="outline"
+                                className="w-full justify-start"
+                                onClick={() => handleUseTenantSecret(ts.key)}
+                              >
+                                <Globe className="h-4 w-4 mr-2" />
+                                {ts.key}
+                              </Button>
+                            ))
+                          )}
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  )}
                 </div>
                 <div className="flex gap-2">
                   <Input
