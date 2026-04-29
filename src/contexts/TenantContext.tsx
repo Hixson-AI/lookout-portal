@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import { api } from '../lib/api';
 import type { Tenant } from '../lib/types';
 
@@ -18,6 +19,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [currentTenant, setCurrentTenantState] = useState<Tenant | null>(null);
   const [availableTenants, setAvailableTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
 
   // Load available tenants on mount
   useEffect(() => {
@@ -35,19 +37,29 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     loadTenants();
   }, []);
 
-  // Resolve current tenant from localStorage or URL or first tenant
+  // Resolve current tenant from URL, then localStorage, then first tenant.
+  // Re-runs on every navigation so that client-side routes like
+  // /tenants/:id -> /:slug (via LegacyTenantRedirect) update the header.
   useEffect(() => {
     if (availableTenants.length === 0) return;
 
     const savedSlug = localStorage.getItem(STORAGE_KEY);
-    const urlSlug = window.location.pathname.split('/')[1];
+    const urlSlug = location.pathname.split('/')[1];
 
-    // Try URL slug first
+    // Try URL slug first — this takes precedence so SPA navigation
+    // to a different tenant updates the active tenant.
     const fromUrl = availableTenants.find((t) => t.slug === urlSlug);
     if (fromUrl) {
-      setCurrentTenantState(fromUrl);
+      if (fromUrl.id !== currentTenant?.id) {
+        setCurrentTenantState(fromUrl);
+        localStorage.setItem(STORAGE_KEY, fromUrl.slug);
+      }
       return;
     }
+
+    // If we already have a selected tenant and the URL isn't pointing at
+    // a specific tenant (e.g. /tenants, /platform, /select-tenant), keep it.
+    if (currentTenant) return;
 
     // Try localStorage
     const fromStorage = availableTenants.find((t) => t.slug === savedSlug);
@@ -58,7 +70,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 
     // Fallback to first tenant
     setCurrentTenantState(availableTenants[0]);
-  }, [availableTenants]);
+  }, [availableTenants, location.pathname, currentTenant]);
 
   const setCurrentTenant = (slug: string) => {
     const tenant = availableTenants.find((t) => t.slug === slug);
